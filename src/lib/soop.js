@@ -1,4 +1,25 @@
-const API_BASE = 'https://api-channel.sooplive.com/v1.1/channel'
+export const API_BASE = 'https://api-channel.sooplive.com/v1.1/channel'
+
+/**
+ * 비공식 API라 언제든 바뀔 수 있다. 어떻게 깨졌는지를 kind로 구분해 두면
+ * 사용자에게 "글 번호를 확인하세요" 같은 엉뚱한 소리를 하지 않을 수 있다.
+ *
+ * network  — 연결 자체 실패. CORS가 막혔거나 네트워크가 끊겼다.
+ * notfound — 게시글이 정말 없다.
+ * endpoint — 글은 있는데 댓글 주소만 사라졌다. API 경로가 바뀐 것.
+ * schema   — 200이 왔는데 응답 모양이 다르다. 이게 제일 위험하다.
+ * server   — 그 밖의 오류 응답.
+ */
+export class SoopApiError extends Error {
+  constructor(message, kind) {
+    super(message)
+    this.name = 'SoopApiError'
+    this.kind = kind
+  }
+}
+
+const API_CHANGED_HINT =
+  ' SOOP이 비공식 API를 바꿨을 수 있습니다. 계속 이러면 소스의 API 주소를 확인해야 합니다.'
 
 /**
  * 게시글 URL(또는 "bjId/postNo" 형태)에서 방송국 ID와 글 번호를 뽑아낸다.
@@ -95,11 +116,39 @@ function normalize(item) {
 export async function fetchPost(bjId, postNo, { signal } = {}) {
   const data = await fetchJson(
     `${API_BASE}/${encodeURIComponent(bjId)}/post/${encodeURIComponent(postNo)}`,
-    signal
+    signal,
+    // 여기서 404면 글이 정말 없는 것으로 본다. 뒤이어 부를 댓글 주소가 살아 있는지는
+    // 이 요청이 성공했는지로 갈린다.
+    'notfound'
   )
+  if (data == null || typeof data !== 'object' || data.titleNo === undefined) {
+    throw new SoopApiError(`게시글 응답 형식이 예상과 다릅니다.${API_CHANGED_HINT}`, 'schema')
+  }
   return {
     title: decodeEntities(data.titleName ?? ''),
-    html: data.content?.content ?? '',
+    html: typeof data.content?.content === 'string' ? data.content.content : '',
+  }
+}
+
+/**
+ * 우리가 실제로 읽는 필드가 그대로 있는지 확인한다.
+ * 이게 없으면 필드명이 바뀌었을 때 조용히 "댓글 0개"로 보인다 — 틀린 답을
+ * 자신 있게 내놓는 상태라, 차라리 실패로 끊는 게 낫다.
+ */
+function assertCommentPage(payload, page) {
+  const where = `댓글 ${page}페이지`
+  if (payload == null || typeof payload !== 'object' || !Array.isArray(payload.data)) {
+    throw new SoopApiError(`${where} 응답에 목록이 없습니다.${API_CHANGED_HINT}`, 'schema')
+  }
+  if (!Number.isFinite(payload.meta?.lastPage)) {
+    throw new SoopApiError(`${where} 응답에 페이지 정보가 없습니다.${API_CHANGED_HINT}`, 'schema')
+  }
+  const sample = payload.data[0]
+  if (!sample) return
+  for (const field of ['pCommentNo', 'comment', 'likeCnt', 'regDate']) {
+    if (sample[field] === undefined) {
+      throw new SoopApiError(`${where}에 '${field}' 항목이 없습니다.${API_CHANGED_HINT}`, 'schema')
+    }
   }
 }
 
@@ -116,16 +165,20 @@ export async function fetchAllComments(bjId, postNo, { signal, onProgress } = {}
     `${API_BASE}/${encodeURIComponent(bjId)}/post/${encodeURIComponent(postNo)}` +
     `/comment?page=${page}&orderBy=like_cnt&cCommentNo=0`
 
-  const first = await fetchJson(url(1), signal)
-  const lastPage = first.meta?.lastPage ?? 1
+  // 본문을 이미 받아 온 뒤에 부르므로, 여기서 404면 글이 없는 게 아니라 주소가 바뀐 것이다.
+  const first = await fetchJson(url(1), signal, 'endpoint')
+  assertCommentPage(first, 1)
+
+  const lastPage = first.meta.lastPage
   onProgress?.(1, lastPage)
 
   const byId = new Map()
-  for (const item of first.data ?? []) byId.set(item.pCommentNo, normalize(item))
+  for (const item of first.data) byId.set(item.pCommentNo, normalize(item))
 
   for (let page = 2; page <= lastPage; page += 1) {
-    const chunk = await fetchJson(url(page), signal)
-    for (const item of chunk.data ?? []) byId.set(item.pCommentNo, normalize(item))
+    const chunk = await fetchJson(url(page), signal, 'endpoint')
+    assertCommentPage(chunk, page)
+    for (const item of chunk.data) byId.set(item.pCommentNo, normalize(item))
     onProgress?.(page, lastPage)
   }
 
@@ -139,14 +192,39 @@ export async function fetchAllComments(bjId, postNo, { signal, onProgress } = {}
   }
 }
 
-async function fetchJson(url, signal) {
-  const res = await fetch(url, { signal })
-  if (!res.ok) {
-    throw new Error(
-      res.status === 404
-        ? '게시글을 찾을 수 없습니다. 방송국 ID와 글 번호를 확인해 주세요.'
-        : `SOOP API 요청 실패 (HTTP ${res.status})`
+async function fetchJson(url, signal, notFoundKind) {
+  let res
+  try {
+    res = await fetch(url, { signal })
+  } catch (err) {
+    if (err.name === 'AbortError') throw err
+    // fetch가 거절하는 경우는 대개 오프라인이거나 CORS가 막힌 것이다.
+    // 브라우저는 둘을 구분해 알려주지 않으므로 양쪽 다 짚어 준다.
+    throw new SoopApiError(
+      'SOOP 서버에 연결하지 못했습니다. 인터넷 연결이 끊겼거나, ' +
+        'SOOP이 외부 사이트의 접근(CORS)을 막았을 수 있습니다.',
+      'network'
     )
   }
-  return res.json()
+
+  if (res.status === 404) {
+    throw new SoopApiError(
+      notFoundKind === 'endpoint'
+        ? `게시글은 찾았는데 댓글 주소가 응답하지 않습니다.${API_CHANGED_HINT}`
+        : '게시글을 찾을 수 없습니다. 삭제되었거나 주소가 잘못됐을 수 있습니다.' + API_CHANGED_HINT,
+      notFoundKind ?? 'notfound'
+    )
+  }
+  if (res.status === 429) {
+    throw new SoopApiError('SOOP이 요청을 제한하고 있습니다. 잠시 후 다시 시도해 주세요.', 'server')
+  }
+  if (!res.ok) {
+    throw new SoopApiError(`SOOP API 요청 실패 (HTTP ${res.status})`, 'server')
+  }
+
+  try {
+    return await res.json()
+  } catch {
+    throw new SoopApiError(`SOOP API가 JSON이 아닌 응답을 보냈습니다.${API_CHANGED_HINT}`, 'schema')
+  }
 }

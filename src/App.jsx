@@ -5,10 +5,11 @@ import CommentCard from './components/CommentCard'
 import { fetchAllComments, fetchPost, parsePostUrl, postUrl } from './lib/soop'
 import { buildGroups, detectCategories } from './lib/categories'
 import { UNGROUPED_ID, classify, rank, toCsv, validateGrouping } from './lib/groups'
+import { SAMPLE_POST } from './lib/sample'
 import './App.css'
 
 const STORE_URL = 'soopcomment.lastUrl'
-const SAMPLE_URL = 'https://www.sooplive.com/station/ecvhao/post/203249055'
+const SAMPLE_URL = SAMPLE_POST.url
 const overrideKey = (bjId, postNo) => `soopcomment.overrides.${bjId}.${postNo}`
 
 const ALL_TAB = '__all__'

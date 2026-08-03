@@ -59,7 +59,35 @@ GET https://api-channel.sooplive.com/v1.1/channel/{bjId}/post/{postNo}/comment
 - 본문은 HTML 이스케이프된 채로 오므로(`&quot;` → `"`) 받는 즉시 디코딩합니다.
   화면에는 텍스트로만 넣기 때문에 이렇게 풀어도 안전합니다.
 
-이건 비공식 API입니다. SOOP이 스펙을 바꾸면 [`src/lib/soop.js`](src/lib/soop.js)만 고치면
+### 비공식 API를 쓴다는 것
+
+SOOP은 방송국 게시글 댓글에 대한 공개 API를 제공하지 않습니다. 위 주소는 사이트가 내부적으로
+쓰는 것이라 언제든 예고 없이 바뀔 수 있고, 그건 막을 방법이 없습니다. 대신 **깨졌을 때
+조용히 틀린 답을 내놓지 않도록** 두 가지를 해 뒀습니다.
+
+**1. 실패를 구분해서 알립니다.** 특히 세 번째가 중요합니다 — 예전에는 필드명만 바뀌어도
+에러 없이 "댓글 0개"로 보였습니다. 선발 기준이 좋아요 수인 글에서 그건 틀린 답을 자신 있게
+내놓는 상태라, 지금은 실패로 끊습니다.
+
+| 깨지는 방식 | 화면에 나오는 말 |
+|---|---|
+| 연결 실패 (CORS 차단·오프라인) | 인터넷 연결이 끊겼거나 SOOP이 외부 접근을 막았을 수 있다 |
+| 댓글 주소만 404 (본문은 정상) | 게시글은 찾았는데 댓글 주소가 응답하지 않는다 → API 변경 |
+| 200인데 응답 모양이 다름 | 어느 필드가 없어졌는지 짚어서 알림 |
+
+**2. 매일 자동으로 찔러 봅니다.** [`scripts/check-api.mjs`](scripts/check-api.mjs)가 CORS
+헤더·본문·댓글 수집·필드·분류 적중률을 확인하고,
+[워크플로](.github/workflows/api-health.yml)가 매일 06:20(KST) 돌려서 실패하면 이슈를
+엽니다(이미 열린 이슈가 있으면 댓글만 답니다). 직접 돌려볼 수도 있습니다:
+
+```bash
+node scripts/check-api.mjs
+```
+
+표본 글은 [`src/lib/sample.js`](src/lib/sample.js) 한 곳에 있습니다. 그 글이 삭제되면
+헬스체크가 그렇게 알려 주니 다른 글로 바꾸면 됩니다.
+
+API 주소 자체가 바뀌었을 땐 [`src/lib/soop.js`](src/lib/soop.js)의 `API_BASE`만 고치면
 됩니다.
 
 ## 분류는 게시글이 정한다
@@ -114,9 +142,11 @@ CSV 내보내기는 모든 분류를 순위와 함께 내려받습니다(Excel�
 ## 구조
 
 ```
+scripts/check-api.mjs            SOOP API가 아직 기대대로인지 확인 (매일 자동 실행)
 src/
   App.jsx                        화면 전체 상태 (불러오기, 탭, 검색, CSV)
-  lib/soop.js                    URL 파싱 · API 순회 · HTML 엔티티 디코딩
+  lib/sample.js                  예시 글 (앱과 헬스체크가 공유)
+  lib/soop.js                    URL 파싱 · API 순회 · 실패 구분 · 엔티티 디코딩
   lib/categories.js              본문에서 분류 감지 + 검색어 생성
   lib/groups.js                  분류 · 검증 · 순위 · 상위 N명 · CSV
   components/GroupPanel.jsx      감지된 분류 표시 (또는 버린 이유)
