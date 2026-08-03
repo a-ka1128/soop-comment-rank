@@ -1,14 +1,7 @@
-import { useState } from 'react'
 import { channelUrl } from '../lib/soop'
 import { UNGROUPED_ID } from '../lib/groups'
 
-const CLAMP_LENGTH = 220
-
 export default function CommentCard({ comment, color, showGroupName, groupName, groups, onAssign }) {
-  const [expanded, setExpanded] = useState(false)
-  const long = comment.text.length > CLAMP_LENGTH
-  const body = expanded || !long ? comment.text : `${comment.text.slice(0, CLAMP_LENGTH)}…`
-
   return (
     <article className="card" style={{ '--group': color }}>
       <div className="card-rank">
@@ -50,13 +43,7 @@ export default function CommentCard({ comment, color, showGroupName, groupName, 
           <span className="likes">♥ {comment.likes.toLocaleString()}</span>
         </header>
 
-        <p className="text">{body}</p>
-
-        {long && (
-          <button type="button" className="more" onClick={() => setExpanded((v) => !v)}>
-            {expanded ? '접기' : '더 보기'}
-          </button>
-        )}
+        <p className="text">{comment.text}</p>
 
         {comment.photo && (
           <a href={comment.photo} target="_blank" rel="noreferrer noopener">

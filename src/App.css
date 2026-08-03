@@ -456,15 +456,6 @@ button:disabled {
   word-break: break-word;
 }
 
-.more {
-  margin-top: 4px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--accent);
-  font-size: 12px;
-}
-
 .photo {
   margin-top: 8px;
   max-width: 220px;
