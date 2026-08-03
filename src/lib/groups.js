@@ -1,35 +1,34 @@
 export const UNGROUPED_ID = '__ungrouped__'
 
-const REGEX_FORM = /^\/(.*)\/([gimsuy]*)$/
-
-/**
- * `/패턴/플래그` 형태면 정규식으로, 아니면 일반 검색어로 컴파일한다.
- * 일반 검색어는 공백을 모두 무시하고 비교하므로
- * "여자 버튜버"가 "인기여자버튜버"에도 걸린다.
- */
-function compile(keyword) {
-  const asRegex = keyword.match(REGEX_FORM)
-  if (asRegex) {
-    try {
-      return { type: 'regex', value: new RegExp(asRegex[1], asRegex[2] || 'i') }
-    } catch {
-      return null
-    }
-  }
-  const squashed = squash(keyword)
-  return squashed ? { type: 'text', value: squashed } : null
-}
-
 function squash(text) {
   return text.toLowerCase().replace(/\s+/g, '')
 }
 
+/**
+ * 글자 그대로 찾는 검색어. 공백을 모두 무시하고 비교하므로
+ * "여자 버튜버"가 "인기여자버튜버"에도 걸린다.
+ */
+export function textRule(keyword) {
+  const value = squash(keyword ?? '')
+  return value ? { type: 'text', value } : null
+}
+
+/**
+ * 정규식 검색어. 반드시 코드가 만든 RegExp만 넘긴다.
+ *
+ * 예전에는 "/패턴/" 모양의 문자열을 보면 정규식으로 컴파일했는데,
+ * 검색어가 게시글 본문에서 자동 생성되는 지금 구조에서는 그게 곧
+ * 남이 쓴 글이 내 정규식이 된다는 뜻이었다. 목록 항목을 `/(a+)+(b+)+$/`로
+ * 두 개 적어 두면 방문자 브라우저가 댓글 하나에 몇 분씩 멈춘다(실측).
+ */
+export function regexRule(pattern) {
+  return pattern instanceof RegExp ? { type: 'regex', value: pattern } : null
+}
+
 function groupMatches(group, raw, squashed) {
-  return group.keywords.some((keyword) => {
-    const rule = compile(keyword)
-    if (!rule) return false
-    return rule.type === 'regex' ? rule.value.test(raw) : squashed.includes(rule.value)
-  })
+  return group.keywords.some((rule) =>
+    rule.type === 'regex' ? rule.value.test(raw) : squashed.includes(rule.value)
+  )
 }
 
 /**
@@ -122,8 +121,16 @@ export function formatNicknames(items, { format = 'lines', withRank = false, wit
   return items.map(line).join(format === 'comma' ? ', ' : '\n')
 }
 
+// Excel은 따옴표를 벗겨낸 뒤 =, +, -, @로 시작하는 칸을 수식으로 해석한다.
+// 닉네임과 댓글은 남이 쓴 글이고 "- 안녕하세요" 같은 건 흔하므로 앞에 '를 붙여 텍스트로 못박는다.
+const FORMULA_LEAD = /^[=+\-@\t\r]/
+
 export function toCsv(sections) {
-  const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
+  const esc = (v) => {
+    const raw = String(v ?? '')
+    const safe = FORMULA_LEAD.test(raw) ? `'${raw}` : raw
+    return `"${safe.replace(/"/g, '""')}"`
+  }
   const rows = [['그룹', '순위', '닉네임', '아이디', '좋아요', '작성일', '내용'].join(',')]
   for (const { group, items } of sections) {
     for (const item of items) {
@@ -133,7 +140,7 @@ export function toCsv(sections) {
           item.rank,
           esc(item.nick),
           esc(item.userId),
-          item.likes,
+          Number(item.likes) || 0,
           esc(item.date),
           esc(item.text.replace(/\r?\n/g, ' ')),
         ].join(',')

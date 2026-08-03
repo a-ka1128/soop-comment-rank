@@ -22,11 +22,26 @@ export function parsePostUrl(input) {
 }
 
 export function postUrl(bjId, postNo) {
-  return `https://www.sooplive.com/station/${bjId}/post/${postNo}`
+  return `https://www.sooplive.com/station/${encodeURIComponent(bjId)}/post/${encodeURIComponent(postNo)}`
 }
 
 export function channelUrl(userId) {
-  return `https://ch.sooplive.co.kr/${userId}`
+  return `https://www.sooplive.com/station/${encodeURIComponent(userId)}`
+}
+
+/**
+ * API가 준 이미지 주소를 그대로 href/src에 꽂지 않는다.
+ * React는 href를 소독해 주지 않으므로 javascript: 같은 스킴이 섞여 들어오면
+ * 클릭 한 번에 실행된다. http(s)만 통과시키고 나머지는 버린다.
+ */
+function safeHttpUrl(url) {
+  if (!url) return ''
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : ''
+  } catch {
+    return ''
+  }
 }
 
 const NAMED_ENTITIES = {
@@ -69,10 +84,10 @@ function normalize(item) {
     text: decodeEntities(item.comment ?? ''),
     likes: item.likeCnt ?? 0,
     date: item.regDate ?? '',
-    profile: item.profileImage || '',
+    profile: safeHttpUrl(item.profileImage),
     isBest: !!item.isBestTop,
     replyCount: item.cCommentCnt ?? 0,
-    photo: item.photo?.url || '',
+    photo: safeHttpUrl(item.photo?.url),
   }
 }
 

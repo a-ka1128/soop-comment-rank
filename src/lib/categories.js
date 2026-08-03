@@ -1,5 +1,6 @@
 // 확장자를 붙여 두면 Vite뿐 아니라 node로도 그냥 돌아가 검증 스크립트를 쓰기 쉽다.
 import { decodeEntities } from './soop.js'
+import { regexRule, textRule } from './groups.js'
 
 const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨']
 
@@ -89,6 +90,9 @@ export const GROUP_COLORS = [
  * 감지한 카테고리를 분류 그룹으로 바꾼다.
  * 댓글은 "2번", "2.", "2 ", "인기여자버튜버"처럼 제각각 적으므로
  * 번호 표기와 이름에서 뽑은 구를 모두 검색어로 넣는다.
+ *
+ * 이름에서 뽑은 구는 남이 쓴 글이므로 반드시 글자 그대로 찾는다(textRule).
+ * 정규식은 여기서 번호로 직접 만든 것만 쓴다.
  */
 export function buildGroups(labels) {
   const tokenSets = labels.map(tokenize)
@@ -105,10 +109,10 @@ export function buildGroups(labels) {
       topN: detectTopN(label),
       color: GROUP_COLORS[i % GROUP_COLORS.length],
       keywords: [
-        `${number}번`,
-        CIRCLED[i],
-        distinctivePhrase(tokenSets[i], freq, label),
-        `/^\\s*${number}[\\s.,)\\]]/`,
+        textRule(`${number}번`),
+        textRule(CIRCLED[i]),
+        textRule(distinctivePhrase(tokenSets[i], freq, label)),
+        regexRule(new RegExp(`^\\s*${number}[\\s.,)\\]]`)),
       ].filter(Boolean),
     }
   })
