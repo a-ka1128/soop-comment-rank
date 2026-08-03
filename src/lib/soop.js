@@ -5,6 +5,7 @@ export const API_BASE = 'https://api-channel.sooplive.com/v1.1/channel'
  * 사용자에게 "글 번호를 확인하세요" 같은 엉뚱한 소리를 하지 않을 수 있다.
  *
  * network  — 연결 자체 실패. CORS가 막혔거나 네트워크가 끊겼다.
+ * forbidden— 볼 권한이 없다. 애청자 공개 게시판 같은 경우.
  * notfound — 게시글이 정말 없다.
  * endpoint — 글은 있는데 댓글 주소만 사라졌다. API 경로가 바뀐 것.
  * schema   — 200이 왔는데 응답 모양이 다르다. 이게 제일 위험하다.
@@ -134,17 +135,22 @@ export async function fetchPost(bjId, postNo, { signal } = {}) {
  * 우리가 실제로 읽는 필드가 그대로 있는지 확인한다.
  * 이게 없으면 필드명이 바뀌었을 때 조용히 "댓글 0개"로 보인다 — 틀린 답을
  * 자신 있게 내놓는 상태라, 차라리 실패로 끊는 게 낫다.
+ *
+ * 단, 댓글이 하나도 없는 글은 meta가 통째로 null로 온다. 그건 정상이므로
+ * 페이지 정보와 항목 검사는 data가 실제로 있을 때만 한다.
  */
 function assertCommentPage(payload, page) {
   const where = `댓글 ${page}페이지`
   if (payload == null || typeof payload !== 'object' || !Array.isArray(payload.data)) {
     throw new SoopApiError(`${where} 응답에 목록이 없습니다.${API_CHANGED_HINT}`, 'schema')
   }
+
+  const sample = payload.data[0]
+  if (!sample) return
+
   if (!Number.isFinite(payload.meta?.lastPage)) {
     throw new SoopApiError(`${where} 응답에 페이지 정보가 없습니다.${API_CHANGED_HINT}`, 'schema')
   }
-  const sample = payload.data[0]
-  if (!sample) return
   for (const field of ['pCommentNo', 'comment', 'likeCnt', 'regDate']) {
     if (sample[field] === undefined) {
       throw new SoopApiError(`${where}에 '${field}' 항목이 없습니다.${API_CHANGED_HINT}`, 'schema')
@@ -158,25 +164,30 @@ function assertCommentPage(payload, page) {
  *
  * @param {string} bjId
  * @param {string} postNo
- * @param {{ signal?: AbortSignal, onProgress?: (done: number, total: number) => void }} opts
+ * @param {{
+ *   signal?: AbortSignal,
+ *   onProgress?: (done: number, total: number) => void,
+ *   postConfirmed?: boolean,
+ * }} opts postConfirmed는 본문을 이미 확인했다는 뜻. 404 메시지를 가르는 데 쓴다.
  */
-export async function fetchAllComments(bjId, postNo, { signal, onProgress } = {}) {
+export async function fetchAllComments(bjId, postNo, { signal, onProgress, postConfirmed } = {}) {
   const url = (page) =>
     `${API_BASE}/${encodeURIComponent(bjId)}/post/${encodeURIComponent(postNo)}` +
     `/comment?page=${page}&orderBy=like_cnt&cCommentNo=0`
 
-  // 본문을 이미 받아 온 뒤에 부르므로, 여기서 404면 글이 없는 게 아니라 주소가 바뀐 것이다.
-  const first = await fetchJson(url(1), signal, 'endpoint')
+  const notFoundKind = postConfirmed ? 'endpoint' : 'notfound'
+  const first = await fetchJson(url(1), signal, notFoundKind)
   assertCommentPage(first, 1)
 
-  const lastPage = first.meta.lastPage
+  // 댓글이 없는 글은 meta가 null이다.
+  const lastPage = Number.isFinite(first.meta?.lastPage) ? first.meta.lastPage : 1
   onProgress?.(1, lastPage)
 
   const byId = new Map()
   for (const item of first.data) byId.set(item.pCommentNo, normalize(item))
 
   for (let page = 2; page <= lastPage; page += 1) {
-    const chunk = await fetchJson(url(page), signal, 'endpoint')
+    const chunk = await fetchJson(url(page), signal, notFoundKind)
     assertCommentPage(chunk, page)
     for (const item of chunk.data) byId.set(item.pCommentNo, normalize(item))
     onProgress?.(page, lastPage)
@@ -189,6 +200,15 @@ export async function fetchAllComments(bjId, postNo, { signal, onProgress } = {}
     // commentCount는 답글까지 포함한 숫자라 원댓글 수와 다를 수 있다.
     totalWithReplies: first.commentCount ?? byId.size,
     fetchedAt: new Date(),
+  }
+}
+
+async function readApiMessage(res) {
+  try {
+    const body = await res.json()
+    return typeof body?.message === 'string' ? body.message : ''
+  } catch {
+    return ''
   }
 }
 
@@ -215,11 +235,24 @@ async function fetchJson(url, signal, notFoundKind) {
       notFoundKind ?? 'notfound'
     )
   }
+  if (res.status === 401 || res.status === 403) {
+    // SOOP이 이유를 한국어로 정확히 알려 준다 ("이 게시판은 애청자 공개입니다." 등).
+    // 상태 코드만 보여 주는 것보다 그대로 전하는 편이 훨씬 쓸모 있다.
+    const reason = await readApiMessage(res)
+    throw new SoopApiError(
+      reason || '로그인하거나 권한이 있어야 볼 수 있는 글입니다.',
+      'forbidden'
+    )
+  }
   if (res.status === 429) {
     throw new SoopApiError('SOOP이 요청을 제한하고 있습니다. 잠시 후 다시 시도해 주세요.', 'server')
   }
   if (!res.ok) {
-    throw new SoopApiError(`SOOP API 요청 실패 (HTTP ${res.status})`, 'server')
+    const reason = await readApiMessage(res)
+    throw new SoopApiError(
+      `SOOP API 요청 실패 (HTTP ${res.status})${reason ? `: ${reason}` : ''}`,
+      'server'
+    )
   }
 
   try {

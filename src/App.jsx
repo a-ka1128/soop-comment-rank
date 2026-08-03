@@ -159,16 +159,29 @@ export default function App() {
     localStorage.setItem(STORE_URL, rawInput)
 
     try {
-      const post = await fetchPost(parsed.bjId, parsed.postNo, { signal })
-      const categories = detectCategories(post.html)
+      // 본문은 분류를 찾는 데만 쓴다. 애청자 공개 게시판처럼 본문만 막힌 글도 있는데
+      // (댓글은 누구나 읽힌다) 그때 전체를 실패시키면 정작 필요한 걸 못 보게 된다.
+      let post = { title: '', html: '', error: '' }
+      try {
+        post = { ...(await fetchPost(parsed.bjId, parsed.postNo, { signal })), error: '' }
+      } catch (err) {
+        if (err.name === 'AbortError' || err.kind === 'notfound') throw err
+        post = { title: '', html: '', error: err.message }
+      }
 
       const result = await fetchAllComments(parsed.bjId, parsed.postNo, {
         signal,
+        postConfirmed: !post.error,
         onProgress: (done, total) => setProgress({ done, total }),
       })
 
       setOverrides(loadStored(overrideKey(parsed.bjId, parsed.postNo), {}) ?? {})
-      setData({ ...result, title: post.title, categories })
+      setData({
+        ...result,
+        title: post.title,
+        postError: post.error,
+        categories: detectCategories(post.html),
+      })
       setActiveTab(ALL_TAB)
     } catch (err) {
       if (err.name !== 'AbortError') setError(err.message || '댓글을 불러오지 못했습니다.')
@@ -305,7 +318,13 @@ export default function App() {
 
           {exportOpen && exportSections.length > 0 && <NicknameExport sections={exportSections} />}
 
-          <GroupPanel groups={groups} counts={counts} detection={detection} />
+          <GroupPanel
+            groups={groups}
+            counts={counts}
+            detection={detection}
+            postError={data.postError}
+            commentCount={data.comments.length}
+          />
 
           <nav className="tabs">
             {grouped && (
