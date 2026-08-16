@@ -1,16 +1,17 @@
 :root {
-  /* 야전 무전기 패널 같은 톤. 올리브 드랩 바탕에 황동/앰버 계기판 색을 얹었다. */
-  --bg: #0f120c;
-  --panel: #171c12;
-  --panel-2: #1f2618;
-  --line: #2f3a22;
-  --text: #dde3cf;
-  --muted: #8a9573;
+  /* 배경 카모에서 실제로 뽑은 색들. 눈대중이 아니라 이미지 색 분포에서 가져왔다.
+     주요 8색: #1a1912 #26241a #2f2c1f #363324 #3b3a29 #423d2b #48432f #514b35 (평균 #383525) */
+  --bg: #14130d;
+  --panel: #1c1b13;
+  --panel-2: #26241a;
+  --line: #3b3a29;
+  --text: #e6e2d2;
+  --muted: #a09a80;
 
-  --accent: #9ab53c; /* 필드 그린 — 주요 동작 */
-  --brass: #c9a227; /* 황동 — 좋아요·강조 수치 */
-  --slate: #8a94a3; /* 강판 회색 — 하락·보조 */
-  --danger: #b4472e; /* 녹슨 적색 */
+  --accent: #a3bd45; /* 필드 그린 — 주요 동작 */
+  --brass: #d0a72a; /* 황동 — 좋아요·수치 */
+  --slate: #8f9585; /* 강판 — 하락·보조 */
+  --danger: #bf4c2e; /* 녹슨 적색 */
 
   /* 각진 모서리가 이 화면의 성격을 정한다. 둥글리지 않는다. */
   --radius: 3px;
@@ -30,18 +31,25 @@
 html,
 body {
   margin: 0;
-  background: var(--bg);
   color: var(--text);
 }
 
 body {
   min-height: 100vh;
-  /* 아주 옅은 사선 결. 가까이서만 보이고 글을 방해하지 않는 정도로. */
-  background-image: repeating-linear-gradient(
-    135deg,
-    rgba(154, 181, 60, 0.022) 0 2px,
-    transparent 2px 7px
-  );
+  background: var(--bg) url('/camo.jpg') center / cover no-repeat fixed;
+}
+
+/*
+ * 카모는 그 자체가 고대비 노이즈라, 위에 글을 얹으면 읽히지 않는다.
+ * 짙은 막을 한 겹 덮어 무늬는 남기고 대비는 배경색 수준으로 되돌린다.
+ * 막 두께 0.9는 카모의 가장 밝은 얼룩(#514b35)까지 눌러 준다.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  pointer-events: none;
 }
 
 button,

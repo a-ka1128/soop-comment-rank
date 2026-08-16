@@ -1,4 +1,6 @@
 .app {
+  position: relative;
+  z-index: 1;
   max-width: 960px;
   margin: 0 auto;
   padding: 28px 20px 80px;
@@ -36,15 +38,6 @@
   padding-left: 13px;
   color: var(--muted);
   font-size: 14px;
-}
-
-/* 패널 제목은 작전 표지처럼 작게 자간을 벌린다. */
-.panel-head h2,
-.export-head h2 {
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  color: var(--muted);
-  text-transform: uppercase;
 }
 
 .loader {
@@ -193,10 +186,14 @@ button:disabled {
   background: var(--panel);
 }
 
+/* 패널 제목은 작전 표지처럼 작게 자간을 벌린다. */
 .panel-head h2,
 .export-head h2 {
   margin: 0;
-  font-size: 15px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
 }
 
 .panel-head p {
@@ -293,7 +290,7 @@ button:disabled {
   margin: 0 0 10px;
   padding: 8px 12px;
   border-radius: var(--radius);
-  background: color-mix(in srgb, #c9a227 14%, transparent);
+  background: color-mix(in srgb, var(--brass) 14%, transparent);
   color: var(--brass);
   font-size: 12px;
 }
@@ -596,4 +593,159 @@ button:disabled {
   .search {
     width: 100%;
   }
+}
+
+/* ---------- 증가량 그래프 ---------- */
+
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0 14px;
+}
+
+.seg {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.seg button {
+  padding: 6px 12px;
+  border: 0;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.seg button.on {
+  background: color-mix(in srgb, var(--accent) 20%, var(--panel));
+  color: var(--text);
+  font-weight: 600;
+}
+
+.gain-total {
+  font-family: var(--mono);
+  color: var(--brass);
+}
+
+.chart-empty {
+  margin: 0;
+  padding: 22px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.chart-plot {
+  position: relative;
+}
+
+.chart-plot svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* 눈금선은 표면 바로 위 실선 한 겹. 축은 그보다 한 단계만 진하게. */
+.grid-line {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.axis-line {
+  stroke: color-mix(in srgb, var(--muted) 55%, transparent);
+  stroke-width: 1;
+}
+
+.tick {
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.peak {
+  fill: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.bar {
+  fill: var(--brass);
+}
+
+.bar.is-down {
+  fill: var(--slate);
+}
+
+.bar.is-hover {
+  fill: var(--text);
+}
+
+.chart-tip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.cell-gain {
+  color: var(--brass);
+  font-family: var(--mono);
+}
+
+.chart-table-wrap {
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.chart-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.chart-table th,
+.chart-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-table th {
+  position: sticky;
+  top: 0;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.chart-table td:not(.cell-nick) {
+  font-family: var(--mono);
+}
+
+.chart-table .cell-nick {
+  text-align: left;
+  font-family: inherit;
 }
