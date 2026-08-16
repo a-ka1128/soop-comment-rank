@@ -193,7 +193,27 @@ node collector/collect.mjs    # 한 번 수동 실행해서 기록되는지 확�
 수집기는 상주하지 않고 1분마다 한 번 실행되고 끝납니다. 죽은 프로세스를 지키는 것보다
 못 돈 1분이 낫습니다. 1분마다 깨우는 방법은 두 가지입니다.
 
-**cron (root 권한 없이 가능 — 이쪽을 먼저 보세요)**
+**상주 루프 (sudo 도 cron 도 없을 때)**
+
+이 저장소가 실제로 도는 GCP VM 이 그런 경우다. sudo 가 아예 없어 cron 설치도
+`loginctl enable-linger` 도 막힌다. systemd 사용자 타이머는 로그아웃 **8분 뒤** 사용자
+매니저와 함께 정리됐다(실측). 대신 logind 의 `KillUserProcesses` 기본값이 `no` 라,
+세션에서 떼어 낸 프로세스는 살아남는다.
+
+```bash
+setsid nohup ~/soop-comment-rank/deploy/loop-collector.sh >/dev/null 2>&1 &
+```
+
+확인·중지:
+```bash
+tail -f ~/soop-comment-rank/collector.log
+kill $(cat ~/soop-comment-rank/collector.pid)
+```
+
+재부팅까지 견디지는 못한다. 그건 root 가 있어야 하고, GCP 라면 콘솔에서 VM 메타데이터에
+`startup-script` 로 `loginctl enable-linger 사용자` 를 넣어 두는 방법이 있다.
+
+**cron (설치돼 있고 쓸 수 있을 때)**
 
 ```bash
 crontab -e
@@ -241,6 +261,7 @@ journalctl -u soop-collector.service -f      # 기록 로그
 scripts/check-api.mjs            SOOP API가 아직 기대대로인지 확인 (매일 자동 실행)
 src/
   App.jsx                        화면 전체 상태 (불러오기, 실시간 갱신, 탭, 검색)
+deploy/loop-collector.sh         sudo·cron 없이 1분마다 도는 상주 루프
   lib/sample.js                  예시 글 (앱과 헬스체크가 공유)
   lib/soop.js                    URL 파싱 · API 순회 · 실패 구분 · 엔티티 디코딩
   lib/categories.js              본문에서 분류 감지 + 검색어 생성

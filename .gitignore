@@ -31,3 +31,4 @@ collector.env
 service-account*.json
 
 collector.log
+collector.pid

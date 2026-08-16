@@ -34,17 +34,19 @@ export default function PersonChart({ bjId, postNo, candidates }) {
   const [status, setStatus] = useState('idle')
   const [refreshTick, setRefreshTick] = useState(0)
 
+  // meta 도 매 주기 다시 읽는다. 한 번만 읽으면 "수집" 시각이 처음 값에 멈춰서,
+  // 수집이 실제로 끊겼는지 화면만 낡은 건지 구분할 수 없게 된다.
   useEffect(() => {
     if (!historyEnabled() || !bjId) return
     let alive = true
-    setStatus('loading')
+    if (refreshTick === 0) setStatus('loading')
     fetchMeta(bjId, postNo)
       .then((m) => alive && (setMeta(m), setStatus(m ? 'ready' : 'untracked')))
       .catch(() => alive && setStatus('error'))
     return () => {
       alive = false
     }
-  }, [bjId, postNo])
+  }, [bjId, postNo, refreshTick])
 
   // 수집기가 1분마다 쓰므로 화면도 1분마다 새로 읽는다.
   useEffect(() => {

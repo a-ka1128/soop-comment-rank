@@ -6,12 +6,10 @@ import PersonChart from './components/PersonChart'
 import { fetchAllComments, fetchPost, parsePostUrl, postUrl } from './lib/soop'
 import { buildGroups, detectCategories } from './lib/categories'
 import { UNGROUPED_ID, classify, rank, validateGrouping } from './lib/groups'
-import { SAMPLE_POST } from './lib/sample'
 import { useFlipReorder } from './hooks/useFlipReorder'
 import './App.css'
 
 const STORE_URL = 'soopcomment.lastUrl'
-const SAMPLE_URL = SAMPLE_POST.url
 const overrideKey = (bjId, postNo) => `soopcomment.overrides.${bjId}.${postNo}`
 
 const ALL_TAB = '__all__'
@@ -292,22 +290,11 @@ export default function App() {
           <input
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
-            placeholder="https://www.sooplive.com/station/ecvhao/post/203249055"
+            placeholder="https://www.sooplive.com/station/방송국ID/post/글번호"
             spellCheck={false}
           />
           <button type="submit" disabled={loading}>
             {loading ? '불러오는 중…' : '불러오기'}
-          </button>
-          <button
-            type="button"
-            className="ghost"
-            onClick={() => {
-              setUrlInput(SAMPLE_URL)
-              load(SAMPLE_URL)
-            }}
-            disabled={loading}
-          >
-            예시 글
           </button>
         </form>
 
