@@ -47,6 +47,14 @@ export function postUrl(bjId, postNo) {
   return `https://www.sooplive.com/station/${encodeURIComponent(bjId)}/post/${encodeURIComponent(postNo)}`
 }
 
+/**
+ * 그 댓글이 하이라이트된 채로 열리는 주소.
+ * SOOP 알림이 쓰는 앵커 형식이라 댓글 번호를 그대로 붙이면 된다.
+ */
+export function commentUrl(bjId, postNo, commentId) {
+  return `${postUrl(bjId, postNo)}#comment_noti${encodeURIComponent(commentId)}`
+}
+
 export function channelUrl(userId) {
   return `https://www.sooplive.com/station/${encodeURIComponent(userId)}`
 }

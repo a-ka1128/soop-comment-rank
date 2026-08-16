@@ -6,7 +6,20 @@ import { fetchMeta, fetchSeries, historyEnabled } from '../lib/history'
  * 않고 색약에서는 더 붙어 버린다. 색이 혼자 신원을 지는 자리라 여기만 따로 쓴다.
  * 다섯 색 모두 패널 표면에서 4.2:1 이상이고 색약 분리 검증을 통과한다.
  */
-const SERIES = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181']
+const HUES = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181']
+
+/**
+ * 10개 슬롯. 색은 다섯 가지뿐이고 나머지 절반은 점선으로 가른다.
+ *
+ * 색을 열 개로 늘리지 않는 이유: 검증을 통과하는 계열 색은 여덟이 상한이고,
+ * 아홉 번째부터는 만들어 봐야 색약에서 기존 색과 구분되지 않는다. 색 하나에
+ * 실선·점선을 얹는 편이 정직하다. 여기에 선 끝 이름표가 늘 붙으므로
+ * 실제 신원은 색도 선모양도 아닌 글자가 진다.
+ */
+const SERIES = HUES.flatMap((color) => [
+  { color, dash: null },
+  { color, dash: '7 5' },
+])
 const MAX_SERIES = SERIES.length
 
 const RANGES = [
@@ -17,8 +30,8 @@ const RANGES = [
 ]
 
 const W = 960
-const H = 240
-const PAD = { top: 18, right: 90, bottom: 28, left: 52 }
+const H = 460
+const PAD = { top: 20, right: 104, bottom: 30, left: 56 }
 const PLOT_W = W - PAD.left - PAD.right
 const PLOT_H = H - PAD.top - PAD.bottom
 
@@ -87,9 +100,11 @@ export default function PersonChart({ bjId, postNo, candidates }) {
         const all = series[c.id] ?? []
         const points = span === Infinity ? all : all.filter((p) => now - p.t.getTime() <= span)
         const first = points[0]?.likes ?? 0
+        const style = SERIES[i % MAX_SERIES]
         return {
           comment: c,
-          color: SERIES[i % MAX_SERIES],
+          color: style.color,
+          dash: style.dash,
           points: points.map((p) => ({ t: p.t, v: relative ? p.likes - first : p.likes })),
         }
       })
@@ -115,12 +130,41 @@ export default function PersonChart({ bjId, postNo, candidates }) {
     }
   }, [lines])
 
+  /**
+   * 선 끝 이름표 위치. 10명이면 끝점이 겹치는 일이 흔해서, 원래 자리에서 가까운
+   * 순서대로 최소 간격만큼 밀어낸다. 겹쳐서 못 읽는 이름표는 없느니만 못하다.
+   */
+  const labels = useMemo(() => {
+    if (!scale) return []
+    const GAP = 14
+    const placed = lines
+      .map((line) => {
+        const last = line.points[line.points.length - 1]
+        return {
+          id: line.comment.id,
+          nick: line.comment.nick.length > 9 ? `${line.comment.nick.slice(0, 8)}…` : line.comment.nick,
+          color: line.color,
+          x: scale.x(last.t.getTime()) + 7,
+          y: scale.y(last.v) + 4,
+        }
+      })
+      .sort((a, b) => a.y - b.y)
+
+    for (let i = 1; i < placed.length; i += 1) {
+      if (placed[i].y - placed[i - 1].y < GAP) placed[i].y = placed[i - 1].y + GAP
+    }
+    // 아래로만 밀면 마지막이 그림 밖으로 나간다. 넘친 만큼 전체를 위로 되민다.
+    const overflow = placed.length > 0 ? placed[placed.length - 1].y - (H - PAD.bottom) : 0
+    if (overflow > 0) for (const l of placed) l.y -= overflow
+    return placed
+  }, [lines, scale])
+
   const shortlist = useMemo(() => {
     const q = query.trim().toLowerCase()
     const pool = q
       ? candidates.filter((c) => c.nick.toLowerCase().includes(q) || c.userId.toLowerCase().includes(q))
-      : candidates.slice(0, 12)
-    return pool.slice(0, 12)
+      : candidates.slice(0, 24)
+    return pool.slice(0, 24)
   }, [candidates, query])
 
   function toggle(comment) {
@@ -206,15 +250,16 @@ export default function PersonChart({ bjId, postNo, candidates }) {
             <div className="chips">
               {shortlist.map((c) => {
                 const on = picked.some((p) => p.id === c.id)
-                const color = on ? SERIES[picked.findIndex((p) => p.id === c.id) % MAX_SERIES] : null
+                const style = on ? SERIES[picked.findIndex((p) => p.id === c.id) % MAX_SERIES] : null
                 return (
                   <button
                     key={c.id}
                     type="button"
                     className={`chip${on ? ' on' : ''}`}
-                    style={color ? { '--chip': color } : undefined}
+                    style={style ? { '--chip': style.color } : undefined}
                     onClick={() => toggle(c)}
                   >
+                    {style?.dash && <span className="dash-mark" aria-hidden="true" />}
                     {c.rank}. {c.nick}
                   </button>
                 )
@@ -235,7 +280,7 @@ export default function PersonChart({ bjId, postNo, candidates }) {
                   role="img"
                   aria-label={`선택한 ${lines.length}명의 좋아요 추이 꺾은선 그래프`}
                 >
-                  {[0, 0.25, 0.5, 0.75, 1].map((f) => {
+                  {[0, 0.2, 0.4, 0.6, 0.8, 1].map((f) => {
                     const v = scale.vMax - f * (scale.vMax - scale.vMin)
                     return (
                       <g key={f}>
@@ -253,7 +298,7 @@ export default function PersonChart({ bjId, postNo, candidates }) {
                     )
                   })}
 
-                  {[0, 0.5, 1].map((f) => {
+                  {[0, 0.25, 0.5, 0.75, 1].map((f) => {
                     const t = scale.t0 + f * (scale.t1 - scale.t0)
                     return (
                       <text
@@ -272,22 +317,29 @@ export default function PersonChart({ bjId, postNo, candidates }) {
                     const d = line.points
                       .map((p, i) => `${i === 0 ? 'M' : 'L'}${scale.x(p.t.getTime())},${scale.y(p.v)}`)
                       .join(' ')
-                    const last = line.points[line.points.length - 1]
                     return (
-                      <g key={line.comment.id}>
-                        <path d={d} className="line" style={{ stroke: line.color }} />
-                        {/* 선마다 끝에 이름을 붙인다. 색만으로 누구인지 알게 두지 않는다. */}
-                        <text
-                          x={scale.x(last.t.getTime()) + 6}
-                          y={scale.y(last.v) + 4}
-                          className="line-label"
-                          style={{ fill: line.color }}
-                        >
-                          {line.comment.nick}
-                        </text>
-                      </g>
+                      <path
+                        key={line.comment.id}
+                        d={d}
+                        className="line"
+                        style={{ stroke: line.color }}
+                        strokeDasharray={line.dash ?? undefined}
+                      />
                     )
                   })}
+
+                  {/* 선마다 끝에 이름을 붙인다. 색도 선모양도 아닌 글자가 신원을 진다. */}
+                  {labels.map((l) => (
+                    <text
+                      key={l.id}
+                      x={l.x}
+                      y={l.y}
+                      className="line-label"
+                      style={{ fill: l.color }}
+                    >
+                      {l.nick}
+                    </text>
+                  ))}
                 </svg>
               </div>
 

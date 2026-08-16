@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { channelUrl } from '../lib/soop'
+import { channelUrl, commentUrl } from '../lib/soop'
 import { UNGROUPED_ID } from '../lib/groups'
 
 /** 직전 갱신 대비 순위 변동. 스냅샷이 없으면(첫 로드) 아무것도 보이지 않는다. */
@@ -18,6 +18,8 @@ function RankDelta({ rank, prevRank, hasSnapshot }) {
 
 export default function CommentCard({
   comment,
+  bjId,
+  postNo,
   color,
   showGroupName,
   groupName,
@@ -84,6 +86,14 @@ export default function CommentCard({
           )}
 
           <footer className="card-foot">
+            <a
+              href={commentUrl(bjId, postNo, comment.id)}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="channel"
+            >
+              댓글 원본 ↗
+            </a>
             <a
               href={channelUrl(comment.userId)}
               target="_blank"

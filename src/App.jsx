@@ -434,6 +434,8 @@ export default function App() {
               <CommentCard
                 key={comment.id}
                 comment={comment}
+                bjId={data.bjId}
+                postNo={data.postNo}
                 prevRank={prevRanks?.get(activeSection.id)?.get(comment.id)}
                 hasSnapshot={!!prevRanks}
                 color={
