@@ -420,9 +420,19 @@ export default function App() {
               const prev = visibleItems[index - 1]
               const crossesCut =
                 CUT_RANK && prev && prev.rank <= CUT_RANK && comment.rank > CUT_RANK
+              // 컷 바로 위아래의 좋아요 차이. 지금 몇 개 차이로 갈리는지가
+              // 이 선을 보는 사람이 실제로 알고 싶은 숫자다.
+              const cutGap = crossesCut ? prev.likes - comment.likes : 0
               return (
                 <div key={comment.id}>
-                  {crossesCut && <div className="cutline">{CUT_RANK}위 컷</div>}
+                  {crossesCut && (
+                    <div className="cutline">
+                      <span className="cutline-label">{CUT_RANK}위 컷</span>
+                      <span className="cutline-gap">
+                        {CUT_RANK}위와 {CUT_RANK + 1}위 차이 ♥{cutGap.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
                   <CommentCard
                     comment={comment}
                     bjId={data.bjId}

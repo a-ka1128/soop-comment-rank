@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { formatNicknames, takeTop } from '../lib/groups'
+import { formatNicknames, takeTop, toGridCsv } from '../lib/groups'
 
 const DEFAULT_N = 33
 
@@ -122,6 +122,14 @@ export default function NicknameExport({ sections }) {
           <span className="spacer" />
           <button type="button" className="ghost" onClick={(e) => copy('전체', combined, e)}>
             {buttonLabel('전체', '전체 복사')}
+          </button>
+          <button
+            type="button"
+            className="ghost"
+            onClick={(e) => copy('csv', toGridCsv(results.flatMap((r) => r.picked)), e)}
+            title="세로로 채운 3열 40행. 표에 붙이면 위에서 아래로 순위가 읽힙니다."
+          >
+            {buttonLabel('csv', 'CSV 3×40 복사')}
           </button>
         </div>
       </div>

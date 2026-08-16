@@ -121,3 +121,28 @@ export function formatNicknames(items, { format = 'lines', withRank = false, wit
   return items.map(line).join(format === 'comma' ? ', ' : '\n')
 }
 
+// Excel은 따옴표를 벗겨낸 뒤 =, +, -, @로 시작하는 칸을 수식으로 해석한다.
+// 닉네임은 남이 쓴 글이라 앞에 '를 붙여 텍스트로 못박는다.
+const FORMULA_LEAD = /^[=+\-@\t\r]/
+
+function csvCell(value) {
+  const raw = String(value ?? '')
+  const safe = FORMULA_LEAD.test(raw) ? `'${raw}` : raw
+  return /[",\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe
+}
+
+/**
+ * 닉네임을 세로로 채운 격자 CSV. 열 3 · 행 40이면 1~40이 첫 열, 41~80이 둘째 열이 된다.
+ * 표에 붙였을 때 위에서 아래로 순위가 읽히는 배치다.
+ */
+export function toGridCsv(items, { columns = 3, rows = 40 } = {}) {
+  const names = items.slice(0, columns * rows).map((c) => c.nick)
+  const lines = []
+  for (let r = 0; r < rows; r += 1) {
+    const line = []
+    for (let c = 0; c < columns; c += 1) line.push(csvCell(names[c * rows + r] ?? ''))
+    lines.push(line.join(','))
+  }
+  // Excel이 UTF-8로 읽도록 BOM을 붙인다.
+  return '\ufeff' + lines.join('\r\n')
+}
