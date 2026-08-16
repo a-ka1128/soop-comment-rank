@@ -813,28 +813,68 @@ button:disabled {
 }
 
 /*
- * 컷 라인. 통과선이라 목록을 훑다가 놓치면 안 되므로, 얇은 점선 대신
- * 색을 깐 띠로 세워 두고 위아래로 실선을 덧댄다.
+ * 컷 라인. 목록을 훑다가 놓치면 안 되는 선이라 굵은 점선 두 줄로 세우고,
+ * 발광과 함께 점선이 천천히 흐르게 해서 정지 화면에서도 눈이 걸리게 한다.
+ * 띠(면)로 채워 봤더니 카드처럼 보여서 오히려 목록에 섞였다.
  */
 .cutline {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  margin: 16px 0;
-  padding: 9px 14px;
-  border-top: 2px solid var(--danger);
-  border-bottom: 2px solid var(--danger);
-  background: color-mix(in srgb, var(--danger) 20%, transparent);
+  margin: 20px 0;
+  padding: 12px 2px;
+}
+
+.cutline::before,
+.cutline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--danger) 0 13px,
+    transparent 13px 24px
+  );
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--danger) 75%, transparent));
+  animation: cut-march 1.8s linear infinite;
+}
+
+.cutline::before {
+  top: 0;
+}
+
+.cutline::after {
+  bottom: 0;
+}
+
+@keyframes cut-march {
+  to {
+    background-position: 24px 0;
+  }
+}
+
+/* 흐르는 효과는 어디까지나 장식이다. 싫다고 한 사람에게는 멈춰 있어야 한다. */
+@media (prefers-reduced-motion: reduce) {
+  .cutline::before,
+  .cutline::after {
+    animation: none;
+  }
 }
 
 .cutline-label {
+  padding: 4px 11px;
+  border-radius: var(--radius);
+  background: var(--danger);
+  color: var(--bg);
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--text);
+  letter-spacing: 0.12em;
 }
 
 .cutline-gap {
