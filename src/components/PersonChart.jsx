@@ -2,24 +2,24 @@ import { useEffect, useMemo, useState } from 'react'
 import { fetchMeta, fetchSeries, historyEnabled } from '../lib/history'
 
 /**
- * 검증을 통과한 계열 색. 화면의 올리브·갈색 팔레트는 한 계열이라 선끼리 구분되지
- * 않고 색약에서는 더 붙어 버린다. 색이 혼자 신원을 지는 자리라 여기만 따로 쓴다.
- * 다섯 색 모두 패널 표면에서 4.2:1 이상이고 색약 분리 검증을 통과한다.
- */
-const HUES = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181']
-
-/**
- * 10개 슬롯. 색은 다섯 가지뿐이고 나머지 절반은 점선으로 가른다.
+ * 열 명을 무지개 순서로 그린다. 색약 구분은 요청에 따라 기준에서 뺐다.
  *
- * 색을 열 개로 늘리지 않는 이유: 검증을 통과하는 계열 색은 여덟이 상한이고,
- * 아홉 번째부터는 만들어 봐야 색약에서 기존 색과 구분되지 않는다. 색 하나에
- * 실선·점선을 얹는 편이 정직하다. 여기에 선 끝 이름표가 늘 붙으므로
- * 실제 신원은 색도 선모양도 아닌 글자가 진다.
+ * 색상환을 열 등분해 순서대로 놓았고, 패널 표면 대비는 전부 5.08:1 이상이다.
+ * 가장 가까운 조합은 파랑↔남색(ΔE 9.8)인데, 무지개에 둘 다 넣기로 한 이상
+ * 피할 수 없다. 선 끝마다 이름표가 붙어 있어 색을 헷갈려도 누군지는 안다.
  */
-const SERIES = HUES.flatMap((color) => [
-  { color, dash: null },
-  { color, dash: '7 5' },
-])
+const SERIES = [
+  '#ff4d4d', // 빨
+  '#ff9124', // 주
+  '#ffd21f', // 노
+  '#a8e831', // 연두
+  '#2fd96b', // 초
+  '#25d7d7', // 청
+  '#3f9dff', // 파
+  '#8a80ff', // 남
+  '#c96bff', // 보
+  '#ff4fb0', // 분홍
+]
 const MAX_SERIES = SERIES.length
 
 const RANGES = [
@@ -100,11 +100,9 @@ export default function PersonChart({ bjId, postNo, candidates }) {
         const all = series[c.id] ?? []
         const points = span === Infinity ? all : all.filter((p) => now - p.t.getTime() <= span)
         const first = points[0]?.likes ?? 0
-        const style = SERIES[i % MAX_SERIES]
         return {
           comment: c,
-          color: style.color,
-          dash: style.dash,
+          color: SERIES[i % MAX_SERIES],
           points: points.map((p) => ({ t: p.t, v: relative ? p.likes - first : p.likes })),
         }
       })
@@ -250,16 +248,15 @@ export default function PersonChart({ bjId, postNo, candidates }) {
             <div className="chips">
               {shortlist.map((c) => {
                 const on = picked.some((p) => p.id === c.id)
-                const style = on ? SERIES[picked.findIndex((p) => p.id === c.id) % MAX_SERIES] : null
+                const color = on ? SERIES[picked.findIndex((p) => p.id === c.id) % MAX_SERIES] : null
                 return (
                   <button
                     key={c.id}
                     type="button"
                     className={`chip${on ? ' on' : ''}`}
-                    style={style ? { '--chip': style.color } : undefined}
+                    style={color ? { '--chip': color } : undefined}
                     onClick={() => toggle(c)}
                   >
-                    {style?.dash && <span className="dash-mark" aria-hidden="true" />}
                     {c.rank}. {c.nick}
                   </button>
                 )
@@ -323,7 +320,6 @@ export default function PersonChart({ bjId, postNo, candidates }) {
                         d={d}
                         className="line"
                         style={{ stroke: line.color }}
-                        strokeDasharray={line.dash ?? undefined}
                       />
                     )
                   })}

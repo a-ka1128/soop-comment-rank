@@ -276,8 +276,11 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <h1>SOOP 댓글 좋아요 랭킹</h1>
-          <p>게시글 댓글을 분류별로 나누고 좋아요 순위를 매겨 상위 N명을 뽑아냅니다.</p>
+          <img className="brand-logo" src="./logo.png" alt="" width="48" height="48" />
+          <div>
+            <h1>아르마3 랜덤고지전3 좋아요 랭킹</h1>
+            <p>게시글 댓글을 좋아요 순으로 세우고, 개인별 증가량을 기록합니다.</p>
+          </div>
         </div>
 
         <form

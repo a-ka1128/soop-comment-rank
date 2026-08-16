@@ -799,16 +799,15 @@ button:disabled {
   font-weight: 700;
 }
 
-/* 점선 계열임을 칩에서도 알 수 있게 하는 표시. */
-.dash-mark {
-  display: inline-block;
-  width: 12px;
-  height: 2px;
-  margin-right: 5px;
-  vertical-align: middle;
-  background: repeating-linear-gradient(
-    to right,
-    currentColor 0 4px,
-    transparent 4px 7px
-  );
+
+.topbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  flex: none;
 }
