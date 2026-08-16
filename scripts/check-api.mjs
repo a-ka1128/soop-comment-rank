@@ -10,11 +10,11 @@
  * 실패하면 exit 1. 워크플로가 그걸 보고 이슈를 연다.
  */
 import { API_BASE, fetchAllComments, fetchPost } from '../src/lib/soop.js'
-import { SAMPLE_POST } from '../src/lib/sample.js'
+import { TARGET_POST } from '../src/lib/target.js'
 import { detectCategories, buildGroups } from '../src/lib/categories.js'
 import { classify, UNGROUPED_ID } from '../src/lib/groups.js'
 
-const { bjId, postNo, url } = SAMPLE_POST
+const { bjId, postNo, url } = TARGET_POST
 const failures = []
 const notes = []
 
@@ -48,7 +48,7 @@ try {
   post = await fetchPost(bjId, postNo)
   check('게시글 본문', post.html.length > 0, `${post.title} (본문 ${post.html.length}자)`)
 } catch (err) {
-  check('게시글 본문', false, `${err.kind ?? 'error'}: ${err.message} — 표본 글(${url})이 삭제됐다면 src/lib/sample.js를 고칠 것`)
+  check('게시글 본문', false, `${err.kind ?? 'error'}: ${err.message} — 대상 글(${url})이 삭제됐다면 src/lib/target.js를 고칠 것`)
 }
 
 // 3. 댓글 전 페이지. 스키마 검증은 fetchAllComments 안에서 던진다.
@@ -73,10 +73,12 @@ if (post) {
   }
 }
 
-// 4. 분류 감지. 이게 깨지면 API가 아니라 본문 HTML 구조가 바뀐 것이다.
+// 4. 분류 감지. 분류가 있는 글인지 아닌지는 그 글이 정하는 것이라 없다고 실패는 아니다.
+//    (대상 글이 아르마3처럼 번호 목록이 없으면 여기는 그냥 "없음"이 정상이다.)
+//    분류가 있는 글일 때만 적중률까지 확인한다. 그게 깨지면 본문 HTML 구조가 바뀐 것이다.
 if (post && comments.length > 0) {
   const categories = detectCategories(post.html)
-  check('분류 감지', categories.length >= 2, categories.join(' / ') || '(못 찾음)')
+  notes.push(`  --   분류 감지 — ${categories.join(' / ') || '없음 (이 글에는 번호 목록이 없음)'}`)
 
   if (categories.length >= 2) {
     const buckets = classify(comments, buildGroups(categories))

@@ -14,13 +14,16 @@ npm install
 npm run dev
 ```
 
-http://localhost:5173 에서 게시글 주소를 붙여넣고 **불러오기**를 누릅니다.
+http://localhost:5173 을 열면 [`src/lib/target.js`](src/lib/target.js)에 적힌 게시글을
+바로 불러옵니다. 다루는 글이 하나로 정해져 있어서 주소 입력칸은 없습니다.
 
-```
-https://www.sooplive.com/station/ecvhao/post/203249055
+```js
+export const TARGET_POST = { bjId: 'ecvhao', postNo: '204516133', url: '...' }
+export const CUT_RANK = 119   // 이 순위 아래에 컷 라인이 그어진다. null 이면 안 그림
 ```
 
-`ecvhao/203249055` 형태로 방송국 ID와 글 번호만 넣어도 됩니다.
+다른 글로 바꾸려면 이 파일과 [`collector/tracked.json`](collector/tracked.json)이
+같은 글을 가리키게 하면 됩니다.
 
 | 명령 | 설명 |
 |---|---|
@@ -262,7 +265,7 @@ scripts/check-api.mjs            SOOP API가 아직 기대대로인지 확인 (�
 src/
   App.jsx                        화면 전체 상태 (불러오기, 실시간 갱신, 탭, 검색)
 deploy/loop-collector.sh         sudo·cron 없이 1분마다 도는 상주 루프
-  lib/sample.js                  예시 글 (앱과 헬스체크가 공유)
+  lib/target.js                  다루는 게시글과 컷 순위 (앱·헬스체크가 공유)
   lib/soop.js                    URL 파싱 · API 순회 · 실패 구분 · 엔티티 디코딩
   lib/categories.js              본문에서 분류 감지 + 검색어 생성
   lib/groups.js                  분류 · 검증 · 순위 · 상위 N명

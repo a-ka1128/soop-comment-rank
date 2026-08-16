@@ -3,13 +3,13 @@ import GroupPanel from './components/GroupPanel'
 import NicknameExport from './components/NicknameExport'
 import CommentCard from './components/CommentCard'
 import PersonChart from './components/PersonChart'
-import { fetchAllComments, fetchPost, parsePostUrl, postUrl } from './lib/soop'
+import { fetchAllComments, fetchPost, postUrl } from './lib/soop'
 import { buildGroups, detectCategories } from './lib/categories'
 import { UNGROUPED_ID, classify, rank, validateGrouping } from './lib/groups'
+import { CUT_RANK, TARGET_POST } from './lib/target'
 import { useFlipReorder } from './hooks/useFlipReorder'
 import './App.css'
 
-const STORE_URL = 'soopcomment.lastUrl'
 const overrideKey = (bjId, postNo) => `soopcomment.overrides.${bjId}.${postNo}`
 
 const ALL_TAB = '__all__'
@@ -19,7 +19,6 @@ const NEUTRAL_COLOR = '#a39a7a'
 // 실측: 이런 신청 글은 45초 사이 상위 30개 중 32개의 좋아요가 움직인다.
 // 10초면 순위 변동이 눈에 보이면서 요청도 과하지 않다.
 const REFRESH_SEC = 10
-
 
 function loadStored(key, fallback) {
   try {
@@ -31,8 +30,6 @@ function loadStored(key, fallback) {
 }
 
 export default function App() {
-  const [urlInput, setUrlInput] = useState(() => localStorage.getItem(STORE_URL) || '')
-
   const [data, setData] = useState(null)
   const [overrides, setOverrides] = useState({})
   const [loading, setLoading] = useState(false)
@@ -52,6 +49,7 @@ export default function App() {
 
   const abortRef = useRef(null)
   const refreshRef = useRef(null)
+  const loadRef = useRef(null)
   const renderRef = useRef({ allSection: null, sections: [] })
   const listRef = useRef(null)
   const animateNextRef = useRef(false)
@@ -61,6 +59,12 @@ export default function App() {
     localStorage.setItem(overrideKey(data.bjId, data.postNo), JSON.stringify(overrides))
   }, [overrides, data])
 
+  // 다룰 글이 하나로 정해져 있으므로 열자마자 불러온다.
+  useEffect(() => {
+    loadRef.current?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   /** 본문에서 뽑은 후보 그룹과, 그게 실제 댓글에 들어맞는지에 대한 판정. */
   const detection = useMemo(() => {
     if (!data) return null
@@ -68,15 +72,12 @@ export default function App() {
     return { candidates, check: validateGrouping(data.comments, candidates) }
   }, [data])
 
-  const groups = useMemo(
-    () => (detection?.check.ok ? detection.candidates : []),
-    [detection]
-  )
+  const groups = useMemo(() => (detection?.check.ok ? detection.candidates : []), [detection])
   const grouped = groups.length > 0
 
   const buckets = useMemo(
     () => (data ? classify(data.comments, groups, overrides) : null),
-    [data, groups, overrides]
+    [data, groups, overrides],
   )
 
   /** 그룹 탭들. 그룹이 하나도 없으면 빈 배열이고 전체 탭만 남는다. */
@@ -132,7 +133,7 @@ export default function App() {
   }, [groups])
 
   const activeSection =
-    activeTab === ALL_TAB ? allSection : sections.find((s) => s.id === activeTab) ?? allSection
+    activeTab === ALL_TAB ? allSection : (sections.find((s) => s.id === activeTab) ?? allSection)
 
   // 갱신 직전 순위를 찍어 두기 위해, 화면에 그려진 최신 결과를 항상 들고 있는다.
   useEffect(() => {
@@ -163,7 +164,7 @@ export default function App() {
       (c) =>
         c.nick.toLowerCase().includes(q) ||
         c.userId.toLowerCase().includes(q) ||
-        c.text.toLowerCase().includes(q)
+        c.text.toLowerCase().includes(q),
     )
   }, [activeSection, query])
 
@@ -177,14 +178,8 @@ export default function App() {
       ? [allSection]
       : []
 
-  async function load(rawInput) {
-    const parsed = parsePostUrl(rawInput)
-    if (!parsed) {
-      setError(
-        '게시글 주소를 인식하지 못했습니다. 예: https://www.sooplive.com/station/ecvhao/post/203249055'
-      )
-      return
-    }
+  async function load() {
+    const parsed = TARGET_POST
 
     abortRef.current?.abort()
     const controller = new AbortController()
@@ -196,14 +191,16 @@ export default function App() {
     setProgress({ done: 0, total: 1 })
     setPrevRanks(null)
     setRefreshedAt(null)
-    localStorage.setItem(STORE_URL, rawInput)
 
     try {
       // 본문은 분류를 찾는 데만 쓴다. 애청자 공개 게시판처럼 본문만 막힌 글도 있는데
       // (댓글은 누구나 읽힌다) 그때 전체를 실패시키면 정작 필요한 걸 못 보게 된다.
       let post = { title: '', html: '', error: '' }
       try {
-        post = { ...(await fetchPost(parsed.bjId, parsed.postNo, { signal })), error: '' }
+        post = {
+          ...(await fetchPost(parsed.bjId, parsed.postNo, { signal })),
+          error: '',
+        }
       } catch (err) {
         if (err.name === 'AbortError' || err.kind === 'notfound') throw err
         post = { title: '', html: '', error: err.message }
@@ -249,7 +246,9 @@ export default function App() {
   async function refreshComments() {
     if (!data || loading) return
     try {
-      const fresh = await fetchAllComments(data.bjId, data.postNo, { postConfirmed: !data.postError })
+      const fresh = await fetchAllComments(data.bjId, data.postNo, {
+        postConfirmed: !data.postError,
+      })
       animateNextRef.current = true
       setPrevRanks(captureRanks())
       setData((prev) => (prev ? { ...prev, ...fresh } : prev))
@@ -261,6 +260,7 @@ export default function App() {
   }
 
   refreshRef.current = refreshComments
+  loadRef.current = load
 
   function assign(commentId, groupId) {
     setOverrides((prev) => {
@@ -270,7 +270,6 @@ export default function App() {
       return next
     })
   }
-
 
   return (
     <div className="app">
@@ -283,29 +282,13 @@ export default function App() {
           </div>
         </div>
 
-        <form
-          className="loader"
-          onSubmit={(e) => {
-            e.preventDefault()
-            load(urlInput)
-          }}
-        >
-          <input
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
-            placeholder="https://www.sooplive.com/station/방송국ID/post/글번호"
-            spellCheck={false}
-          />
-          <button type="submit" disabled={loading}>
-            {loading ? '불러오는 중…' : '불러오기'}
-          </button>
-        </form>
-
         {progress && (
           <div className="progress">
             <div
               className="progress-bar"
-              style={{ width: `${(progress.done / Math.max(progress.total, 1)) * 100}%` }}
+              style={{
+                width: `${(progress.done / Math.max(progress.total, 1)) * 100}%`,
+              }}
             />
             <span>
               {progress.done} / {progress.total} 페이지
@@ -433,33 +416,38 @@ export default function App() {
           <main className="list" ref={listRef}>
             {visibleItems.length === 0 && <p className="empty">표시할 댓글이 없습니다.</p>}
 
-            {visibleItems.map((comment) => (
-              <CommentCard
-                key={comment.id}
-                comment={comment}
-                bjId={data.bjId}
-                postNo={data.postNo}
-                prevRank={prevRanks?.get(activeSection.id)?.get(comment.id)}
-                hasSnapshot={!!prevRanks}
-                color={
-                  activeTab === ALL_TAB
-                    ? groupColorById[comment.groupId] ?? NEUTRAL_COLOR
-                    : activeSection.color
-                }
-                showGroupName={grouped && activeTab === ALL_TAB}
-                groupName={groupNameById[comment.groupId]}
-                groups={groups}
-                onAssign={assign}
-              />
-            ))}
+            {visibleItems.map((comment, index) => {
+              const prev = visibleItems[index - 1]
+              const crossesCut =
+                CUT_RANK && prev && prev.rank <= CUT_RANK && comment.rank > CUT_RANK
+              return (
+                <div key={comment.id}>
+                  {crossesCut && <div className="cutline">{CUT_RANK}위 컷</div>}
+                  <CommentCard
+                    comment={comment}
+                    bjId={data.bjId}
+                    postNo={data.postNo}
+                    prevRank={prevRanks?.get(activeSection.id)?.get(comment.id)}
+                    hasSnapshot={!!prevRanks}
+                    color={
+                      activeTab === ALL_TAB
+                        ? (groupColorById[comment.groupId] ?? NEUTRAL_COLOR)
+                        : activeSection.color
+                    }
+                    showGroupName={grouped && activeTab === ALL_TAB}
+                    groupName={groupNameById[comment.groupId]}
+                    groups={groups}
+                    onAssign={assign}
+                  />
+                </div>
+              )
+            })}
           </main>
         </>
       )}
 
-      {!data && !loading && (
-        <p className="placeholder">
-          SOOP 방송국 게시글 주소를 붙여넣고 <strong>불러오기</strong>를 누르세요.
-        </p>
+      {!data && !loading && !error && (
+        <p className="placeholder">댓글을 불러오는 중입니다…</p>
       )}
     </div>
   )
