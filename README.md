@@ -113,7 +113,7 @@ API 주소 자체가 바뀌었을 땐 [`src/lib/soop.js`](src/lib/soop.js)의 `A
 | 구독 이모티콘 작가 구인 | 5개 기재 항목 | 0% | 버림 |
 | 스모오라 합격자 발표 | 4명 명단 | 0% | 버림 |
 
-버려지면 이유가 화면에 그대로 나옵니다.
+버려지면 분류 패널 자체가 뜨지 않고, 탭 없이 좋아요 순 한 줄로만 나옵니다.
 
 ### 분류 세부 규칙
 
@@ -137,19 +137,20 @@ API 주소 자체가 바뀌었을 땐 [`src/lib/soop.js`](src/lib/soop.js)의 `A
 N번째와 N+1번째의 좋아요가 같으면 **동점 경고**가 뜹니다. 거기서 자르는 건 자의적이므로
 직접 판단해야 합니다.
 
-CSV 내보내기는 모든 분류를 순위와 함께 내려받습니다(Excel용 BOM 포함).
 
 ## 구조
 
 ```
 scripts/check-api.mjs            SOOP API가 아직 기대대로인지 확인 (매일 자동 실행)
 src/
-  App.jsx                        화면 전체 상태 (불러오기, 탭, 검색, CSV)
+  App.jsx                        화면 전체 상태 (불러오기, 실시간 갱신, 탭, 검색)
   lib/sample.js                  예시 글 (앱과 헬스체크가 공유)
   lib/soop.js                    URL 파싱 · API 순회 · 실패 구분 · 엔티티 디코딩
   lib/categories.js              본문에서 분류 감지 + 검색어 생성
-  lib/groups.js                  분류 · 검증 · 순위 · 상위 N명 · CSV
-  components/GroupPanel.jsx      감지된 분류 표시 (또는 버린 이유)
+  lib/groups.js                  분류 · 검증 · 순위 · 상위 N명
+  components/GroupPanel.jsx      감지된 분류 표시 (못 찾으면 아예 안 뜸)
+  components/GainChart.jsx       좋아요 증가량 막대그래프
+  hooks/useFlipReorder.js        순위 변동 시 줄이 미끄러지는 효과
   components/NicknameExport.jsx  상위 N명 닉네임 추출
   components/CommentCard.jsx     댓글 카드 + 수동 분류 지정
 ```

@@ -5,7 +5,7 @@ import CommentCard from './components/CommentCard'
 import GainChart from './components/GainChart'
 import { fetchAllComments, fetchPost, parsePostUrl, postUrl } from './lib/soop'
 import { buildGroups, detectCategories } from './lib/categories'
-import { UNGROUPED_ID, classify, rank, toCsv, validateGrouping } from './lib/groups'
+import { UNGROUPED_ID, classify, rank, validateGrouping } from './lib/groups'
 import { SAMPLE_POST } from './lib/sample'
 import { useFlipReorder } from './hooks/useFlipReorder'
 import './App.css'
@@ -44,14 +44,14 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState(ALL_TAB)
   const [query, setQuery] = useState('')
-  const [exportOpen, setExportOpen] = useState(true)
+  const [exportOpen, setExportOpen] = useState(false)
 
   const [chartOpen, setChartOpen] = useState(false)
   // 좋아요 증가량을 그리려면 과거 값이 있어야 하는데 API는 시계열을 주지 않는다.
   // 창을 열어 둔 동안 직접 쌓는다: 관측 시작 시점과 직전 갱신 시점 두 개.
   const [likesHistory, setLikesHistory] = useState(null)
 
-  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [autoRefresh, setAutoRefresh] = useState(true)
   const [refreshedAt, setRefreshedAt] = useState(null)
   // 직전 갱신 시점의 순위. 분류별로 따로 담아야 탭을 옮겨도 맞는 변동이 보인다.
   const [prevRanks, setPrevRanks] = useState(null)
@@ -281,16 +281,6 @@ export default function App() {
     })
   }
 
-  function exportCsv() {
-    const source = grouped ? sections : [allSection]
-    const csv = toCsv(source.filter((s) => s && s.items.length > 0).map((s) => ({ ...s, group: s.name })))
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `soop-${data.bjId}-${data.postNo}.csv`
-    link.click()
-    URL.revokeObjectURL(link.href)
-  }
 
   return (
     <div className="app">
@@ -390,9 +380,6 @@ export default function App() {
             {refreshedAt && (
               <span className="muted">{refreshedAt.toTimeString().slice(0, 8)} 갱신</span>
             )}
-            <button type="button" className="ghost" onClick={exportCsv}>
-              CSV 내보내기
-            </button>
             {Object.keys(overrides).length > 0 && (
               <button type="button" className="ghost" onClick={() => setOverrides({})}>
                 수동 지정 {Object.keys(overrides).length}건 초기화
@@ -422,13 +409,7 @@ export default function App() {
 
           {exportOpen && exportSections.length > 0 && <NicknameExport sections={exportSections} />}
 
-          <GroupPanel
-            groups={groups}
-            counts={counts}
-            detection={detection}
-            postError={data.postError}
-            commentCount={data.comments.length}
-          />
+          {grouped && <GroupPanel groups={groups} counts={counts} />}
 
           <nav className="tabs">
             {grouped && (

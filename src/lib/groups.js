@@ -121,32 +121,3 @@ export function formatNicknames(items, { format = 'lines', withRank = false, wit
   return items.map(line).join(format === 'comma' ? ', ' : '\n')
 }
 
-// Excel은 따옴표를 벗겨낸 뒤 =, +, -, @로 시작하는 칸을 수식으로 해석한다.
-// 닉네임과 댓글은 남이 쓴 글이고 "- 안녕하세요" 같은 건 흔하므로 앞에 '를 붙여 텍스트로 못박는다.
-const FORMULA_LEAD = /^[=+\-@\t\r]/
-
-export function toCsv(sections) {
-  const esc = (v) => {
-    const raw = String(v ?? '')
-    const safe = FORMULA_LEAD.test(raw) ? `'${raw}` : raw
-    return `"${safe.replace(/"/g, '""')}"`
-  }
-  const rows = [['그룹', '순위', '닉네임', '아이디', '좋아요', '작성일', '내용'].join(',')]
-  for (const { group, items } of sections) {
-    for (const item of items) {
-      rows.push(
-        [
-          esc(group),
-          item.rank,
-          esc(item.nick),
-          esc(item.userId),
-          Number(item.likes) || 0,
-          esc(item.date),
-          esc(item.text.replace(/\r?\n/g, ' ')),
-        ].join(',')
-      )
-    }
-  }
-  // Excel이 UTF-8로 열도록 BOM을 붙인다.
-  return '﻿' + rows.join('\r\n')
-}
