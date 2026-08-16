@@ -23,6 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
-# 수집기 자격증명 — 절대 커밋하지 않는다
+# 로컬 설정과 자격증명 — 절대 커밋하지 않는다
+.env
+.env.local
+.env.*.local
 collector.env
 service-account*.json
