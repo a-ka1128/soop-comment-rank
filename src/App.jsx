@@ -14,7 +14,9 @@ const SAMPLE_URL = SAMPLE_POST.url
 const overrideKey = (bjId, postNo) => `soopcomment.overrides.${bjId}.${postNo}`
 
 const ALL_TAB = '__all__'
-const UNGROUPED_COLOR = '#6b7280'
+// 특정 분류에 속하지 않는 줄(전체·미분류)의 색. 순위 숫자에 그대로 쓰이므로
+// 어두운 바탕에서 충분히 읽혀야 한다.
+const NEUTRAL_COLOR = '#a3ab8c'
 // 실측: 이런 신청 글은 45초 사이 상위 30개 중 32개의 좋아요가 움직인다.
 // 10초면 순위 변동이 눈에 보이면서 요청도 과하지 않다.
 const REFRESH_SEC = 10
@@ -90,7 +92,7 @@ export default function App() {
       list.push({
         id: UNGROUPED_ID,
         name: '미분류',
-        color: UNGROUPED_COLOR,
+        color: NEUTRAL_COLOR,
         topN: null,
         items: rank(ungrouped),
       })
@@ -103,7 +105,7 @@ export default function App() {
     return {
       id: ALL_TAB,
       name: '전체',
-      color: '#8b93a7',
+      color: NEUTRAL_COLOR,
       topN: null,
       items: rank([...buckets.values()].flat()),
     }
@@ -122,7 +124,7 @@ export default function App() {
   }, [groups])
 
   const groupColorById = useMemo(() => {
-    const map = { [UNGROUPED_ID]: UNGROUPED_COLOR }
+    const map = { [UNGROUPED_ID]: NEUTRAL_COLOR }
     for (const g of groups) map[g.id] = g.color
     return map
   }, [groups])
@@ -411,7 +413,7 @@ export default function App() {
                   type="button"
                   className={activeTab === ALL_TAB ? 'active' : ''}
                   onClick={() => setActiveTab(ALL_TAB)}
-                  style={{ '--group': '#8b93a7' }}
+                  style={{ '--group': NEUTRAL_COLOR }}
                 >
                   전체 <em>{data.comments.length}</em>
                 </button>
@@ -448,7 +450,7 @@ export default function App() {
                 hasSnapshot={!!prevRanks}
                 color={
                   activeTab === ALL_TAB
-                    ? groupColorById[comment.groupId] ?? '#8b93a7'
+                    ? groupColorById[comment.groupId] ?? NEUTRAL_COLOR
                     : activeSection.color
                 }
                 showGroupName={grouped && activeTab === ALL_TAB}

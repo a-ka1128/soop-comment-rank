@@ -1,16 +1,24 @@
 :root {
-  --bg: #0e1116;
-  --panel: #161b23;
-  --panel-2: #1c222c;
-  --line: #262d39;
-  --text: #e6e9ef;
-  --muted: #8b93a7;
-  --accent: #4f7cff;
-  --danger: #ef4444;
+  /* 야전 무전기 패널 같은 톤. 올리브 드랩 바탕에 황동/앰버 계기판 색을 얹었다. */
+  --bg: #0f120c;
+  --panel: #171c12;
+  --panel-2: #1f2618;
+  --line: #2f3a22;
+  --text: #dde3cf;
+  --muted: #8a9573;
+
+  --accent: #9ab53c; /* 필드 그린 — 주요 동작 */
+  --brass: #c9a227; /* 황동 — 좋아요·강조 수치 */
+  --slate: #8a94a3; /* 강판 회색 — 하락·보조 */
+  --danger: #b4472e; /* 녹슨 적색 */
+
+  /* 각진 모서리가 이 화면의 성격을 정한다. 둥글리지 않는다. */
+  --radius: 3px;
 
   color-scheme: dark;
   font-family: 'Pretendard', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     system-ui, sans-serif;
+  --mono: ui-monospace, 'Consolas', 'D2Coding', 'Courier New', monospace;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
@@ -28,11 +36,18 @@ body {
 
 body {
   min-height: 100vh;
+  /* 아주 옅은 사선 결. 가까이서만 보이고 글을 방해하지 않는 정도로. */
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(154, 181, 60, 0.022) 0 2px,
+    transparent 2px 7px
+  );
 }
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
   color: inherit;
 }

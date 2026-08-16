@@ -75,15 +75,16 @@ function detectTopN(label) {
   return Number.isFinite(n) && n > 0 ? n : null
 }
 
+/** 야전 색 계열. 서로 구분되면서도 화면 전체 톤에서 튀지 않는 순서로 둔다. */
 export const GROUP_COLORS = [
-  '#4f7cff',
-  '#ff5c8a',
-  '#22c55e',
-  '#f59e0b',
-  '#a855f7',
-  '#06b6d4',
-  '#ef4444',
-  '#84cc16',
+  '#9ab53c', // 필드 그린
+  '#c9a227', // 황동
+  '#7d9aa8', // 강판
+  '#b4643a', // 녹슨 적갈
+  '#c3b091', // 모래
+  '#5f8a6a', // 침엽수
+  '#8f7f5a', // 카키
+  '#6b7f95', // 슬레이트
 ]
 
 /**

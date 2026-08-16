@@ -16,7 +16,7 @@
 .swatch {
   width: 10px;
   height: 10px;
-  border-radius: 3px;
+  border-radius: var(--radius);
   background: var(--group);
   flex: none;
 }
@@ -25,14 +25,26 @@
 
 .topbar .brand h1 {
   margin: 0;
+  padding-left: 10px;
+  border-left: 3px solid var(--accent);
   font-size: 24px;
   letter-spacing: -0.4px;
 }
 
 .topbar .brand p {
   margin: 6px 0 18px;
+  padding-left: 13px;
   color: var(--muted);
   font-size: 14px;
+}
+
+/* 패널 제목은 작전 표지처럼 작게 자간을 벌린다. */
+.panel-head h2,
+.export-head h2 {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
 }
 
 .loader {
@@ -45,7 +57,7 @@
   min-width: 0;
   padding: 11px 14px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--panel);
 }
 
@@ -60,10 +72,10 @@ textarea:focus-visible {
 button.primary {
   padding: 11px 20px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--accent);
-  color: #fff;
-  font-weight: 600;
+  color: var(--bg);
+  font-weight: 700;
 }
 
 button.primary {
@@ -74,7 +86,7 @@ button.primary {
 button.ghost {
   padding: 9px 14px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--panel);
   color: var(--muted);
   font-size: 13px;
@@ -82,7 +94,7 @@ button.ghost {
 
 button.ghost:hover {
   color: var(--text);
-  border-color: #3a4453;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
 }
 
 button:disabled {
@@ -94,7 +106,7 @@ button:disabled {
   position: relative;
   margin-top: 12px;
   height: 22px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--panel);
   overflow: hidden;
 }
@@ -118,7 +130,7 @@ button:disabled {
   margin: 12px 0 0;
   padding: 10px 14px;
   border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--danger) 12%, transparent);
   font-size: 14px;
 }
@@ -139,7 +151,7 @@ button:disabled {
   margin: 22px 0 16px;
   padding: 14px 16px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--panel);
 }
 
@@ -151,6 +163,7 @@ button:disabled {
 }
 
 .stat strong {
+  font-family: var(--mono);
   font-size: 18px;
 }
 
@@ -176,7 +189,7 @@ button:disabled {
   margin-bottom: 16px;
   padding: 16px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--panel);
 }
 
@@ -208,7 +221,7 @@ button:disabled {
   padding: 8px 12px;
   border: 1px solid var(--line);
   border-left: 3px solid var(--group);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--panel-2);
   font-size: 14px;
 }
@@ -246,7 +259,7 @@ button:disabled {
   padding: 12px;
   border: 1px solid var(--line);
   border-left: 3px solid var(--group);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--panel-2);
 }
 
@@ -271,7 +284,7 @@ button:disabled {
   width: 68px;
   padding: 4px 8px;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: var(--radius);
   background: var(--panel);
   font-variant-numeric: tabular-nums;
 }
@@ -279,9 +292,9 @@ button:disabled {
 .tie {
   margin: 0 0 10px;
   padding: 8px 12px;
-  border-radius: 8px;
-  background: color-mix(in srgb, #f59e0b 14%, transparent);
-  color: #f2b23a;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, #c9a227 14%, transparent);
+  color: var(--brass);
   font-size: 12px;
 }
 
@@ -289,7 +302,7 @@ button:disabled {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--panel);
   color: var(--text);
   font-family: inherit;
@@ -311,13 +324,14 @@ button:disabled {
 .tabs button {
   padding: 8px 14px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--panel);
   color: var(--muted);
   font-size: 13px;
 }
 
 .tabs button em {
+  font-family: var(--mono);
   font-style: normal;
   opacity: 0.7;
   margin-left: 4px;
@@ -334,7 +348,7 @@ button:disabled {
   width: 200px;
   padding: 8px 12px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--panel);
 }
 
@@ -350,7 +364,7 @@ button:disabled {
   margin-bottom: 6px;
   border: 1px solid var(--line);
   border-left: 3px solid var(--group);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--panel);
   overflow: hidden;
 }
@@ -376,7 +390,8 @@ button:disabled {
 }
 
 .rank-no {
-  min-width: 30px;
+  min-width: 32px;
+  font-family: var(--mono);
   font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -385,6 +400,7 @@ button:disabled {
 }
 
 .delta {
+  font-family: var(--mono);
   font-size: 11px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -392,18 +408,18 @@ button:disabled {
 }
 
 .delta.up {
-  color: #f2557a;
+  color: #b6cc55;
 }
 
 .delta.down {
-  color: #4f93ff;
+  color: var(--slate);
 }
 
 .delta.new {
   padding: 1px 5px;
-  border-radius: 999px;
-  background: color-mix(in srgb, #22c55e 22%, transparent);
-  color: #4ade80;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, #9ab53c 22%, transparent);
+  color: #b6cc55;
 }
 
 .chevron {
@@ -459,15 +475,16 @@ button:disabled {
 }
 
 .likes {
+  font-family: var(--mono);
   font-size: 14px;
   font-weight: 600;
-  color: #ff6b8b;
+  color: var(--brass);
   font-variant-numeric: tabular-nums;
 }
 
 .badge {
   padding: 1px 7px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
@@ -475,7 +492,7 @@ button:disabled {
 
 .badge.best {
   background: color-mix(in srgb, var(--accent) 25%, transparent);
-  color: #9db4ff;
+  color: #c2d67a;
 }
 
 .badge.group-badge {
@@ -484,13 +501,13 @@ button:disabled {
 }
 
 .badge.manual {
-  background: color-mix(in srgb, #22c55e 22%, transparent);
-  color: #4ade80;
+  background: color-mix(in srgb, #9ab53c 22%, transparent);
+  color: #b6cc55;
 }
 
 .badge.warn {
-  background: color-mix(in srgb, #f59e0b 22%, transparent);
-  color: #f2b23a;
+  background: color-mix(in srgb, #c9a227 22%, transparent);
+  color: var(--brass);
   cursor: help;
 }
 
@@ -507,7 +524,7 @@ button:disabled {
   gap: 6px;
   padding: 7px 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--panel);
   font-size: 13px;
   color: var(--muted);
@@ -529,7 +546,7 @@ button:disabled {
   margin-top: 8px;
   max-width: 220px;
   max-height: 160px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   object-fit: cover;
 }
 
@@ -545,7 +562,7 @@ button:disabled {
 .assign select {
   padding: 3px 6px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--panel-2);
   color: var(--muted);
   font-size: 12px;
