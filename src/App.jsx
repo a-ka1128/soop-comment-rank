@@ -428,9 +428,15 @@ export default function App() {
                   {crossesCut && (
                     <div className="cutline">
                       <span className="cutline-label">{CUT_RANK}위 컷</span>
-                      <span className="cutline-gap">
-                        {CUT_RANK}위와 {CUT_RANK + 1}위 차이 ♥{cutGap.toLocaleString()}
-                      </span>
+                      {cutGap === 0 ? (
+                        // 동점이면 컷이 좋아요로 갈린 게 아니라 작성 시각으로 갈린 것이다.
+                        // "0개 차이"로 적으면 그 사실이 묻힌다.
+                        <span className="cutline-gap is-tie">
+                          동점 ♥{comment.likes.toLocaleString()} — 작성 순서로 갈림
+                        </span>
+                      ) : (
+                        <span className="cutline-gap">♥{cutGap.toLocaleString()}개 차이</span>
+                      )}
                     </div>
                   )}
                   <CommentCard

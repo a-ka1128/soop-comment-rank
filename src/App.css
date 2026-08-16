@@ -813,43 +813,26 @@ button:disabled {
 }
 
 /*
- * 컷 라인. 목록을 훑다가 놓치면 안 되는 선이라 굵은 점선 두 줄로 세우고,
- * 발광과 함께 점선이 천천히 흐르게 해서 정지 화면에서도 눈이 걸리게 한다.
- * 띠(면)로 채워 봤더니 카드처럼 보여서 오히려 목록에 섞였다.
+ * 컷 라인. ----- 119위 컷 · 4개 차이 ----- 처럼 가운데 글자를 두고 좌우로 선을 뻗는다.
+ * 굵은 점선에 발광을 얹고 천천히 흐르게 해서, 목록을 훑다가 지나치지 않게 한다.
+ * 면으로 채워 봤더니 카드처럼 보여서 오히려 목록에 섞였다.
  */
 .cutline {
-  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
   margin: 20px 0;
-  padding: 12px 2px;
 }
 
+/* 좌우로 뻗는 선. flex 항목이라 가운데 글자 길이에 맞춰 알아서 늘어난다. */
 .cutline::before,
 .cutline::after {
   content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
+  flex: 1;
   height: 3px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--danger) 0 13px,
-    transparent 13px 24px
-  );
+  background: repeating-linear-gradient(90deg, var(--danger) 0 13px, transparent 13px 24px);
   filter: drop-shadow(0 0 5px color-mix(in srgb, var(--danger) 75%, transparent));
   animation: cut-march 1.8s linear infinite;
-}
-
-.cutline::before {
-  top: 0;
-}
-
-.cutline::after {
-  bottom: 0;
 }
 
 @keyframes cut-march {
@@ -875,11 +858,20 @@ button:disabled {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.12em;
+  white-space: nowrap;
 }
 
 .cutline-gap {
   font-family: var(--mono);
   font-size: 13px;
   font-weight: 700;
+  color: var(--brass);
+  white-space: nowrap;
+}
+/* 컷 위아래가 동점이면 좋아요가 아니라 작성 시각이 순위를 가른 것이라 따로 알린다. */
+.cutline-gap.is-tie {
+  padding: 3px 9px;
+  border: 1px solid var(--brass);
+  border-radius: var(--radius);
   color: var(--brass);
 }
