@@ -347,43 +347,77 @@ button:disabled {
 }
 
 .card {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 10px;
-  padding: 14px;
+  margin-bottom: 6px;
   border: 1px solid var(--line);
   border-left: 3px solid var(--group);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--panel);
+  overflow: hidden;
 }
 
-.card-rank {
+.card.is-open {
+  border-color: color-mix(in srgb, var(--group) 55%, var(--line));
+}
+
+/* 접힌 상태의 한 줄. 클릭하면 펼쳐진다. */
+.card-row {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  width: 46px;
-  flex: none;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+
+.card-row:hover {
+  background: var(--panel-2);
 }
 
 .rank-no {
-  font-size: 19px;
+  min-width: 30px;
+  font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--group);
+  flex: none;
 }
 
-.card-body {
-  flex: 1;
-  min-width: 0;
+.delta {
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex: none;
 }
 
-.card-head {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex-wrap: wrap;
-  margin-bottom: 6px;
+.delta.up {
+  color: #f2557a;
+}
+
+.delta.down {
+  color: #4f93ff;
+}
+
+.delta.new {
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #22c55e 22%, transparent);
+  color: #4ade80;
+}
+
+.chevron {
+  width: 12px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--muted);
+  flex: none;
+}
+
+.card-detail {
+  padding: 4px 14px 12px 52px;
+  border-top: 1px solid var(--line);
 }
 
 .avatar {
@@ -401,16 +435,27 @@ button:disabled {
 .nick {
   font-weight: 600;
   font-size: 14px;
-  text-decoration: none;
-}
-
-.nick:hover {
-  text-decoration: underline;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40%;
 }
 
 .uid {
   font-size: 12px;
   color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 25%;
+}
+
+.channel {
+  text-decoration: none;
+}
+
+.channel:hover {
+  color: var(--text);
 }
 
 .likes {
@@ -450,10 +495,34 @@ button:disabled {
 }
 
 .text {
-  margin: 0;
+  margin: 8px 0 0;
   font-size: 14px;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.live:has(input:checked) {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* 미끄러지는 줄이 이웃 줄에 가리지 않도록 위로 띄운다. */
+.card.is-moving {
+  position: relative;
+  z-index: 1;
 }
 
 .photo {

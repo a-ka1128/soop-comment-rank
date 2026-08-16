@@ -6,6 +6,7 @@ import { fetchAllComments, fetchPost, parsePostUrl, postUrl } from './lib/soop'
 import { buildGroups, detectCategories } from './lib/categories'
 import { UNGROUPED_ID, classify, rank, toCsv, validateGrouping } from './lib/groups'
 import { SAMPLE_POST } from './lib/sample'
+import { useFlipReorder } from './hooks/useFlipReorder'
 import './App.css'
 
 const STORE_URL = 'soopcomment.lastUrl'
@@ -14,6 +15,9 @@ const overrideKey = (bjId, postNo) => `soopcomment.overrides.${bjId}.${postNo}`
 
 const ALL_TAB = '__all__'
 const UNGROUPED_COLOR = '#6b7280'
+// 실측: 이런 신청 글은 45초 사이 상위 30개 중 32개의 좋아요가 움직인다.
+// 10초면 순위 변동이 눈에 보이면서 요청도 과하지 않다.
+const REFRESH_SEC = 10
 
 function loadStored(key, fallback) {
   try {
@@ -35,9 +39,18 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState(ALL_TAB)
   const [query, setQuery] = useState('')
-  const [exportOpen, setExportOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(true)
+
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [refreshedAt, setRefreshedAt] = useState(null)
+  // 직전 갱신 시점의 순위. 분류별로 따로 담아야 탭을 옮겨도 맞는 변동이 보인다.
+  const [prevRanks, setPrevRanks] = useState(null)
 
   const abortRef = useRef(null)
+  const refreshRef = useRef(null)
+  const renderRef = useRef({ allSection: null, sections: [] })
+  const listRef = useRef(null)
+  const animateNextRef = useRef(false)
 
   useEffect(() => {
     if (!data) return
@@ -117,6 +130,27 @@ export default function App() {
   const activeSection =
     activeTab === ALL_TAB ? allSection : sections.find((s) => s.id === activeTab) ?? allSection
 
+  // 갱신 직전 순위를 찍어 두기 위해, 화면에 그려진 최신 결과를 항상 들고 있는다.
+  useEffect(() => {
+    renderRef.current = { allSection, sections }
+  })
+
+  // 자동 갱신. 탭이 뒤에 있을 때는 쉬게 해서 헛된 요청을 보내지 않는다.
+  useEffect(() => {
+    if (!autoRefresh || !data) return
+    const timer = setInterval(() => {
+      if (!document.hidden) refreshRef.current?.()
+    }, REFRESH_SEC * 1000)
+    return () => clearInterval(timer)
+  }, [autoRefresh, data])
+
+  // 순위가 바뀌면 줄이 새 자리로 미끄러진다. 갱신으로 바뀐 경우에만 건다.
+  useFlipReorder(listRef, () => {
+    const should = animateNextRef.current
+    animateNextRef.current = false
+    return should
+  })
+
   const visibleItems = useMemo(() => {
     if (!activeSection) return []
     const q = query.trim().toLowerCase()
@@ -156,6 +190,8 @@ export default function App() {
     setLoading(true)
     setError('')
     setProgress({ done: 0, total: 1 })
+    setPrevRanks(null)
+    setRefreshedAt(null)
     localStorage.setItem(STORE_URL, rawInput)
 
     try {
@@ -190,6 +226,37 @@ export default function App() {
       setProgress(null)
     }
   }
+
+  /** 지금 화면에 그려진 순위를 분류별로 찍어 둔다. 갱신 후 변동을 계산하는 기준. */
+  function captureRanks() {
+    const snapshot = new Map()
+    const add = (section) => {
+      if (section) snapshot.set(section.id, new Map(section.items.map((i) => [i.id, i.rank])))
+    }
+    add(renderRef.current.allSection)
+    renderRef.current.sections.forEach(add)
+    return snapshot
+  }
+
+  /**
+   * 댓글만 다시 가져온다. 본문은 다시 읽지 않는다 — 분류는 그대로고,
+   * 갱신할 때마다 요청을 두 배로 늘릴 이유가 없다.
+   */
+  async function refreshComments() {
+    if (!data || loading) return
+    try {
+      const fresh = await fetchAllComments(data.bjId, data.postNo, { postConfirmed: !data.postError })
+      animateNextRef.current = true
+      setPrevRanks(captureRanks())
+      setData((prev) => (prev ? { ...prev, ...fresh } : prev))
+      setRefreshedAt(new Date())
+      setError('')
+    } catch (err) {
+      if (err.name !== 'AbortError') setError(err.message || '갱신하지 못했습니다.')
+    }
+  }
+
+  refreshRef.current = refreshComments
 
   function assign(commentId, groupId) {
     setOverrides((prev) => {
@@ -293,11 +360,22 @@ export default function App() {
             <button
               type="button"
               className="ghost"
-              onClick={() => load(urlInput)}
+              onClick={() => refreshComments()}
               disabled={loading}
             >
               새로고침
             </button>
+            <label className="live">
+              <input
+                type="checkbox"
+                checked={autoRefresh}
+                onChange={(e) => setAutoRefresh(e.target.checked)}
+              />
+              실시간 {REFRESH_SEC}초
+            </label>
+            {refreshedAt && (
+              <span className="muted">{refreshedAt.toTimeString().slice(0, 8)} 갱신</span>
+            )}
             <button type="button" className="ghost" onClick={exportCsv}>
               CSV 내보내기
             </button>
@@ -359,13 +437,15 @@ export default function App() {
             />
           </nav>
 
-          <main className="list">
+          <main className="list" ref={listRef}>
             {visibleItems.length === 0 && <p className="empty">표시할 댓글이 없습니다.</p>}
 
             {visibleItems.map((comment) => (
               <CommentCard
                 key={comment.id}
                 comment={comment}
+                prevRank={prevRanks?.get(activeSection.id)?.get(comment.id)}
+                hasSnapshot={!!prevRanks}
                 color={
                   activeTab === ALL_TAB
                     ? groupColorById[comment.groupId] ?? '#8b93a7'
