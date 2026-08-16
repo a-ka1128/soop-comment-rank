@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { fetchMeta, fetchSeries, historyEnabled } from '../lib/history'
 
 /**
- * 검증을 통과한 계열 색. 우리 밀리터리 팔레트는 색약에서 서로 붙어 버려
- * (황동↔필드그린 ΔE 1.6) 선 구분에는 쓸 수 없다. 이 다섯은 패널 표면 #1c1b13
- * 기준으로 명도대·채도·색약분리·정상시야분리·대비 전부 통과한다.
+ * 검증을 통과한 계열 색. 화면의 올리브·갈색 팔레트는 한 계열이라 선끼리 구분되지
+ * 않고 색약에서는 더 붙어 버린다. 색이 혼자 신원을 지는 자리라 여기만 따로 쓴다.
+ * 다섯 색 모두 패널 표면에서 4.2:1 이상이고 색약 분리 검증을 통과한다.
  */
 const SERIES = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181']
 const MAX_SERIES = SERIES.length
@@ -32,6 +32,7 @@ export default function PersonChart({ bjId, postNo, candidates }) {
   const [query, setQuery] = useState('')
   const [meta, setMeta] = useState(null)
   const [status, setStatus] = useState('idle')
+  const [refreshTick, setRefreshTick] = useState(0)
 
   useEffect(() => {
     if (!historyEnabled() || !bjId) return
@@ -45,21 +46,36 @@ export default function PersonChart({ bjId, postNo, candidates }) {
     }
   }, [bjId, postNo])
 
-  // 고른 사람의 시계열만 가져온다. points/{댓글id} 아래가 곧 그 사람 기록이라
-  // 한 사람 추가에 요청 하나면 끝난다.
+  // 수집기가 1분마다 쓰므로 화면도 1분마다 새로 읽는다.
   useEffect(() => {
-    const missing = picked.filter((c) => !series[c.id])
-    if (missing.length === 0) return
+    const timer = setInterval(() => {
+      if (!document.hidden) setRefreshTick((n) => n + 1)
+    }, 60000)
+    return () => clearInterval(timer)
+  }, [])
+
+  /**
+   * 고른 사람 전원의 시계열을 매번 다시 읽는다.
+   *
+   * 예전에는 아직 안 받아 온 사람만 골라 받았는데, 그러면 한 번 받은 사람은 영영
+   * 그 시점에 멈춰 버린다. 나중에 추가한 사람만 최신이라 선들의 끝 시각이 서로
+   * 어긋나 보였다. 최대 5명이라 전원 다시 읽어도 요청 다섯 개다.
+   */
+  useEffect(() => {
+    if (picked.length === 0) {
+      setSeries({})
+      return
+    }
     let alive = true
     Promise.all(
-      missing.map((c) => fetchSeries(bjId, postNo, c.id).then((points) => [c.id, points]))
+      picked.map((c) => fetchSeries(bjId, postNo, c.id).then((points) => [c.id, points]))
     ).then((pairs) => {
-      if (alive) setSeries((prev) => ({ ...prev, ...Object.fromEntries(pairs) }))
+      if (alive) setSeries(Object.fromEntries(pairs))
     })
     return () => {
       alive = false
     }
-  }, [picked, series, bjId, postNo])
+  }, [picked, refreshTick, bjId, postNo])
 
   const lines = useMemo(() => {
     const span = RANGES.find((r) => r.id === range)?.ms ?? Infinity
@@ -117,7 +133,7 @@ export default function PersonChart({ bjId, postNo, candidates }) {
     return (
       <section className="panel chart">
         <div className="panel-head">
-          <h2>개인 추이</h2>
+          <h2>개인 증가량 그래프</h2>
         </div>
         <p className="chart-empty">
           기록 서버가 설정되지 않았습니다. <code>VITE_RTDB_URL</code>을 넣고 다시 빌드하면
@@ -130,7 +146,7 @@ export default function PersonChart({ bjId, postNo, candidates }) {
   return (
     <section className="panel chart">
       <div className="panel-head">
-        <h2>개인 추이</h2>
+        <h2>개인 증가량 그래프</h2>
       </div>
 
       {status === 'untracked' && (

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import GroupPanel from './components/GroupPanel'
 import NicknameExport from './components/NicknameExport'
 import CommentCard from './components/CommentCard'
-import GainChart from './components/GainChart'
 import PersonChart from './components/PersonChart'
 import { fetchAllComments, fetchPost, parsePostUrl, postUrl } from './lib/soop'
 import { buildGroups, detectCategories } from './lib/categories'
@@ -18,12 +17,11 @@ const overrideKey = (bjId, postNo) => `soopcomment.overrides.${bjId}.${postNo}`
 const ALL_TAB = '__all__'
 // 특정 분류에 속하지 않는 줄(전체·미분류)의 색. 순위 숫자에 그대로 쓰이므로
 // 어두운 바탕에서 충분히 읽혀야 한다.
-const NEUTRAL_COLOR = '#a3ab8c'
+const NEUTRAL_COLOR = '#a39a7a'
 // 실측: 이런 신청 글은 45초 사이 상위 30개 중 32개의 좋아요가 움직인다.
 // 10초면 순위 변동이 눈에 보이면서 요청도 과하지 않다.
 const REFRESH_SEC = 10
 
-const likesMap = (comments) => new Map(comments.map((c) => [c.id, c.likes]))
 
 function loadStored(key, fallback) {
   try {
@@ -47,11 +45,7 @@ export default function App() {
   const [query, setQuery] = useState('')
   const [exportOpen, setExportOpen] = useState(false)
 
-  const [chartOpen, setChartOpen] = useState(false)
   const [personOpen, setPersonOpen] = useState(false)
-  // 좋아요 증가량을 그리려면 과거 값이 있어야 하는데 API는 시계열을 주지 않는다.
-  // 창을 열어 둔 동안 직접 쌓는다: 관측 시작 시점과 직전 갱신 시점 두 개.
-  const [likesHistory, setLikesHistory] = useState(null)
 
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [refreshedAt, setRefreshedAt] = useState(null)
@@ -204,7 +198,6 @@ export default function App() {
     setProgress({ done: 0, total: 1 })
     setPrevRanks(null)
     setRefreshedAt(null)
-    setLikesHistory(null)
     localStorage.setItem(STORE_URL, rawInput)
 
     try {
@@ -224,8 +217,6 @@ export default function App() {
         onProgress: (done, total) => setProgress({ done, total }),
       })
 
-      const snapshot = likesMap(result.comments)
-      setLikesHistory({ baseline: snapshot, previous: snapshot, since: new Date() })
       setOverrides(loadStored(overrideKey(parsed.bjId, parsed.postNo), {}) ?? {})
       setData({
         ...result,
@@ -263,7 +254,6 @@ export default function App() {
       const fresh = await fetchAllComments(data.bjId, data.postNo, { postConfirmed: !data.postError })
       animateNextRef.current = true
       setPrevRanks(captureRanks())
-      setLikesHistory((h) => (h ? { ...h, previous: likesMap(data.comments) } : h))
       setData((prev) => (prev ? { ...prev, ...fresh } : prev))
       setRefreshedAt(new Date())
       setError('')
@@ -393,15 +383,7 @@ export default function App() {
               onClick={() => setPersonOpen((v) => !v)}
               aria-expanded={personOpen}
             >
-              개인 추이 {personOpen ? '닫기' : ''}
-            </button>
-            <button
-              type="button"
-              className={chartOpen ? 'primary' : 'ghost'}
-              onClick={() => setChartOpen((v) => !v)}
-              aria-expanded={chartOpen}
-            >
-              증가량 그래프 {chartOpen ? '닫기' : ''}
+              개인 증가량 그래프 {personOpen ? '닫기' : ''}
             </button>
             <button
               type="button"
@@ -419,10 +401,6 @@ export default function App() {
               postNo={data.postNo}
               candidates={activeSection?.items ?? []}
             />
-          )}
-
-          {chartOpen && (
-            <GainChart section={activeSection} history={likesHistory} refreshedAt={refreshedAt} />
           )}
 
           {exportOpen && exportSections.length > 0 && <NicknameExport sections={exportSections} />}

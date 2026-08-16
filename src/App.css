@@ -595,7 +595,7 @@ button:disabled {
   }
 }
 
-/* ---------- 증가량 그래프 ---------- */
+/* ---------- 그래프 공용 ---------- */
 
 .chart-controls {
   display: flex;
@@ -750,7 +750,7 @@ button:disabled {
   font-family: inherit;
 }
 
-/* ---------- 개인 추이 ---------- */
+/* ---------- 개인 증가량 그래프 ---------- */
 
 .picker {
   margin-bottom: 12px;
