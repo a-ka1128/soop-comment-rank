@@ -28,7 +28,12 @@ jobs:
 
       - run: npm ci
       - run: npm run lint
+
+      # 기록 서버 주소. 비밀값이 아니라 공개 URL이고, 접근은 database.rules.json 이 막는다.
+      # 저장소 Variables 에 RTDB_URL 을 넣지 않으면 개인 추이 기능만 조용히 꺼진 채 빌드된다.
       - run: npm run build
+        env:
+          VITE_RTDB_URL: ${{ vars.RTDB_URL }}
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

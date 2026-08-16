@@ -3,6 +3,7 @@ import GroupPanel from './components/GroupPanel'
 import NicknameExport from './components/NicknameExport'
 import CommentCard from './components/CommentCard'
 import GainChart from './components/GainChart'
+import PersonChart from './components/PersonChart'
 import { fetchAllComments, fetchPost, parsePostUrl, postUrl } from './lib/soop'
 import { buildGroups, detectCategories } from './lib/categories'
 import { UNGROUPED_ID, classify, rank, validateGrouping } from './lib/groups'
@@ -47,6 +48,7 @@ export default function App() {
   const [exportOpen, setExportOpen] = useState(false)
 
   const [chartOpen, setChartOpen] = useState(false)
+  const [personOpen, setPersonOpen] = useState(false)
   // 좋아요 증가량을 그리려면 과거 값이 있어야 하는데 API는 시계열을 주지 않는다.
   // 창을 열어 둔 동안 직접 쌓는다: 관측 시작 시점과 직전 갱신 시점 두 개.
   const [likesHistory, setLikesHistory] = useState(null)
@@ -387,6 +389,14 @@ export default function App() {
             )}
             <button
               type="button"
+              className={personOpen ? 'primary' : 'ghost'}
+              onClick={() => setPersonOpen((v) => !v)}
+              aria-expanded={personOpen}
+            >
+              개인 추이 {personOpen ? '닫기' : ''}
+            </button>
+            <button
+              type="button"
               className={chartOpen ? 'primary' : 'ghost'}
               onClick={() => setChartOpen((v) => !v)}
               aria-expanded={chartOpen}
@@ -402,6 +412,14 @@ export default function App() {
               닉네임 추출 {exportOpen ? '닫기' : ''}
             </button>
           </section>
+
+          {personOpen && (
+            <PersonChart
+              bjId={data.bjId}
+              postNo={data.postNo}
+              candidates={activeSection?.items ?? []}
+            />
+          )}
 
           {chartOpen && (
             <GainChart section={activeSection} history={likesHistory} refreshedAt={refreshedAt} />

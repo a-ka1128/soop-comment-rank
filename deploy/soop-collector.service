@@ -1,0 +1,15 @@
+# /etc/systemd/system/soop-collector.service
+# ubuntu / 경로는 실제 계정과 클론 위치에 맞게 고칠 것.
+[Unit]
+Description=SOOP 댓글 좋아요 수집기 (1회 실행)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/soop-comment-rank
+EnvironmentFile=/home/ubuntu/soop-comment-rank/collector.env
+ExecStart=/usr/bin/node collector/collect.mjs
+# SOOP이 느릴 때 다음 분과 겹치지 않도록 끊는다.
+TimeoutStartSec=50

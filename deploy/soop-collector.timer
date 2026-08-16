@@ -1,0 +1,12 @@
+# /etc/systemd/system/soop-collector.timer
+[Unit]
+Description=SOOP 좋아요 수집기를 1분마다 실행
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+# 분 경계에 맞춰 떨어지게 해서 기록 간격이 고르게 유지되도록 한다.
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

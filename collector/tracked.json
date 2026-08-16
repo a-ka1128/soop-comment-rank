@@ -1,0 +1,6 @@
+{
+  "_설명": "여기 적은 게시글만 1분마다 수집합니다. 늘릴수록 SOOP에 보내는 요청도 그만큼 늘어납니다.",
+  "posts": [
+    { "url": "https://www.sooplive.com/station/ecvhao/post/204516133" }
+  ]
+}

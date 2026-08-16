@@ -138,6 +138,79 @@ N번째와 N+1번째의 좋아요가 같으면 **동점 경고**가 뜹니다. �
 직접 판단해야 합니다.
 
 
+## 개인 추이 (기록 서버)
+
+화면 안에서 쌓는 증가량은 창을 닫으면 사라집니다. **개인별 좋아요 추이**를 오래 보려면
+누군가 계속 SOOP을 찔러 기록해야 합니다. 그 역할을 VM의 수집기가 맡고, 저장은 Firebase
+Realtime Database에 합니다.
+
+```
+VM (systemd 타이머, 1분)          Firebase RTDB (무료 Spark)        GitHub Pages
+collector/collect.mjs  ──쓰기──▶  posts/{bjId}_{postNo}/  ──읽기──▶  개인 추이 그래프
+                                    meta / comments / points
+```
+
+**Firebase 무료 한도 안에서 돌아갑니다.** 단 스케줄러는 Firebase 밖에 두어야 합니다 —
+Cloud Functions는 배포 자체가 Blaze(카드 등록) 요금제를 요구하기 때문입니다. 수집기를 VM에서
+돌리면 Firebase는 Spark 그대로 씁니다. RTDB Spark 한도는 저장 1GB / 월 다운로드 10GB이고,
+연산당 과금이 없어 1분 간격 쓰기에 적합합니다. 게시글 하나에 하루 약 15MB가 쌓이므로,
+하루 지난 구간은 수집기가 5분 간격만 남기고 솎아냅니다.
+
+### Firebase 쪽 준비 (한 번만)
+
+1. [Firebase 콘솔](https://console.firebase.google.com)에서 프로젝트를 만들거나 고릅니다.
+2. **Realtime Database**를 만듭니다. 지역은 아무거나. 만들 때 "잠금 모드"를 고릅니다.
+3. 규칙에 이 저장소의 [`database.rules.json`](database.rules.json) 내용을 붙여넣습니다.
+   브라우저는 읽기만 되고 쓰기는 전부 막힙니다 (수집기는 서비스 계정이라 규칙을 우회합니다).
+4. 프로젝트 설정 → 서비스 계정 → **새 비공개 키 생성**으로 JSON을 내려받습니다.
+   이 파일은 비밀입니다. 저장소에 넣지 마세요 (`.gitignore`에 이미 있습니다).
+5. 저장소 Settings → Secrets and variables → Actions → **Variables**에
+   `RTDB_URL` 을 데이터베이스 주소(`https://...firebaseio.com`)로 추가합니다.
+   넣지 않으면 배포본에서 개인 추이 기능만 조용히 꺼진 채로 나갑니다.
+
+### VM 쪽 준비
+
+```bash
+# Node 22 (없다면)
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+
+git clone https://github.com/a-ka1128/soop-comment-rank.git
+cd soop-comment-rank
+
+cp collector.env.example collector.env
+nano collector.env            # RTDB 주소와 서비스 계정 JSON 경로
+# 4번에서 받은 키를 service-account.json 으로 올려 둔다
+
+node collector/collect.mjs    # 한 번 수동 실행해서 기록되는지 확인
+```
+
+수집할 게시글은 [`collector/tracked.json`](collector/tracked.json)에 적습니다. 여기 적은
+글만 수집하므로 부하가 예측 가능합니다.
+
+```bash
+sudo cp deploy/soop-collector.* /etc/systemd/system/
+sudo nano /etc/systemd/system/soop-collector.service   # User/경로를 실제에 맞게
+sudo systemctl daemon-reload
+sudo systemctl enable --now soop-collector.timer
+
+systemctl list-timers soop-collector.timer   # 다음 실행 시각 확인
+journalctl -u soop-collector.service -f      # 기록 로그
+```
+
+수집기는 상주하지 않고 1분마다 한 번 실행되고 끝납니다. 죽은 프로세스를 지키는 것보다
+못 돈 1분이 낫고, 재시작은 systemd가 알아서 합니다.
+
+### 그래프
+
+`개인 추이` 버튼에서 최대 5명까지 고르면 선이 그려집니다. 기본은 **구간 증가분**입니다 —
+1위(6천)와 100위(80)를 같은 축에 누적값으로 놓으면 아래쪽 선이 바닥에 붙어 보이지 않기
+때문에, 구간 시작을 0으로 맞춰 서로 비교되게 합니다. 누적값도 토글로 볼 수 있습니다.
+
+선 색은 화면의 밀리터리 팔레트를 쓰지 않습니다. 그 색들은 서로 붙어 있어 색약에서
+구분되지 않습니다(황동↔필드그린 ΔE 1.6). 검증을 통과한 다섯 색을 따로 쓰고, 선 끝마다
+닉네임을 직접 붙여 색만으로 구분하지 않아도 되게 했습니다.
+
 ## 구조
 
 ```
@@ -153,4 +226,8 @@ src/
   hooks/useFlipReorder.js        순위 변동 시 줄이 미끄러지는 효과
   components/NicknameExport.jsx  상위 N명 닉네임 추출
   components/CommentCard.jsx     댓글 카드 + 수동 분류 지정
+  components/PersonChart.jsx     개인별 좋아요 추이 (기록 서버)
+  lib/history.js                 RTDB 읽기 (SDK 없이 REST)
+collector/collect.mjs            1분마다 SOOP을 찍어 RTDB에 기록 (VM)
+deploy/                          systemd 유닛
 ```
