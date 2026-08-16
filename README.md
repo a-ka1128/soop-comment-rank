@@ -162,6 +162,8 @@ Cloud Functions는 배포 자체가 Blaze(카드 등록) 요금제를 요구하�
 2. **Realtime Database**를 만듭니다. 지역은 아무거나. 만들 때 "잠금 모드"를 고릅니다.
 3. 규칙에 이 저장소의 [`database.rules.json`](database.rules.json) 내용을 붙여넣습니다.
    브라우저는 읽기만 되고 쓰기는 전부 막힙니다 (수집기는 서비스 계정이라 규칙을 우회합니다).
+   규칙에는 주석을 넣지 마세요 — 점으로 시작하지 않는 키는 전부 하위 경로 이름으로
+   해석돼서 `"//": "설명"` 같은 줄은 저장이 거부됩니다.
 4. 프로젝트 설정 → 서비스 계정 → **새 비공개 키 생성**으로 JSON을 내려받습니다.
    이 파일은 비밀입니다. 저장소에 넣지 마세요 (`.gitignore`에 이미 있습니다).
 5. 저장소 Settings → Secrets and variables → Actions → **Variables**에
