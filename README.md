@@ -190,6 +190,28 @@ node collector/collect.mjs    # 한 번 수동 실행해서 기록되는지 확�
 수집할 게시글은 [`collector/tracked.json`](collector/tracked.json)에 적습니다. 여기 적은
 글만 수집하므로 부하가 예측 가능합니다.
 
+수집기는 상주하지 않고 1분마다 한 번 실행되고 끝납니다. 죽은 프로세스를 지키는 것보다
+못 돈 1분이 낫습니다. 1분마다 깨우는 방법은 두 가지입니다.
+
+**cron (root 권한 없이 가능 — 이쪽을 먼저 보세요)**
+
+```bash
+crontab -e
+```
+```cron
+* * * * * /home/사용자이름/soop-comment-rank/deploy/run-collector.sh
+```
+
+[`deploy/run-collector.sh`](deploy/run-collector.sh)가 `collector.env`를 읽고 node 경로를
+찾아 줍니다 — cron은 `.bashrc`를 읽지 않아서 PATH가 비어 있기 때문입니다. 홈에 풀어 둔
+node도 자동으로 찾습니다. 로그는 `collector.log`에 쌓이고 5000줄이 넘으면 알아서 잘립니다.
+
+```bash
+tail -f ~/soop-comment-rank/collector.log
+```
+
+**systemd (root 권한이 있을 때)**
+
 ```bash
 sudo cp deploy/soop-collector.* /etc/systemd/system/
 sudo nano /etc/systemd/system/soop-collector.service   # User/경로를 실제에 맞게
@@ -199,9 +221,6 @@ sudo systemctl enable --now soop-collector.timer
 systemctl list-timers soop-collector.timer   # 다음 실행 시각 확인
 journalctl -u soop-collector.service -f      # 기록 로그
 ```
-
-수집기는 상주하지 않고 1분마다 한 번 실행되고 끝납니다. 죽은 프로세스를 지키는 것보다
-못 돈 1분이 낫고, 재시작은 systemd가 알아서 합니다.
 
 ### 그래프
 
