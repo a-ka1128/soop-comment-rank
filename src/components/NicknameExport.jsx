@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { formatNicknames, takeTop, toGridCsv } from '../lib/groups'
 
-const DEFAULT_N = 33
+// 이 사이트가 다루는 글은 120명을 뽑는다. 분류 이름에 TOP n 이 적혀 있으면 그쪽이 이긴다.
+const DEFAULT_N = 120
 
 function execCommandCopy(text) {
   const box = document.createElement('textarea')

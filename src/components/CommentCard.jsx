@@ -2,11 +2,14 @@ import { useState } from 'react'
 import { channelUrl, commentUrl } from '../lib/soop'
 import { UNGROUPED_ID } from '../lib/groups'
 
-/** 직전 갱신 대비 순위 변동. 스냅샷이 없으면(첫 로드) 아무것도 보이지 않는다. */
-function RankDelta({ rank, prevRank, hasSnapshot }) {
-  if (!hasSnapshot) return null
-  if (prevRank === undefined) return <span className="delta new">NEW</span>
-  const moved = prevRank - rank
+/**
+ * 마지막으로 움직였을 때의 순위 변동. 갱신마다 지워지지 않고, 다시 움직이거나
+ * 정해진 시간이 지날 때까지 남는다(App 의 MOVE_TTL_MS).
+ */
+function RankDelta({ move, hasSnapshot }) {
+  if (!hasSnapshot || !move) return null
+  if (move.delta === null) return <span className="delta new">NEW</span>
+  const moved = move.delta
   if (moved === 0) return null
   return (
     <span className={`delta ${moved > 0 ? 'up' : 'down'}`}>
@@ -25,7 +28,7 @@ export default function CommentCard({
   groupName,
   groups,
   onAssign,
-  prevRank,
+  move,
   hasSnapshot,
 }) {
   const [open, setOpen] = useState(false)
@@ -43,7 +46,7 @@ export default function CommentCard({
         aria-expanded={open}
       >
         <span className="rank-no">{comment.rank}</span>
-        <RankDelta rank={comment.rank} prevRank={prevRank} hasSnapshot={hasSnapshot} />
+        <RankDelta move={move} hasSnapshot={hasSnapshot} />
 
         {comment.profile ? (
           <img className="avatar" src={comment.profile} alt="" loading="lazy" />

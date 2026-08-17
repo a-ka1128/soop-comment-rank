@@ -19,6 +19,9 @@ const NEUTRAL_COLOR = '#a39a7a'
 // 실측: 이런 신청 글은 45초 사이 상위 30개 중 32개의 좋아요가 움직인다.
 // 10초면 순위 변동이 눈에 보이면서 요청도 과하지 않다.
 const REFRESH_SEC = 10
+// 순위 변동 표시를 얼마나 붙들어 둘지. 10초마다 새로 그리면 화살표가 깜빡이고 지나가
+// 무엇이 움직였는지 볼 틈이 없다. 다시 움직이지 않으면 이 시간까지 남긴다.
+const MOVE_TTL_MS = 5 * 60 * 1000
 
 function loadStored(key, fallback) {
   try {
@@ -44,10 +47,14 @@ export default function App() {
 
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [refreshedAt, setRefreshedAt] = useState(null)
-  // 직전 갱신 시점의 순위. 분류별로 따로 담아야 탭을 옮겨도 맞는 변동이 보인다.
-  const [prevRanks, setPrevRanks] = useState(null)
+  /**
+   * 분류별 { 댓글id -> { delta, at } }. delta 는 마지막으로 움직인 폭이고
+   * at 은 그때 시각이다. 갱신마다 갈아엎지 않고, 다시 움직일 때까지 들고 있는다.
+   */
+  const [moves, setMoves] = useState(new Map())
 
   const abortRef = useRef(null)
+  const prevRanksRef = useRef(null)
   const refreshRef = useRef(null)
   const loadRef = useRef(null)
   const renderRef = useRef({ allSection: null, sections: [] })
@@ -149,6 +156,42 @@ export default function App() {
     return () => clearInterval(timer)
   }, [autoRefresh, data])
 
+  /**
+   * 새 순위가 그려진 뒤, 직전 순위와 비교해 이동 기록을 갱신한다.
+   * 움직이지 않은 줄은 예전 기록을 그대로 들고 있다가 MOVE_TTL_MS 가 지나면 놓는다.
+   */
+  useEffect(() => {
+    if (!data) return
+    const current = captureRanks()
+    const previous = prevRanksRef.current
+    prevRanksRef.current = current
+    if (!previous) return
+
+    const now = Date.now()
+    setMoves((kept) => {
+      const next = new Map()
+      for (const [sectionId, ranks] of current) {
+        const was = previous.get(sectionId)
+        const keptHere = kept.get(sectionId) ?? new Map()
+        const out = new Map()
+        for (const [id, rankNow] of ranks) {
+          const rankBefore = was?.get(id)
+          if (rankBefore === undefined) {
+            out.set(id, { delta: null, at: now })
+          } else if (rankBefore !== rankNow) {
+            out.set(id, { delta: rankBefore - rankNow, at: now })
+          } else {
+            const old = keptHere.get(id)
+            if (old && now - old.at < MOVE_TTL_MS) out.set(id, old)
+          }
+        }
+        next.set(sectionId, out)
+      }
+      return next
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
+
   // 순위가 바뀌면 줄이 새 자리로 미끄러진다. 갱신으로 바뀐 경우에만 건다.
   useFlipReorder(listRef, () => {
     const should = animateNextRef.current
@@ -189,7 +232,8 @@ export default function App() {
     setLoading(true)
     setError('')
     setProgress({ done: 0, total: 1 })
-    setPrevRanks(null)
+    setMoves(new Map())
+    prevRanksRef.current = null
     setRefreshedAt(null)
 
     try {
@@ -250,7 +294,6 @@ export default function App() {
         postConfirmed: !data.postError,
       })
       animateNextRef.current = true
-      setPrevRanks(captureRanks())
       setData((prev) => (prev ? { ...prev, ...fresh } : prev))
       setRefreshedAt(new Date())
       setError('')
@@ -443,8 +486,8 @@ export default function App() {
                     comment={comment}
                     bjId={data.bjId}
                     postNo={data.postNo}
-                    prevRank={prevRanks?.get(activeSection.id)?.get(comment.id)}
-                    hasSnapshot={!!prevRanks}
+                    move={moves.get(activeSection.id)?.get(comment.id)}
+                    hasSnapshot={!!prevRanksRef.current}
                     color={
                       activeTab === ALL_TAB
                         ? (groupColorById[comment.groupId] ?? NEUTRAL_COLOR)
