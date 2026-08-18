@@ -82,9 +82,28 @@ export class Rtdb {
     return res.status === 204 ? null : res.json()
   }
 
-  /** 여러 경로를 한 번에 갱신한다. 키가 깊은 경로여도 된다. */
+  /**
+   * 여러 경로를 한 번에 갱신한다. 키가 깊은 경로여도 된다.
+   *
+   * 주의: RTDB는 "쓰는 위치에 있는 데이터 크기"로 한계를 건다. 그래서 루트에 PATCH를
+   * 보내면 보내는 양이 작아도 데이터베이스 전체가 커지는 순간 거부된다
+   * ("Data to write exceeds the maximum size that can be modified with a single request").
+   * 실제로 하루치가 쌓이자 그렇게 멈췄다. 항상 좁은 경로에 쓸 것.
+   */
   update(path, values) {
+    if (!path) throw new Error('루트에 PATCH하지 말 것 — 좁은 경로를 지정해야 한다.')
     return this.request('PATCH', path, values)
+  }
+
+  put(path, value) {
+    return this.request('PUT', path, value)
+  }
+
+  /** 여러 요청을 동시에 몇 개씩만 굴린다. 순차로 하면 171개가 30초를 넘긴다. */
+  static async inBatches(items, size, run) {
+    for (let i = 0; i < items.length; i += size) {
+      await Promise.all(items.slice(i, i + size).map(run))
+    }
   }
 
   get(path) {

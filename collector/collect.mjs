@@ -49,27 +49,34 @@ async function collectOne(db, entry, now) {
   })
 
   const tick = tickKey(now)
-  const updates = {
-    [`posts/${key}/meta`]: {
-      bjId,
-      postNo,
-      title,
-      updatedAt: now.toISOString(),
-      commentCount: comments.length,
-      totalWithReplies,
-    },
-  }
 
+  // 쓰는 위치를 좁게 잡는다. 예전에는 루트에 한 번에 PATCH했는데, RTDB가 "쓰는 위치의
+  // 데이터 크기"로 한계를 걸기 때문에 데이터베이스가 커지자 하루 만에 거부당했다.
+  await db.put(`posts/${key}/meta`, {
+    bjId,
+    postNo,
+    title,
+    updatedAt: now.toISOString(),
+    commentCount: comments.length,
+    totalWithReplies,
+  })
+
+  // 댓글 정보는 작은 서브트리라 한 번에 보내도 된다.
+  // 닉네임은 바뀔 수 있으니 매번 덮어쓴다.
+  const profile = {}
   for (const c of comments) {
-    // 닉네임은 바뀔 수 있으니 매번 덮어쓴다. 대신 처음 본 시각은 건드리지 않는다.
-    updates[`posts/${key}/comments/${c.id}/nick`] = c.nick
-    updates[`posts/${key}/comments/${c.id}/userId`] = c.userId
-    updates[`posts/${key}/comments/${c.id}/regDate`] = c.date
-    updates[`posts/${key}/comments/${c.id}/likes`] = c.likes
-    updates[`posts/${key}/points/${c.id}/${tick}`] = c.likes
+    profile[`${c.id}/nick`] = c.nick
+    profile[`${c.id}/userId`] = c.userId
+    profile[`${c.id}/regDate`] = c.date
+    profile[`${c.id}/likes`] = c.likes
   }
+  await db.update(`posts/${key}/comments`, profile)
 
-  await db.update('', updates)
+  // 시계열은 통째로 크므로 사람별로 나눠 쓴다. 각 요청이 닿는 곳은 그 사람의 기록뿐이다.
+  await Rtdb.inBatches(comments, 8, (c) =>
+    db.update(`posts/${key}/points/${c.id}`, { [tick]: c.likes })
+  )
+
   return { key, title, count: comments.length, tick }
 }
 
@@ -79,18 +86,24 @@ async function thin(db, key, now) {
   const points = await db.get(`posts/${key}/points`)
   if (!points) return 0
 
-  const removals = {}
+  const perComment = new Map()
   let removed = 0
   for (const [commentId, series] of Object.entries(points)) {
+    const drop = {}
     for (const tick of Object.keys(series)) {
       const minute = Number(tick)
       if (minute < cutoff && minute % THIN_KEEP_EVERY !== 0) {
-        removals[`posts/${key}/points/${commentId}/${tick}`] = null
+        drop[tick] = null
         removed += 1
       }
     }
+    if (Object.keys(drop).length > 0) perComment.set(commentId, drop)
   }
-  if (removed > 0) await db.update('', removals)
+
+  // 여기도 사람별로 나눠 보낸다. 한 번에 몰면 수만 개가 되어 같은 한계에 걸린다.
+  await Rtdb.inBatches([...perComment], 8, ([commentId, drop]) =>
+    db.update(`posts/${key}/points/${commentId}`, drop)
+  )
   return removed
 }
 
