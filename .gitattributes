@@ -1,0 +1,5 @@
+# 이 저장소는 윈도우에서 편집하고 리눅스 VM에서 돌린다.
+# 셸 스크립트에 CR 이 섞이면 VM 에서 "bad interpreter" 로 죽으므로 LF 로 못박는다.
+*.sh text eol=lf
+*.mjs text eol=lf
+deploy/soop-collector.* text eol=lf

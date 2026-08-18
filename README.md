@@ -213,8 +213,10 @@ tail -f ~/soop-comment-rank/collector.log
 kill $(cat ~/soop-comment-rank/collector.pid)
 ```
 
-재부팅까지 견디지는 못한다. 그건 root 가 있어야 하고, GCP 라면 콘솔에서 VM 메타데이터에
-`startup-script` 로 `loginctl enable-linger 사용자` 를 넣어 두는 방법이 있다.
+**재부팅 후 자동 기동** — 루프 자체는 재부팅을 못 견딘다. GCP 콘솔에서
+VM → 수정 → 메타데이터에 키 `startup-script` 로
+[`deploy/gcp-startup-script.sh`](deploy/gcp-startup-script.sh) 내용을 넣으면, 부팅할 때마다
+root 가 linger 를 켜고 루프를 사용자 권한으로 띄운다. VM 안에 sudo 가 없어도 된다.
 
 **cron (설치돼 있고 쓸 수 있을 때)**
 

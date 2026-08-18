@@ -13,9 +13,18 @@ ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PIDFILE="$ROOT/collector.pid"
 
 # 이미 돌고 있으면 두 개가 되지 않게 한다.
-if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
-  echo "이미 실행 중입니다 (pid $(cat "$PIDFILE"))."
-  exit 0
+#
+# pid 가 살아 있는지만 보면 안 된다. 재부팅하면 남아 있던 pid 번호를 엉뚱한 프로세스가
+# 물려받는데, 하필 부팅 직후엔 낮은 번호가 금방 재사용된다. 그러면 이 스크립트가
+# "이미 실행 중"으로 착각하고 영영 뜨지 않는다. 그 pid 가 정말 이 스크립트인지 확인한다.
+if [ -f "$PIDFILE" ]; then
+  OLD=$(cat "$PIDFILE" 2>/dev/null)
+  # cmdline 은 NUL 로 나뉘어 있다. grep -a 면 그대로 문자열로 훑을 수 있다.
+  if [ -n "$OLD" ] && grep -qa 'loop-collector' "/proc/$OLD/cmdline" 2>/dev/null; then
+    echo "이미 실행 중입니다 (pid $OLD)."
+    exit 0
+  fi
+  rm -f "$PIDFILE"
 fi
 echo $$ >"$PIDFILE"
 trap 'rm -f "$PIDFILE"' EXIT INT TERM
