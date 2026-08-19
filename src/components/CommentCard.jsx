@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { channelUrl, commentUrl } from '../lib/soop'
 import { UNGROUPED_ID } from '../lib/groups'
+import { SEASON2_USER_IDS } from '../lib/season2'
 
 /**
  * 마지막으로 움직였을 때의 순위 변동. 갱신마다 지워지지 않고, 다시 움직이거나
@@ -57,6 +58,11 @@ export default function CommentCard({
         <span className="nick">{comment.nick}</span>
         <span className="uid">{comment.userId}</span>
 
+        {SEASON2_USER_IDS.has(comment.userId) && (
+          <span className="badge season2" title="시즌2 참여자">
+            시즌2
+          </span>
+        )}
         {comment.isBest && <span className="badge best">BEST</span>}
         {showGroupName && groupName && <span className="badge group-badge">{groupName}</span>}
         {comment.manual && (

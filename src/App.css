@@ -875,3 +875,9 @@ button:disabled {
   border-radius: var(--radius);
   color: var(--brass);
 }
+
+/* 시즌2 참여자 표시. 분류 배지와 색이 겹치지 않게 청록 계열로 뺀다. */
+.badge.season2 {
+  background: color-mix(in srgb, #25d7d7 22%, transparent);
+  color: #6fe3e3;
+}
