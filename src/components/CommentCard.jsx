@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { channelUrl, commentUrl } from '../lib/soop'
 import { UNGROUPED_ID } from '../lib/groups'
+import { SEASON1_USER_IDS } from '../lib/season1'
 import { SEASON2_USER_IDS } from '../lib/season2'
 
 /**
@@ -58,8 +59,13 @@ export default function CommentCard({
         <span className="nick">{comment.nick}</span>
         <span className="uid">{comment.userId}</span>
 
+        {SEASON1_USER_IDS.has(comment.userId) && (
+          <span className="badge season1" title="시즌1 참가자">
+            시즌1
+          </span>
+        )}
         {SEASON2_USER_IDS.has(comment.userId) && (
-          <span className="badge season2" title="시즌2 참여자">
+          <span className="badge season2" title="시즌2 참가자">
             시즌2
           </span>
         )}

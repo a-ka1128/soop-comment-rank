@@ -876,3 +876,9 @@ button:disabled {
   background: color-mix(in srgb, #25d7d7 22%, transparent);
   color: #6fe3e3;
 }
+
+/* 시즌1 표시. 시즌2(청록)와 나란히 붙을 수 있어 확실히 다른 색을 준다. */
+.badge.season1 {
+  background: color-mix(in srgb, #9d8bff 24%, transparent);
+  color: #b9adff;
+}
