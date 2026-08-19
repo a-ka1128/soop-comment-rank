@@ -25,6 +25,7 @@ export const SEASON1_USER_IDS = new Set([
   'rainsignac',            // 레인시냐크
   'sookbong777',           // 숙봉이
   'taegeuk0159',           // TaeGeuk > TaeGeuk_
+  'nmalinboy76',           // Marinboy > 마린보이_ (한글/로마자라 자동으로는 안 걸려 사람이 확인)
   'lights5655',            // 즈까락 > 즈까락∥
   'hemingway',             // 해밍웨이 > 해밍웨이_
 ])
@@ -68,7 +69,6 @@ export const SEASON1_UNRESOLVED = [
   '사다12',
   '주 한',
   'MrBlank',
-  'Marinboy',
   '그완트',
   '세기보',
   'Guardianone',
