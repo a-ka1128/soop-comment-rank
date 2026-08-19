@@ -115,7 +115,6 @@ function normalize(item) {
     likes: item.likeCnt ?? 0,
     date: item.regDate ?? '',
     profile: safeHttpUrl(item.profileImage),
-    isBest: !!item.isBestTop,
     replyCount: item.cCommentCnt ?? 0,
     photo: safeHttpUrl(item.photo?.url),
   }

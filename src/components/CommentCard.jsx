@@ -63,7 +63,6 @@ export default function CommentCard({
             시즌2
           </span>
         )}
-        {comment.isBest && <span className="badge best">BEST</span>}
         {showGroupName && groupName && <span className="badge group-badge">{groupName}</span>}
         {comment.manual && (
           <span className="badge manual" title="수동으로 지정한 분류입니다">

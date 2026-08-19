@@ -487,11 +487,6 @@ button:disabled {
   white-space: nowrap;
 }
 
-.badge.best {
-  background: color-mix(in srgb, var(--accent) 25%, transparent);
-  color: #c2d67a;
-}
-
 .badge.group-badge {
   background: color-mix(in srgb, var(--group) 22%, transparent);
   color: var(--group);
