@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { channelUrl, commentUrl } from '../lib/soop'
 import { UNGROUPED_ID } from '../lib/groups'
-import { SEASON1_USER_IDS } from '../lib/season1'
-import { SEASON2_USER_IDS } from '../lib/season2'
+import { seasonMatch } from '../lib/season'
 
 /**
  * 마지막으로 움직였을 때의 순위 변동. 갱신마다 지워지지 않고, 다시 움직이거나
@@ -21,6 +20,12 @@ function RankDelta({ move, hasSnapshot }) {
   )
 }
 
+function seasonTitle(label, hit) {
+  return hit.via === 'nick'
+    ? `${label} 참가자 — 명단의 '${hit.name}' 와 닉네임이 같습니다`
+    : `${label} 참가자`
+}
+
 export default function CommentCard({
   comment,
   bjId,
@@ -34,6 +39,7 @@ export default function CommentCard({
   hasSnapshot,
 }) {
   const [open, setOpen] = useState(false)
+  const seasons = seasonMatch(comment)
 
   return (
     <article
@@ -59,13 +65,13 @@ export default function CommentCard({
         <span className="nick">{comment.nick}</span>
         <span className="uid">{comment.userId}</span>
 
-        {SEASON1_USER_IDS.has(comment.userId) && (
-          <span className="badge season1" title="시즌1 참가자">
+        {seasons.season1 && (
+          <span className="badge season1" title={seasonTitle('시즌1', seasons.season1)}>
             시즌1
           </span>
         )}
-        {SEASON2_USER_IDS.has(comment.userId) && (
-          <span className="badge season2" title="시즌2 참가자">
+        {seasons.season2 && (
+          <span className="badge season2" title={seasonTitle('시즌2', seasons.season2)}>
             시즌2
           </span>
         )}
@@ -76,7 +82,10 @@ export default function CommentCard({
           </span>
         )}
         {comment.conflicts?.length > 0 && (
-          <span className="badge warn" title={`이 분류에도 걸립니다: ${comment.conflicts.join(', ')}`}>
+          <span
+            className="badge warn"
+            title={`이 분류에도 걸립니다: ${comment.conflicts.join(', ')}`}
+          >
             중복 {comment.conflicts.length}
           </span>
         )}
