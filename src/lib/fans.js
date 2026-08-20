@@ -90,37 +90,12 @@ export async function loadFanCounts(userIds, { signal, onUpdate } = {}) {
 }
 
 /**
- * 슬라이더 손잡이 위치(0~1000)와 실제 애청자 수 사이의 변환.
+ * 슬라이더 최대치.
  *
- * 애청자 수는 15명부터 30만 명까지 퍼져 있다. 위치를 인원수에 그대로 비례시키면
- * 한 칸이 300명이라 1명·2명 단위로는 세울 수가 없고, 반대로 한 칸을 1명으로 잡으면
- * 30만 칸짜리 슬라이더가 된다.
+ * 실제 최고는 30만 명 가까이 되지만 거기까지 늘리면 눈금 대부분이 사람 없는
+ * 구간이 된다 — 5만 명이 넘는 사람은 203명 중 16명뿐이다. 5만에서 끊으면
+ * 손잡이를 끝까지 밀었을 때 그 16명만 남는다.
  *
- * 그래서 두 구간으로 나눈다.
- *   왼쪽 100칸 — 한 칸이 정확히 1명. 0, 1, 2, 3 … 100 을 하나씩 짚을 수 있다.
- *   나머지 900칸 — 로그. 100명에서 최대치까지 비율로 늘어난다.
- * 정확한 값이 필요하면 옆의 숫자 칸에 그대로 적으면 된다.
+ * 정확한 수가 필요하면 옆 숫자 칸에 그대로 적으면 된다. 5만보다 큰 수도 받는다.
  */
-export const FAN_SLIDER_STEPS = 1000
-/** 여기까지는 한 칸 = 1명 */
-const LINEAR_UNTIL = 100
-
-/** 손잡이 위치 → 애청자 수 */
-export function fanValueAt(pos, max) {
-  if (!(max > 0)) return 0
-  const p = Math.min(Math.max(pos, 0), FAN_SLIDER_STEPS)
-  if (max <= LINEAR_UNTIL) return Math.round((p / FAN_SLIDER_STEPS) * max)
-  if (p <= LINEAR_UNTIL) return Math.round(p)
-  const t = (p - LINEAR_UNTIL) / (FAN_SLIDER_STEPS - LINEAR_UNTIL)
-  return Math.min(Math.round(LINEAR_UNTIL * (max / LINEAR_UNTIL) ** t), max)
-}
-
-/** 애청자 수 → 손잡이 위치 (숫자를 직접 적었을 때 손잡이를 맞춰 주려고) */
-export function fanPosOf(value, max) {
-  if (!(max > 0) || value <= 0) return 0
-  const v = Math.min(value, max)
-  if (max <= LINEAR_UNTIL) return Math.round((v / max) * FAN_SLIDER_STEPS)
-  if (v <= LINEAR_UNTIL) return Math.round(v)
-  const t = Math.log(v / LINEAR_UNTIL) / Math.log(max / LINEAR_UNTIL)
-  return Math.round(LINEAR_UNTIL + t * (FAN_SLIDER_STEPS - LINEAR_UNTIL))
-}
+export const FAN_MAX = 50000

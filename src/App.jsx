@@ -5,7 +5,7 @@ import CommentCard from './components/CommentCard'
 import PersonChart from './components/PersonChart'
 import { fetchAllComments, fetchPost, postUrl } from './lib/soop'
 import { buildGroups, detectCategories } from './lib/categories'
-import { FAN_SLIDER_STEPS, fanPosOf, fanValueAt, loadFanCounts } from './lib/fans'
+import { FAN_MAX, loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, classify, rank, validateGrouping } from './lib/groups'
 import { CUT_RANK, TARGET_POST } from './lib/target'
 import { useFlipReorder } from './hooks/useFlipReorder'
@@ -256,13 +256,6 @@ export default function App() {
       )
     })
   }, [activeSection, query, fans, minFans])
-
-  /** 슬라이더 오른쪽 끝. 실제로 나온 가장 큰 애청자 수에 맞춘다. */
-  const fanMax = useMemo(() => {
-    let max = 0
-    for (const n of fans.values()) if (n != null && n > max) max = n
-    return max
-  }, [fans])
 
   /** 걸러진 사람 수와, 애청자 수를 아직 모르는 사람 수. */
   const filterInfo = useMemo(() => {
@@ -532,11 +525,11 @@ export default function App() {
               <input
                 type="range"
                 min="0"
-                max={FAN_SLIDER_STEPS}
+                max={FAN_MAX}
                 step="1"
-                value={fanPosOf(minFans, fanMax)}
-                onChange={(e) => setMinFans(fanValueAt(Number(e.target.value), fanMax))}
-                disabled={fanMax === 0}
+                value={Math.min(minFans, FAN_MAX)}
+                onChange={(e) => setMinFans(Number(e.target.value))}
+                disabled={fans.size === 0}
                 aria-label="애청자 수 하한"
               />
               {/* 슬라이더로는 정확히 1,000 같은 수에 세우기 어렵다. 직접 적을 수도 있게 둔다. */}
@@ -544,7 +537,6 @@ export default function App() {
                 className="fanfilter-num"
                 type="number"
                 min="0"
-                max={fanMax || undefined}
                 value={minFans}
                 onChange={(e) => setMinFans(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
                 aria-label="애청자 수 하한 직접 입력"
