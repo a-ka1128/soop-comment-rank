@@ -253,18 +253,28 @@ export default function App() {
   /**
    * 애청자 수로 자르고 남은 사람들. 자른 뒤에는 순위를 다시 매긴다 —
    * 이 조건에서 뽑는다면 남은 사람들이 곧 1등부터이기 때문이다.
+   * 목록과 닉네임 추출이 같은 함수를 쓴다. 화면에서 자른 사람이 추출에는 남아
+   * 있으면, 어느 쪽이 맞는지 알 수 없는 명단이 나온다.
    */
-  const cutItems = useMemo(() => {
-    const items = activeSection?.items ?? []
-    if (appliedMinFans === 0) return items
-    const kept = items.filter((c) => {
-      const count = fans.get(c.userId)
-      // 아직 못 받았거나 방송국이 없는 사람은 숨기지 않는다. 자료가 없다는 이유로
-      // 사람을 지우면, 방금 댓글을 단 사람이 조용히 사라진다.
-      return count == null || count >= appliedMinFans
-    })
-    return kept.map((c, i) => ({ ...c, rank: i + 1 }))
-  }, [activeSection, fans, appliedMinFans])
+  const applyCut = useCallback(
+    (items) => {
+      if (appliedMinFans === 0) return items
+      return items
+        .filter((c) => {
+          const count = fans.get(c.userId)
+          // 아직 못 받았거나 방송국이 없는 사람은 숨기지 않는다. 자료가 없다는 이유로
+          // 사람을 지우면, 방금 댓글을 단 사람이 조용히 사라진다.
+          return count == null || count >= appliedMinFans
+        })
+        .map((c, i) => ({ ...c, rank: i + 1 }))
+    },
+    [fans, appliedMinFans],
+  )
+
+  const cutItems = useMemo(
+    () => applyCut(activeSection?.items ?? []),
+    [applyCut, activeSection],
+  )
 
   /**
    * 검색은 자르는 게 아니라 찾는 것이다. 여기서는 순위를 다시 매기지 않는다 —
@@ -314,11 +324,14 @@ export default function App() {
    * 닉네임 추출은 그룹이 있으면 그룹별로, 없으면 전체 하나로.
    * 미분류는 뽑을 대상이 아니라 남은 찌꺼기라 여기서 뺀다 (미분류 탭에서 확인).
    */
-  const exportSections = grouped
-    ? sections.filter((s) => s.id !== UNGROUPED_ID)
-    : allSection
-      ? [allSection]
-      : []
+  const exportSections = useMemo(() => {
+    const base = grouped
+      ? sections.filter((s) => s.id !== UNGROUPED_ID)
+      : allSection
+        ? [allSection]
+        : []
+    return base.map((s) => ({ ...s, items: applyCut(s.items) }))
+  }, [grouped, sections, allSection, applyCut])
 
   async function load() {
     const parsed = TARGET_POST
