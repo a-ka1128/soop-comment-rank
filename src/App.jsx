@@ -5,7 +5,7 @@ import CommentCard from './components/CommentCard'
 import PersonChart from './components/PersonChart'
 import { fetchAllComments, fetchPost, postUrl } from './lib/soop'
 import { buildGroups, detectCategories } from './lib/categories'
-import { FAN_MAX, loadFanCounts } from './lib/fans'
+import { FAN_MAX, FAN_STEP, loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, classify, rank, validateGrouping } from './lib/groups'
 import { CUT_RANK, TARGET_POST } from './lib/target'
 import { useFlipReorder } from './hooks/useFlipReorder'
@@ -291,6 +291,12 @@ export default function App() {
     )
   }, [cutItems, query])
 
+  /**
+   * 손잡이가 설 자리. 눈금 위에만 선다. 숫자 칸에 눈금 사이 값을 적으면 손잡이는
+   * 가장 가까운 눈금에 놓이지만, 거르는 기준은 적어 넣은 수 그대로다.
+   */
+  const handlePos = Math.round(Math.min(minFans, FAN_MAX) / FAN_STEP) * FAN_STEP
+
   /** 이 조건에서 몇 명이 남는지. 애청자 수를 모르는 사람은 남는 쪽에 넣는다(숨기지 않으므로). */
   const filterInfo = useMemo(() => {
     const items = activeSection?.items ?? []
@@ -567,11 +573,11 @@ export default function App() {
                 type="range"
                 min="0"
                 max={FAN_MAX}
-                step="1"
-                value={Math.min(minFans, FAN_MAX)}
+                step={FAN_STEP}
+                value={handlePos}
                 onChange={(e) => setMinFans(Number(e.target.value))}
                 disabled={fans.size === 0}
-                style={{ '--fill': `${(Math.min(minFans, FAN_MAX) / FAN_MAX) * 100}%` }}
+                style={{ '--fill': `${(handlePos / FAN_MAX) * 100}%` }}
                 aria-label="애청자 수 하한"
               />
               {/* 슬라이더로는 정확히 1,000 같은 수에 세우기 어렵다. 직접 적을 수도 있게 둔다. */}
@@ -579,6 +585,7 @@ export default function App() {
                 className="fanfilter-num"
                 type="number"
                 min="0"
+                step={FAN_STEP}
                 value={minFans}
                 onChange={(e) => setMinFans(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
                 aria-label="애청자 수 하한 직접 입력"

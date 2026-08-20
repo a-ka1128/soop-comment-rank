@@ -99,3 +99,6 @@ export async function loadFanCounts(userIds, { signal, onUpdate } = {}) {
  * 정확한 수가 필요하면 옆 숫자 칸에 그대로 적으면 된다. 5만보다 큰 수도 받는다.
  */
 export const FAN_MAX = 50000
+
+/** 눈금 간격. 한 명 단위로는 손잡이가 너무 잘게 놀아 100명씩 끊는다. */
+export const FAN_STEP = 100
