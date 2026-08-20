@@ -250,24 +250,36 @@ export default function App() {
     return should
   })
 
+  /**
+   * 애청자 수로 자르고 남은 사람들. 자른 뒤에는 순위를 다시 매긴다 —
+   * 이 조건에서 뽑는다면 남은 사람들이 곧 1등부터이기 때문이다.
+   */
+  const cutItems = useMemo(() => {
+    const items = activeSection?.items ?? []
+    if (appliedMinFans === 0) return items
+    const kept = items.filter((c) => {
+      const count = fans.get(c.userId)
+      // 아직 못 받았거나 방송국이 없는 사람은 숨기지 않는다. 자료가 없다는 이유로
+      // 사람을 지우면, 방금 댓글을 단 사람이 조용히 사라진다.
+      return count == null || count >= appliedMinFans
+    })
+    return kept.map((c, i) => ({ ...c, rank: i + 1 }))
+  }, [activeSection, fans, appliedMinFans])
+
+  /**
+   * 검색은 자르는 게 아니라 찾는 것이다. 여기서는 순위를 다시 매기지 않는다 —
+   * 한 사람을 검색했다고 그 사람이 1등이 되면 곤란하다.
+   */
   const visibleItems = useMemo(() => {
-    if (!activeSection) return []
     const q = query.trim().toLowerCase()
-    return activeSection.items.filter((c) => {
-      if (appliedMinFans > 0) {
-        const count = fans.get(c.userId)
-        // 아직 못 받았거나 방송국이 없는 사람은 숨기지 않는다. 자료가 없다는 이유로
-        // 사람을 지우면, 방금 댓글을 단 사람이 조용히 사라진다.
-        if (count != null && count < appliedMinFans) return false
-      }
-      if (!q) return true
-      return (
+    if (!q) return cutItems
+    return cutItems.filter(
+      (c) =>
         c.nick.toLowerCase().includes(q) ||
         c.userId.toLowerCase().includes(q) ||
-        c.text.toLowerCase().includes(q)
-      )
-    })
-  }, [activeSection, query, fans, appliedMinFans])
+        c.text.toLowerCase().includes(q),
+    )
+  }, [cutItems, query])
 
   /** 이 조건에서 몇 명이 남는지. 애청자 수를 모르는 사람은 남는 쪽에 넣는다(숨기지 않으므로). */
   const filterInfo = useMemo(() => {
@@ -287,16 +299,16 @@ export default function App() {
   }, [activeSection, fans, appliedMinFans])
 
   /**
-   * 컷 위아래의 좋아요 차이는 화면에 보이는 이웃이 아니라 실제 순위에서 뽑는다.
-   * 검색이나 애청자 필터로 119등이 가려져 있어도 숫자가 흔들리지 않아야 한다.
+   * 컷 위아래의 좋아요 차이. 검색으로 119등이 가려져 있어도 흔들리지 않게
+   * 화면에 보이는 이웃이 아니라 컷 적용 후의 순위에서 직접 뽑는다.
+   * 애청자로 걸러 낸 뒤라면 그 안에서의 119등이 기준이 된다.
    */
   const cutInfo = useMemo(() => {
-    const items = activeSection?.items ?? []
-    if (!CUT_RANK || items.length <= CUT_RANK) return null
-    const last = items[CUT_RANK - 1]
-    const next = items[CUT_RANK]
+    if (!CUT_RANK || cutItems.length <= CUT_RANK) return null
+    const last = cutItems[CUT_RANK - 1]
+    const next = cutItems[CUT_RANK]
     return { gap: last.likes - next.likes, likes: next.likes }
-  }, [activeSection])
+  }, [cutItems])
 
   /**
    * 닉네임 추출은 그룹이 있으면 그룹별로, 없으면 전체 하나로.
