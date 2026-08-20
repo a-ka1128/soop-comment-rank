@@ -28,6 +28,7 @@ function seasonTitle(label, hit) {
 
 export default function CommentCard({
   comment,
+  fanCount,
   bjId,
   postNo,
   color,
@@ -91,6 +92,11 @@ export default function CommentCard({
         )}
 
         <span className="spacer" />
+        {typeof fanCount === 'number' && (
+          <span className="fans" title={`방송국 애청자 ${fanCount.toLocaleString()}명`}>
+            ★{fanCount.toLocaleString()}
+          </span>
+        )}
         <span className="likes">♥ {comment.likes.toLocaleString()}</span>
         {/* 순위 변동이 ▲▼라서, 펼침 표시는 헷갈리지 않게 다른 모양을 쓴다. */}
         <span className="chevron" aria-hidden="true">

@@ -139,6 +139,25 @@ export async function fetchPost(bjId, postNo, { signal } = {}) {
 }
 
 /**
+ * 방송국의 애청자(즐겨찾기) 수.
+ *
+ * 댓글 API 에는 없어서 사람마다 따로 물어야 한다. 탈퇴했거나 방송국이 없는
+ * 계정은 404 가 오는데, 그건 고장이 아니라 그냥 '모름'이다. 부르는 쪽에서
+ * 가려내라고 kind 를 그대로 달아 던진다.
+ *
+ * @returns {number|null} 응답에 수가 없으면 null
+ */
+export async function fetchFanCount(userId, { signal } = {}) {
+  const data = await fetchJson(
+    `${API_BASE}/${encodeURIComponent(userId)}/station`,
+    signal,
+    'notfound'
+  )
+  const count = data?.upd?.fanCnt
+  return Number.isFinite(count) ? count : null
+}
+
+/**
  * 우리가 실제로 읽는 필드가 그대로 있는지 확인한다.
  * 이게 없으면 필드명이 바뀌었을 때 조용히 "댓글 0개"로 보인다 — 틀린 답을
  * 자신 있게 내놓는 상태라, 차라리 실패로 끊는 게 낫다.

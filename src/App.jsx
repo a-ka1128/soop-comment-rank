@@ -5,6 +5,7 @@ import CommentCard from './components/CommentCard'
 import PersonChart from './components/PersonChart'
 import { fetchAllComments, fetchPost, postUrl } from './lib/soop'
 import { buildGroups, detectCategories } from './lib/categories'
+import { FAN_SLIDER_STEPS, fanPosOf, fanValueAt, loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, classify, rank, validateGrouping } from './lib/groups'
 import { CUT_RANK, TARGET_POST } from './lib/target'
 import { useFlipReorder } from './hooks/useFlipReorder'
@@ -45,6 +46,11 @@ export default function App() {
 
   const [personOpen, setPersonOpen] = useState(false)
 
+  /** userId -> 애청자 수. null 은 '알 수 없음'이고, 그 사람은 걸러 내지 않는다. */
+  const [fans, setFans] = useState(() => new Map())
+  const [fansLoading, setFansLoading] = useState(false)
+  const [minFans, setMinFans] = useState(0)
+
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [refreshedAt, setRefreshedAt] = useState(null)
   /**
@@ -60,6 +66,8 @@ export default function App() {
   const renderRef = useRef({ allSection: null, sections: [] })
   const listRef = useRef(null)
   const animateNextRef = useRef(false)
+  /** 이미 물어본 userId. 10초마다 갱신될 때 같은 사람을 다시 묻지 않기 위한 것. */
+  const fansAskedRef = useRef(new Set())
 
   useEffect(() => {
     if (!data) return
@@ -157,6 +165,37 @@ export default function App() {
   }, [autoRefresh, data])
 
   /**
+   * 애청자 수는 댓글 API 에 없어서 사람마다 따로 묻는다. 갱신 때마다 200번씩 다시
+   * 물을 수는 없으니, 아직 안 물어본 사람만 골라 낸다. 새로 댓글을 단 사람은
+   * 다음 갱신에서 한 명분 요청으로 채워진다.
+   */
+  useEffect(() => {
+    if (!data) return
+    const missing = data.comments
+      .map((c) => c.userId)
+      .filter((id) => id && !fansAskedRef.current.has(id))
+    if (missing.length === 0) return
+    for (const id of missing) fansAskedRef.current.add(id)
+
+    const controller = new AbortController()
+    setFansLoading(true)
+    loadFanCounts(missing, {
+      signal: controller.signal,
+      onUpdate: (partial) =>
+        setFans((prev) => {
+          const next = new Map(prev)
+          for (const [id, n] of partial) next.set(id, n)
+          return next
+        }),
+    })
+      .catch(() => {})
+      .finally(() => {
+        if (!controller.signal.aborted) setFansLoading(false)
+      })
+    return () => controller.abort()
+  }, [data])
+
+  /**
    * 새 순위가 그려진 뒤, 직전 순위와 비교해 이동 기록을 갱신한다.
    * 움직이지 않은 줄은 예전 기록을 그대로 들고 있다가 MOVE_TTL_MS 가 지나면 놓는다.
    */
@@ -202,14 +241,54 @@ export default function App() {
   const visibleItems = useMemo(() => {
     if (!activeSection) return []
     const q = query.trim().toLowerCase()
-    if (!q) return activeSection.items
-    return activeSection.items.filter(
-      (c) =>
+    return activeSection.items.filter((c) => {
+      if (minFans > 0) {
+        const count = fans.get(c.userId)
+        // 아직 못 받았거나 방송국이 없는 사람은 숨기지 않는다. 자료가 없다는 이유로
+        // 사람을 지우면, 방금 댓글을 단 사람이 조용히 사라진다.
+        if (count != null && count < minFans) return false
+      }
+      if (!q) return true
+      return (
         c.nick.toLowerCase().includes(q) ||
         c.userId.toLowerCase().includes(q) ||
-        c.text.toLowerCase().includes(q),
-    )
-  }, [activeSection, query])
+        c.text.toLowerCase().includes(q)
+      )
+    })
+  }, [activeSection, query, fans, minFans])
+
+  /** 슬라이더 오른쪽 끝. 실제로 나온 가장 큰 애청자 수에 맞춘다. */
+  const fanMax = useMemo(() => {
+    let max = 0
+    for (const n of fans.values()) if (n != null && n > max) max = n
+    return max
+  }, [fans])
+
+  /** 걸러진 사람 수와, 애청자 수를 아직 모르는 사람 수. */
+  const filterInfo = useMemo(() => {
+    const items = activeSection?.items ?? []
+    if (minFans === 0) return { hidden: 0, unknown: 0 }
+    let hidden = 0
+    let unknown = 0
+    for (const c of items) {
+      const count = fans.get(c.userId)
+      if (count == null) unknown += 1
+      else if (count < minFans) hidden += 1
+    }
+    return { hidden, unknown }
+  }, [activeSection, fans, minFans])
+
+  /**
+   * 컷 위아래의 좋아요 차이는 화면에 보이는 이웃이 아니라 실제 순위에서 뽑는다.
+   * 검색이나 애청자 필터로 119등이 가려져 있어도 숫자가 흔들리지 않아야 한다.
+   */
+  const cutInfo = useMemo(() => {
+    const items = activeSection?.items ?? []
+    if (!CUT_RANK || items.length <= CUT_RANK) return null
+    const last = items[CUT_RANK - 1]
+    const next = items[CUT_RANK]
+    return { gap: last.likes - next.likes, likes: next.likes }
+  }, [activeSection])
 
   /**
    * 닉네임 추출은 그룹이 있으면 그룹별로, 없으면 전체 하나로.
@@ -448,6 +527,38 @@ export default function App() {
               </>
             )}
             <span className="spacer" />
+            <label className="fanfilter">
+              <span className="fanfilter-label">애청자</span>
+              <input
+                type="range"
+                min="0"
+                max={FAN_SLIDER_STEPS}
+                step="1"
+                value={fanPosOf(minFans, fanMax)}
+                onChange={(e) => setMinFans(fanValueAt(Number(e.target.value), fanMax))}
+                disabled={fanMax === 0}
+                aria-label="애청자 수 하한"
+              />
+              {/* 슬라이더로는 정확히 1,000 같은 수에 세우기 어렵다. 직접 적을 수도 있게 둔다. */}
+              <input
+                className="fanfilter-num"
+                type="number"
+                min="0"
+                max={fanMax || undefined}
+                value={minFans}
+                onChange={(e) => setMinFans(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
+                aria-label="애청자 수 하한 직접 입력"
+              />
+              <span className="fanfilter-unit">명 이상</span>
+              <span className="fanfilter-note">
+                {fansLoading
+                  ? '불러오는 중…'
+                  : minFans === 0
+                    ? ''
+                    : `${filterInfo.hidden}명 숨김` +
+                      (filterInfo.unknown > 0 ? ` · 미확인 ${filterInfo.unknown}명은 표시` : '')}
+              </span>
+            </label>
             <input
               className="search"
               value={query}
@@ -465,17 +576,17 @@ export default function App() {
                 CUT_RANK && prev && prev.rank <= CUT_RANK && comment.rank > CUT_RANK
               // 컷 바로 위아래의 좋아요 차이. 지금 몇 개 차이로 갈리는지가
               // 이 선을 보는 사람이 실제로 알고 싶은 숫자다.
-              const cutGap = crossesCut ? prev.likes - comment.likes : 0
+              const cutGap = cutInfo?.gap ?? 0
               return (
                 <div key={comment.id}>
                   {crossesCut && (
                     <div className="cutline">
                       <span className="cutline-label">{CUT_RANK}위 컷</span>
-                      {cutGap === 0 ? (
+                      {cutInfo && cutGap === 0 ? (
                         // 동점이면 컷이 좋아요로 갈린 게 아니라 작성 시각으로 갈린 것이다.
                         // "0개 차이"로 적으면 그 사실이 묻힌다.
                         <span className="cutline-gap is-tie">
-                          동점 ♥{comment.likes.toLocaleString()} — 작성 순서로 갈림
+                          동점 ♥{cutInfo.likes.toLocaleString()} — 작성 순서로 갈림
                         </span>
                       ) : (
                         <span className="cutline-gap">♥{cutGap.toLocaleString()}개 차이</span>
@@ -484,6 +595,7 @@ export default function App() {
                   )}
                   <CommentCard
                     comment={comment}
+                    fanCount={fans.get(comment.userId)}
                     bjId={data.bjId}
                     postNo={data.postNo}
                     move={moves.get(activeSection.id)?.get(comment.id)}

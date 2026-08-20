@@ -882,3 +882,69 @@ button:disabled {
   background: color-mix(in srgb, #9d8bff 24%, transparent);
   color: #b9adff;
 }
+
+/* 애청자 수 필터 --------------------------------------------------------- */
+
+.fanfilter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-left: 1px solid var(--line);
+}
+
+.fanfilter-label {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* 직접 적는 칸. 슬라이더로 못 세우는 딱 떨어지는 수를 넣기 위한 것. */
+.fanfilter-num {
+  width: 68px;
+  padding: 3px 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--brass);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.fanfilter-num:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.fanfilter-unit {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.fanfilter input[type='range'] {
+  width: 130px;
+  accent-color: var(--brass);
+  cursor: pointer;
+}
+
+/* 숨긴 사람 수. 값이 없을 때도 자리를 차지해 옆의 검색창이 밀리지 않게 한다. */
+.fanfilter-note {
+  min-width: 148px;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.fans {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
