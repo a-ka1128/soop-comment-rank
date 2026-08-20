@@ -927,13 +927,81 @@ button:disabled {
   white-space: nowrap;
 }
 
+/* 슬라이더. 기본 모양(둥근 손잡이)을 걷어내고 조준경 눈금처럼 각지게 세운다.
+   --fill 은 App 에서 넣어 주는 현재 위치(%)로, 지나온 구간을 황동색으로 채운다. */
 .fanfilter input[type='range'] {
-  width: 130px;
-  accent-color: var(--brass);
+  --fill: 0%;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 220px;
+  height: 20px;
+  background: transparent;
   cursor: pointer;
 }
 
-/* 숨긴 사람 수. 값이 없을 때도 자리를 차지해 옆의 검색창이 밀리지 않게 한다. */
+.fanfilter input[type='range']:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.fanfilter input[type='range']::-webkit-slider-runnable-track {
+  height: 6px;
+  background: linear-gradient(
+    to right,
+    var(--brass) 0 var(--fill),
+    var(--panel-2) var(--fill) 100%
+  );
+  border: 1px solid var(--line);
+}
+
+.fanfilter input[type='range']::-moz-range-track {
+  height: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+}
+
+.fanfilter input[type='range']::-moz-range-progress {
+  height: 6px;
+  background: var(--brass);
+}
+
+/* 손잡이 — 가늠쇠 모양의 납작한 날. 가운데 어두운 홈으로 정확한 위치를 짚는다. */
+.fanfilter input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 9px;
+  height: 20px;
+  margin-top: -8px;
+  background: var(--brass);
+  background-image: linear-gradient(
+    to bottom,
+    transparent calc(50% - 1px),
+    var(--bg) calc(50% - 1px) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+  border: 1px solid var(--bg);
+  border-radius: 1px;
+}
+
+.fanfilter input[type='range']::-moz-range-thumb {
+  width: 9px;
+  height: 20px;
+  background: var(--brass);
+  background-image: linear-gradient(
+    to bottom,
+    transparent calc(50% - 1px),
+    var(--bg) calc(50% - 1px) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+  border: 1px solid var(--bg);
+  border-radius: 1px;
+}
+
+.fanfilter input[type='range']:focus-visible {
+  outline: 1px solid var(--brass);
+  outline-offset: 3px;
+}
+
+/* 남은 사람 수. 값이 없을 때도 자리를 차지해 옆의 검색창이 밀리지 않게 한다. */
 .fanfilter-note {
   min-width: 148px;
   font-size: 11px;
@@ -941,10 +1009,3 @@ button:disabled {
   white-space: nowrap;
 }
 
-.fans {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}

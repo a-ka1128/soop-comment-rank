@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { channelUrl, commentUrl } from '../lib/soop'
 import { UNGROUPED_ID } from '../lib/groups'
 import { seasonMatch } from '../lib/season'
@@ -26,9 +26,12 @@ function seasonTitle(label, hit) {
     : `${label} 참가자`
 }
 
-export default function CommentCard({
+/**
+ * 줄이 200개가 넘는다. 슬라이더를 끌 때처럼 부모가 자주 다시 그려지는 상황에서
+ * 내용이 그대로인 줄까지 다시 그리면 눈에 띄게 걸린다.
+ */
+function CommentCard({
   comment,
-  fanCount,
   bjId,
   postNo,
   color,
@@ -92,11 +95,6 @@ export default function CommentCard({
         )}
 
         <span className="spacer" />
-        {typeof fanCount === 'number' && (
-          <span className="fans" title={`방송국 애청자 ${fanCount.toLocaleString()}명`}>
-            ★{fanCount.toLocaleString()}
-          </span>
-        )}
         <span className="likes">♥ {comment.likes.toLocaleString()}</span>
         {/* 순위 변동이 ▲▼라서, 펼침 표시는 헷갈리지 않게 다른 모양을 쓴다. */}
         <span className="chevron" aria-hidden="true">
@@ -157,3 +155,5 @@ export default function CommentCard({
     </article>
   )
 }
+
+export default memo(CommentCard)

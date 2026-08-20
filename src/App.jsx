@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import GroupPanel from './components/GroupPanel'
 import NicknameExport from './components/NicknameExport'
 import CommentCard from './components/CommentCard'
@@ -50,6 +50,8 @@ export default function App() {
   const [fans, setFans] = useState(() => new Map())
   const [fansLoading, setFansLoading] = useState(false)
   const [minFans, setMinFans] = useState(0)
+  /** 실제로 목록에 적용된 하한. 손잡이를 놓거나 잠깐 멈췄을 때 따라온다. */
+  const [appliedMinFans, setAppliedMinFans] = useState(0)
 
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [refreshedAt, setRefreshedAt] = useState(null)
@@ -165,6 +167,16 @@ export default function App() {
   }, [autoRefresh, data])
 
   /**
+   * 손잡이를 끄는 동안 목록을 매번 다시 세우면, 줄이 사라질 때마다 아래 줄이
+   * 위로 올라붙어 화면이 덜그럭거린다. 특히 5만 근처는 한 번 움직일 때마다
+   * 수십 명이 빠져서 더 심하다. 손이 잠깐 멈춘 뒤에 한 번만 반영한다.
+   */
+  useEffect(() => {
+    const timer = setTimeout(() => setAppliedMinFans(minFans), 140)
+    return () => clearTimeout(timer)
+  }, [minFans])
+
+  /**
    * 애청자 수는 댓글 API 에 없어서 사람마다 따로 묻는다. 갱신 때마다 200번씩 다시
    * 물을 수는 없으니, 아직 안 물어본 사람만 골라 낸다. 새로 댓글을 단 사람은
    * 다음 갱신에서 한 명분 요청으로 채워진다.
@@ -242,11 +254,11 @@ export default function App() {
     if (!activeSection) return []
     const q = query.trim().toLowerCase()
     return activeSection.items.filter((c) => {
-      if (minFans > 0) {
+      if (appliedMinFans > 0) {
         const count = fans.get(c.userId)
         // 아직 못 받았거나 방송국이 없는 사람은 숨기지 않는다. 자료가 없다는 이유로
         // 사람을 지우면, 방금 댓글을 단 사람이 조용히 사라진다.
-        if (count != null && count < minFans) return false
+        if (count != null && count < appliedMinFans) return false
       }
       if (!q) return true
       return (
@@ -255,21 +267,24 @@ export default function App() {
         c.text.toLowerCase().includes(q)
       )
     })
-  }, [activeSection, query, fans, minFans])
+  }, [activeSection, query, fans, appliedMinFans])
 
-  /** 걸러진 사람 수와, 애청자 수를 아직 모르는 사람 수. */
+  /** 이 조건에서 몇 명이 남는지. 애청자 수를 모르는 사람은 남는 쪽에 넣는다(숨기지 않으므로). */
   const filterInfo = useMemo(() => {
     const items = activeSection?.items ?? []
-    if (minFans === 0) return { hidden: 0, unknown: 0 }
-    let hidden = 0
+    let remaining = 0
     let unknown = 0
     for (const c of items) {
       const count = fans.get(c.userId)
-      if (count == null) unknown += 1
-      else if (count < minFans) hidden += 1
+      if (count == null) {
+        unknown += 1
+        remaining += 1
+      } else if (count >= appliedMinFans) {
+        remaining += 1
+      }
     }
-    return { hidden, unknown }
-  }, [activeSection, fans, minFans])
+    return { remaining, unknown }
+  }, [activeSection, fans, appliedMinFans])
 
   /**
    * 컷 위아래의 좋아요 차이는 화면에 보이는 이웃이 아니라 실제 순위에서 뽑는다.
@@ -377,14 +392,15 @@ export default function App() {
   refreshRef.current = refreshComments
   loadRef.current = load
 
-  function assign(commentId, groupId) {
+  // 매 렌더마다 새 함수를 만들면 아래 CommentCard 의 memo 가 아무 일도 못 한다.
+  const assign = useCallback((commentId, groupId) => {
     setOverrides((prev) => {
       const next = { ...prev }
       if (groupId) next[commentId] = groupId
       else delete next[commentId]
       return next
     })
-  }
+  }, [])
 
   return (
     <div className="app">
@@ -530,6 +546,7 @@ export default function App() {
                 value={Math.min(minFans, FAN_MAX)}
                 onChange={(e) => setMinFans(Number(e.target.value))}
                 disabled={fans.size === 0}
+                style={{ '--fill': `${(Math.min(minFans, FAN_MAX) / FAN_MAX) * 100}%` }}
                 aria-label="애청자 수 하한"
               />
               {/* 슬라이더로는 정확히 1,000 같은 수에 세우기 어렵다. 직접 적을 수도 있게 둔다. */}
@@ -545,10 +562,10 @@ export default function App() {
               <span className="fanfilter-note">
                 {fansLoading
                   ? '불러오는 중…'
-                  : minFans === 0
-                    ? ''
-                    : `${filterInfo.hidden}명 숨김` +
-                      (filterInfo.unknown > 0 ? ` · 미확인 ${filterInfo.unknown}명은 표시` : '')}
+                  : `${filterInfo.remaining}명 남음` +
+                    (appliedMinFans > 0 && filterInfo.unknown > 0
+                      ? ` · 미확인 ${filterInfo.unknown}명 포함`
+                      : '')}
               </span>
             </label>
             <input
@@ -587,7 +604,6 @@ export default function App() {
                   )}
                   <CommentCard
                     comment={comment}
-                    fanCount={fans.get(comment.userId)}
                     bjId={data.bjId}
                     postNo={data.postNo}
                     move={moves.get(activeSection.id)?.get(comment.id)}
