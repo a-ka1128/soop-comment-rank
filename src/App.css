@@ -1,7 +1,7 @@
 .app {
   position: relative;
   z-index: 1;
-  max-width: 960px;
+  max-width: 1240px;
   margin: 0 auto;
   padding: 28px 20px 80px;
 }
@@ -15,15 +15,21 @@
   color: var(--muted);
 }
 
-.swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: var(--radius);
-  background: var(--group);
-  flex: none;
+/* ---------- 머리말 ---------- */
+
+.topbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-/* ---------- top bar ---------- */
+.brand-logo {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  object-fit: contain;
+  flex: none;
+}
 
 .topbar .brand h1 {
   margin: 0;
@@ -40,64 +46,9 @@
   font-size: 14px;
 }
 
-.loader {
-  display: flex;
-  gap: 8px;
-}
-
-.loader input {
-  flex: 1;
-  min-width: 0;
-  padding: 11px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
-}
-
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.loader button[type='submit'],
-button.primary {
-  padding: 11px 20px;
-  border: 0;
-  border-radius: var(--radius);
-  background: var(--accent);
-  color: var(--bg);
-  font-weight: 700;
-}
-
-button.primary {
-  padding: 9px 14px;
-  font-size: 13px;
-}
-
-button.ghost {
-  padding: 9px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 13px;
-}
-
-button.ghost:hover {
-  color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .progress {
   position: relative;
-  margin-top: 12px;
+  margin-bottom: 12px;
   height: 22px;
   border-radius: var(--radius);
   background: var(--panel);
@@ -120,7 +71,7 @@ button:disabled {
 }
 
 .error {
-  margin: 12px 0 0;
+  margin: 0 0 12px;
   padding: 10px 14px;
   border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
   border-radius: var(--radius);
@@ -128,261 +79,44 @@ button:disabled {
   font-size: 14px;
 }
 
-.placeholder {
-  margin-top: 48px;
-  text-align: center;
-  color: var(--muted);
+/* ---------- 좌우 두 칸 ---------- */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
 }
 
-/* ---------- summary ---------- */
-
-.summary {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 22px 0 16px;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
+/* 명단은 길고 댓글 칸은 짧다. 스크롤을 내려도 오른쪽이 따라오게 붙여 둔다. */
+.detail-pane {
+  position: sticky;
+  top: 20px;
 }
 
-.stat {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  margin-right: 8px;
-}
+/* ---------- 명단 한 줄 ---------- */
 
-.stat strong {
-  font-family: var(--mono);
-  font-size: 18px;
-}
-
-.stat span {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.post-link {
-  font-size: 13px;
-  color: var(--muted);
-  text-decoration: none;
-}
-
-.post-link:hover {
-  color: var(--text);
-}
-
-/* ---------- detected groups panel ---------- */
-
-.panel,
-.export {
-  margin-bottom: 16px;
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
-}
-
-/* 패널 제목은 작전 표지처럼 작게 자간을 벌린다. */
-.panel-head h2,
-.export-head h2 {
-  margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-
-.panel-head p {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.detected {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 14px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.detected li {
+.row {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--group);
-  border-radius: var(--radius);
-  background: var(--panel-2);
-  font-size: 14px;
-}
-
-/* ---------- nickname export ---------- */
-
-.export {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-}
-
-.export-opts {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin: 10px 0 14px;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.export-opts label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-}
-
-.export-groups {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.export-group {
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--group);
-  border-radius: var(--radius);
-  background: var(--panel-2);
-}
-
-.export-group-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-.take {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.take input {
-  width: 68px;
-  padding: 4px 8px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
-  font-variant-numeric: tabular-nums;
-}
-
-.tie {
-  margin: 0 0 10px;
-  padding: 8px 12px;
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--brass) 14%, transparent);
-  color: var(--brass);
-  font-size: 12px;
-}
-
-.export-group textarea {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
-  color: var(--text);
-  font-family: inherit;
-  font-size: 13px;
-  line-height: 1.7;
-  resize: vertical;
-}
-
-/* ---------- tabs ---------- */
-
-.tabs {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-
-.tabs button {
-  padding: 8px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.tabs button em {
-  font-family: var(--mono);
-  font-style: normal;
-  opacity: 0.7;
-  margin-left: 4px;
-}
-
-.tabs button.active {
-  border-color: var(--group);
-  background: color-mix(in srgb, var(--group) 18%, var(--panel));
-  color: var(--text);
-  font-weight: 600;
-}
-
-.search {
-  width: 200px;
-  padding: 8px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
-}
-
-/* ---------- comment list ---------- */
-
-.empty {
-  margin: 0 0 12px;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.card {
   margin-bottom: 6px;
+  padding: 9px 14px;
   border: 1px solid var(--line);
-  border-left: 3px solid var(--group);
+  border-left: 3px solid var(--accent);
   border-radius: var(--radius);
   background: var(--panel);
-  overflow: hidden;
-}
-
-.card.is-open {
-  border-color: color-mix(in srgb, var(--group) 55%, var(--line));
-}
-
-/* 접힌 상태의 한 줄. 클릭하면 펼쳐진다. */
-.card-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 9px 14px;
-  border: 0;
-  background: none;
   text-align: left;
 }
 
-.card-row:hover {
+.row:hover {
+  background: var(--panel-2);
+}
+
+.row.is-selected {
+  border-color: var(--brass);
+  border-left-color: var(--brass);
   background: var(--panel-2);
 }
 
@@ -392,57 +126,25 @@ button:disabled {
   font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--group);
+  color: var(--accent);
   flex: none;
 }
 
-.delta {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  flex: none;
-}
-
-.delta.up {
-  color: #b6cc55;
-}
-
-.delta.down {
-  color: var(--slate);
-}
-
-.delta.new {
-  padding: 1px 5px;
-  border-radius: var(--radius);
-  background: color-mix(in srgb, #9ab53c 22%, transparent);
-  color: #b6cc55;
-}
-
-.chevron {
-  width: 12px;
-  text-align: center;
-  font-size: 13px;
-  line-height: 1;
-  color: var(--muted);
-  flex: none;
-}
-
-.card-detail {
-  padding: 4px 14px 12px 52px;
-  border-top: 1px solid var(--line);
+.row.is-selected .rank-no {
+  color: var(--brass);
 }
 
 .avatar {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius);
   object-fit: cover;
   flex: none;
 }
 
 .avatar-empty {
   background: var(--panel-2);
+  border: 1px solid var(--line);
 }
 
 .nick {
@@ -463,415 +165,26 @@ button:disabled {
   max-width: 25%;
 }
 
-.channel {
-  text-decoration: none;
-}
-
-.channel:hover {
-  color: var(--text);
-}
-
 .likes {
   font-family: var(--mono);
   font-size: 14px;
   font-weight: 600;
   color: var(--brass);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
+
+/* ---------- 배지 ---------- */
 
 .badge {
-  padding: 1px 7px;
+  padding: 2px 7px;
   border-radius: var(--radius);
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.badge.group-badge {
-  background: color-mix(in srgb, var(--group) 22%, transparent);
-  color: var(--group);
-}
-
-.badge.manual {
-  background: color-mix(in srgb, #9ab53c 22%, transparent);
-  color: #b6cc55;
-}
-
-.badge.warn {
-  background: color-mix(in srgb, #c9a227 22%, transparent);
-  color: var(--brass);
-  cursor: help;
-}
-
-.text {
-  margin: 8px 0 0;
-  font-size: 14px;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.live {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
-  font-size: 13px;
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.live:has(input:checked) {
-  border-color: var(--accent);
-  color: var(--text);
-}
-
-/* 미끄러지는 줄이 이웃 줄에 가리지 않도록 위로 띄운다. */
-.card.is-moving {
-  position: relative;
-  z-index: 1;
-}
-
-.photo {
-  margin-top: 8px;
-  max-width: 220px;
-  max-height: 160px;
-  border-radius: var(--radius);
-  object-fit: cover;
-}
-
-.card-foot {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.assign select {
-  padding: 3px 6px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel-2);
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.assign select:hover {
-  color: var(--text);
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-}
-
-@media (max-width: 640px) {
-  .app {
-    padding: 20px 12px 60px;
-  }
-
-  .loader {
-    flex-wrap: wrap;
-  }
-
-  .loader input {
-    flex-basis: 100%;
-  }
-
-  .search {
-    width: 100%;
-  }
-}
-
-/* ---------- 그래프 공용 ---------- */
-
-.chart-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 12px 0 14px;
-}
-
-.seg {
-  display: flex;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.seg button {
-  padding: 6px 12px;
-  border: 0;
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.seg button.on {
-  background: color-mix(in srgb, var(--accent) 20%, var(--panel));
-  color: var(--text);
-  font-weight: 600;
-}
-
-.gain-total {
-  font-family: var(--mono);
-  color: var(--brass);
-}
-
-.chart-empty {
-  margin: 0;
-  padding: 22px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel-2);
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.chart-plot {
-  position: relative;
-}
-
-.chart-plot svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
-}
-
-/* 눈금선은 표면 바로 위 실선 한 겹. 축은 그보다 한 단계만 진하게. */
-.grid-line {
-  stroke: var(--line);
-  stroke-width: 1;
-}
-
-.axis-line {
-  stroke: color-mix(in srgb, var(--muted) 55%, transparent);
-  stroke-width: 1;
-}
-
-.tick {
-  fill: var(--muted);
-  font-family: var(--mono);
-  font-size: 10px;
-  font-variant-numeric: tabular-nums;
-}
-
-.peak {
-  fill: var(--text);
   font-size: 11px;
   font-weight: 700;
-}
-
-.bar {
-  fill: var(--brass);
-}
-
-.bar.is-down {
-  fill: var(--slate);
-}
-
-.bar.is-hover {
-  fill: var(--text);
-}
-
-.chart-tip {
-  position: absolute;
-  top: 0;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-  padding: 5px 9px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--bg);
-  font-size: 12px;
   white-space: nowrap;
-  pointer-events: none;
-}
-
-.cell-gain {
-  color: var(--brass);
-  font-family: var(--mono);
-}
-
-.chart-table-wrap {
-  max-height: 320px;
-  overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-}
-
-.chart-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.chart-table th,
-.chart-table td {
-  padding: 5px 10px;
-  border-bottom: 1px solid var(--line);
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.chart-table th {
-  position: sticky;
-  top: 0;
-  background: var(--panel-2);
-  color: var(--muted);
-  font-weight: 600;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-}
-
-.chart-table td:not(.cell-nick) {
-  font-family: var(--mono);
-}
-
-.chart-table .cell-nick {
-  text-align: left;
-  font-family: inherit;
-}
-
-/* ---------- 개인 증가량 그래프 ---------- */
-
-.picker {
-  margin-bottom: 12px;
-}
-
-.picker .search {
-  width: 100%;
-  margin-bottom: 8px;
-}
-
-.chips {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.chip {
-  padding: 5px 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel-2);
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.chip:hover {
-  color: var(--text);
-}
-
-.chip.on {
-  border-color: var(--chip);
-  background: color-mix(in srgb, var(--chip) 22%, var(--panel));
-  color: var(--text);
-  font-weight: 600;
-}
-
-.line {
-  fill: none;
-  stroke-width: 2;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-
-.line-label {
-  font-size: 11px;
-  font-weight: 700;
-}
-
-
-.topbar .brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.brand-logo {
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
   flex: none;
 }
 
-/*
- * 컷 라인. ----- 119위 컷 · 4개 차이 ----- 처럼 가운데 글자를 두고 좌우로 선을 뻗는다.
- * 굵은 점선에 발광을 얹고 천천히 흐르게 해서, 목록을 훑다가 지나치지 않게 한다.
- * 면으로 채워 봤더니 카드처럼 보여서 오히려 목록에 섞였다.
- */
-.cutline {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 20px 0;
-}
-
-/* 좌우로 뻗는 선. flex 항목이라 가운데 글자 길이에 맞춰 알아서 늘어난다. */
-.cutline::before,
-.cutline::after {
-  content: '';
-  flex: 1;
-  height: 3px;
-  background: repeating-linear-gradient(90deg, var(--danger) 0 13px, transparent 13px 24px);
-  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--danger) 75%, transparent));
-  animation: cut-march 1.8s linear infinite;
-}
-
-@keyframes cut-march {
-  to {
-    background-position: 24px 0;
-  }
-}
-
-/* 흐르는 효과는 어디까지나 장식이다. 싫다고 한 사람에게는 멈춰 있어야 한다. */
-@media (prefers-reduced-motion: reduce) {
-  .cutline::before,
-  .cutline::after {
-    animation: none;
-  }
-}
-
-.cutline-label {
-  padding: 4px 11px;
-  border-radius: var(--radius);
-  background: var(--danger);
-  color: var(--bg);
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  white-space: nowrap;
-}
-
-.cutline-gap {
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--brass);
-  white-space: nowrap;
-}
-/* 컷 위아래가 동점이면 좋아요가 아니라 작성 시각이 순위를 가른 것이라 따로 알린다. */
-.cutline-gap.is-tie {
-  padding: 3px 9px;
-  border: 1px solid var(--brass);
-  border-radius: var(--radius);
-  color: var(--brass);
-}
-
-/* 시즌2 참여자 표시. 분류 배지와 색이 겹치지 않게 청록 계열로 뺀다. */
 .badge.season2 {
   background: color-mix(in srgb, #25d7d7 22%, transparent);
   color: #6fe3e3;
@@ -883,7 +196,7 @@ button:disabled {
   color: #b9adff;
 }
 
-/* 좋아요로 얻은 자리가 아닌 줄 — 고정(우왁굳)과 지휘관.
+/* 좋아요로 얻은 자리가 아닌 줄 — 우왁굳과 지휘관.
    시즌 배지(청록·보라)와 나란히 서므로 황동색 계열로 확실히 갈라 둔다. */
 .badge.fixed {
   background: color-mix(in srgb, var(--brass) 26%, transparent);
@@ -895,129 +208,128 @@ button:disabled {
   color: #e0a087;
 }
 
-/* 애청자 수 필터 --------------------------------------------------------- */
+/* ---------- 댓글 칸 ---------- */
 
-.fanfilter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 10px;
-  border-left: 1px solid var(--line);
-}
-
-.fanfilter-label {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  font-size: 12px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-/* 직접 적는 칸. 슬라이더로 못 세우는 딱 떨어지는 수를 넣기 위한 것. */
-.fanfilter-num {
-  width: 68px;
-  padding: 3px 6px;
-  background: var(--panel-2);
+.detail {
+  padding: 18px 20px 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  color: var(--brass);
+  background: var(--panel);
+}
+
+.detail-blank {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.detail-blank p {
+  margin: 0;
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.detail-rank {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 22px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  color: var(--brass);
+  flex: none;
 }
 
-.fanfilter-num:focus {
-  outline: none;
-  border-color: var(--accent);
+.detail-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius);
+  object-fit: cover;
+  flex: none;
 }
 
-.fanfilter-unit {
+.detail-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.detail-nick {
+  font-size: 17px;
+}
+
+.detail-likes {
+  font-size: 18px;
+}
+
+.detail-badges {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.detail-badges:empty {
+  display: none;
+}
+
+/* 이 칸의 본론. 줄 사이를 넉넉히 벌려 길게 쓴 댓글도 읽히게 한다. */
+.detail-text {
+  margin: 14px 0 0;
+  font-size: 16px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.detail-none {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.detail-photo {
+  margin-top: 14px;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.detail-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
   font-size: 12px;
-  color: var(--muted);
+}
+
+.channel {
+  color: var(--brass);
+  text-decoration: none;
   white-space: nowrap;
 }
 
-/* 슬라이더. 기본 모양(둥근 손잡이)을 걷어내고 조준경 눈금처럼 각지게 세운다.
-   --fill 은 App 에서 넣어 주는 현재 위치(%)로, 지나온 구간을 황동색으로 채운다. */
-.fanfilter input[type='range'] {
-  --fill: 0%;
-  -webkit-appearance: none;
-  appearance: none;
-  width: 220px;
-  height: 20px;
-  background: transparent;
-  cursor: pointer;
+.channel:hover {
+  text-decoration: underline;
 }
 
-.fanfilter input[type='range']:disabled {
-  cursor: default;
-  opacity: 0.4;
-}
+/* ---------- 좁은 화면 ---------- */
 
-.fanfilter input[type='range']::-webkit-slider-runnable-track {
-  height: 6px;
-  background: linear-gradient(
-    to right,
-    var(--brass) 0 var(--fill),
-    var(--panel-2) var(--fill) 100%
-  );
-  border: 1px solid var(--line);
-}
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
 
-.fanfilter input[type='range']::-moz-range-track {
-  height: 6px;
-  background: var(--panel-2);
-  border: 1px solid var(--line);
+  /* 한 줄로 세우면 댓글 칸이 명단 아래로 밀려 누른 결과가 화면 밖에 있게 된다.
+     위로 올리고 붙여 둔다. 긴 댓글은 이 칸 안에서 스크롤한다. */
+  .detail-pane {
+    order: -1;
+    top: 0;
+    z-index: 2;
+    max-height: 60vh;
+    overflow: auto;
+    background: var(--bg);
+  }
 }
-
-.fanfilter input[type='range']::-moz-range-progress {
-  height: 6px;
-  background: var(--brass);
-}
-
-/* 손잡이 — 가늠쇠 모양의 납작한 날. 가운데 어두운 홈으로 정확한 위치를 짚는다. */
-.fanfilter input[type='range']::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 9px;
-  height: 20px;
-  margin-top: -8px;
-  background: var(--brass);
-  background-image: linear-gradient(
-    to bottom,
-    transparent calc(50% - 1px),
-    var(--bg) calc(50% - 1px) calc(50% + 1px),
-    transparent calc(50% + 1px)
-  );
-  border: 1px solid var(--bg);
-  border-radius: 1px;
-}
-
-.fanfilter input[type='range']::-moz-range-thumb {
-  width: 9px;
-  height: 20px;
-  background: var(--brass);
-  background-image: linear-gradient(
-    to bottom,
-    transparent calc(50% - 1px),
-    var(--bg) calc(50% - 1px) calc(50% + 1px),
-    transparent calc(50% + 1px)
-  );
-  border: 1px solid var(--bg);
-  border-radius: 1px;
-}
-
-.fanfilter input[type='range']:focus-visible {
-  outline: 1px solid var(--brass);
-  outline-offset: 3px;
-}
-
-/* 남은 사람 수. 값이 없을 때도 자리를 차지해 옆의 검색창이 밀리지 않게 한다. */
-.fanfilter-note {
-  min-width: 148px;
-  font-size: 11px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
