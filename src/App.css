@@ -1,7 +1,7 @@
 .app {
   position: relative;
   z-index: 1;
-  max-width: 1240px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 28px 20px 80px;
 }
@@ -81,10 +81,11 @@
 
 /* ---------- 좌우 두 칸 ---------- */
 
+/* 명단은 한 줄이 짧아 넓힐 이유가 없다. 남는 너비는 전부 댓글 쪽에 준다. */
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: minmax(0, 500px) minmax(0, 1fr);
+  gap: 24px;
   align-items: start;
 }
 
@@ -211,7 +212,7 @@
 /* ---------- 댓글 칸 ---------- */
 
 .detail {
-  padding: 18px 20px 16px;
+  padding: 22px 26px 18px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel);
@@ -275,9 +276,9 @@
 
 /* 이 칸의 본론. 줄 사이를 넉넉히 벌려 길게 쓴 댓글도 읽히게 한다. */
 .detail-text {
-  margin: 14px 0 0;
-  font-size: 16px;
-  line-height: 1.75;
+  margin: 16px 0 0;
+  font-size: 17px;
+  line-height: 1.8;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -316,6 +317,12 @@
 }
 
 /* ---------- 좁은 화면 ---------- */
+
+@media (max-width: 1120px) {
+  .layout {
+    grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+  }
+}
 
 @media (max-width: 860px) {
   .layout {
