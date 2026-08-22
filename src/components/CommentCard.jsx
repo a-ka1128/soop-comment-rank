@@ -69,6 +69,16 @@ function CommentCard({
         <span className="nick">{comment.nick}</span>
         <span className="uid">{comment.userId}</span>
 
+        {comment.role === 'fixed' && (
+          <span className="badge fixed" title="고정 자리입니다">
+            고정
+          </span>
+        )}
+        {comment.role === 'commander' && (
+          <span className="badge commander" title="지휘관입니다">
+            지휘관
+          </span>
+        )}
         {seasons.season1 && (
           <span className="badge season1" title={seasonTitle('시즌1', seasons.season1)}>
             시즌1
@@ -95,7 +105,9 @@ function CommentCard({
         )}
 
         <span className="spacer" />
-        <span className="likes">♥ {comment.likes.toLocaleString()}</span>
+        <span className="likes">
+          {comment.likes == null ? '—' : `♥ ${comment.likes.toLocaleString()}`}
+        </span>
         {/* 순위 변동이 ▲▼라서, 펼침 표시는 헷갈리지 않게 다른 모양을 쓴다. */}
         <span className="chevron" aria-hidden="true">
           {open ? '⌃' : '⌄'}
@@ -113,14 +125,16 @@ function CommentCard({
           )}
 
           <footer className="card-foot">
-            <a
-              href={commentUrl(bjId, postNo, comment.id)}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="channel"
-            >
-              댓글 원본 ↗
-            </a>
+            {!comment.synthetic && (
+              <a
+                href={commentUrl(bjId, postNo, comment.id)}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="channel"
+              >
+                댓글 원본 ↗
+              </a>
+            )}
             <a
               href={channelUrl(comment.userId)}
               target="_blank"

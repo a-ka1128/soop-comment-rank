@@ -883,6 +883,18 @@ button:disabled {
   color: #b9adff;
 }
 
+/* 좋아요로 얻은 자리가 아닌 줄 — 고정(우왁굳)과 지휘관.
+   시즌 배지(청록·보라)와 나란히 서므로 황동색 계열로 확실히 갈라 둔다. */
+.badge.fixed {
+  background: color-mix(in srgb, var(--brass) 26%, transparent);
+  color: var(--brass);
+}
+
+.badge.commander {
+  background: color-mix(in srgb, #cf7a5a 26%, transparent);
+  color: #e0a087;
+}
+
 /* 애청자 수 필터 --------------------------------------------------------- */
 
 .fanfilter {

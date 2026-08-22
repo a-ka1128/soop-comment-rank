@@ -39,13 +39,16 @@ function applyRoster(items, { fillMissing = false } = {}) {
   if (fillMissing) {
     return FROZEN_ROSTER.map((entry) => {
       const found = live.get(entry.id)
-      if (found) return { ...found, rank: entry.rank }
+      if (found) return { ...found, rank: entry.rank, role: entry.role }
+      // 댓글이 없는 줄(우왁굳)이거나 지워진 줄. 굳힐 때 적어 둔 값으로 자리를 지킨다.
       return {
         id: entry.id,
         userId: entry.userId,
         nick: entry.nick,
         likes: entry.likes,
         rank: entry.rank,
+        role: entry.role,
+        synthetic: true,
         text: '',
         date: '',
         profile: '',
@@ -56,7 +59,7 @@ function applyRoster(items, { fillMissing = false } = {}) {
   }
   return items
     .filter((c) => ROSTER_BY_ID.has(c.id))
-    .map((c) => ({ ...c, rank: ROSTER_BY_ID.get(c.id).rank }))
+    .map((c) => ({ ...c, rank: ROSTER_BY_ID.get(c.id).rank, role: ROSTER_BY_ID.get(c.id).role }))
     .sort((a, b) => a.rank - b.rank)
 }
 
