@@ -8,6 +8,7 @@ import { buildGroups, detectCategories } from './lib/categories'
 import { FAN_MAX, FAN_STEP, loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, classify, rank, validateGrouping } from './lib/groups'
 import { CUT_RANK, TARGET_POST } from './lib/target'
+import { FROZEN_ROSTER, ROSTER_BY_ID } from './lib/roster'
 import { useFlipReorder } from './hooks/useFlipReorder'
 import './App.css'
 
@@ -23,6 +24,41 @@ const REFRESH_SEC = 10
 // 순위 변동 표시를 얼마나 붙들어 둘지. 10초마다 새로 그리면 화살표가 깜빡이고 지나가
 // 무엇이 움직였는지 볼 틈이 없다. 다시 움직이지 않으면 이 시간까지 남긴다.
 const MOVE_TTL_MS = 5 * 60 * 1000
+
+/** 명단이 확정됐는지. 확정되면 좋아요가 아니라 명단이 순서를 정한다. */
+const FROZEN = FROZEN_ROSTER.length > 0
+
+/**
+ * 확정된 명단의 순서를 입힌다. 명단에 없는 사람은 빠지고, 순위는 굳은 값을 쓴다.
+ *
+ * fillMissing 은 전체 목록에만 쓴다 — 댓글이 지워져도 뽑힌 사람이 명단에서
+ * 사라지면 안 되므로, 그 자리는 굳힐 때 적어 둔 값으로 채운다.
+ */
+function applyRoster(items, { fillMissing = false } = {}) {
+  const live = new Map(items.map((c) => [c.id, c]))
+  if (fillMissing) {
+    return FROZEN_ROSTER.map((entry) => {
+      const found = live.get(entry.id)
+      if (found) return { ...found, rank: entry.rank }
+      return {
+        id: entry.id,
+        userId: entry.userId,
+        nick: entry.nick,
+        likes: entry.likes,
+        rank: entry.rank,
+        text: '',
+        date: '',
+        profile: '',
+        replyCount: 0,
+        photo: '',
+      }
+    })
+  }
+  return items
+    .filter((c) => ROSTER_BY_ID.has(c.id))
+    .map((c) => ({ ...c, rank: ROSTER_BY_ID.get(c.id).rank }))
+    .sort((a, b) => a.rank - b.rank)
+}
 
 function loadStored(key, fallback) {
   try {
@@ -105,7 +141,7 @@ export default function App() {
       name: g.name,
       color: g.color,
       topN: g.topN,
-      items: rank(buckets.get(g.id) ?? []),
+      items: FROZEN ? applyRoster(buckets.get(g.id) ?? []) : rank(buckets.get(g.id) ?? []),
     }))
     const ungrouped = buckets.get(UNGROUPED_ID) ?? []
     if (ungrouped.length > 0) {
@@ -114,7 +150,7 @@ export default function App() {
         name: '미분류',
         color: NEUTRAL_COLOR,
         topN: null,
-        items: rank(ungrouped),
+        items: FROZEN ? applyRoster(ungrouped) : rank(ungrouped),
       })
     }
     return list
@@ -127,7 +163,9 @@ export default function App() {
       name: '전체',
       color: NEUTRAL_COLOR,
       topN: null,
-      items: rank([...buckets.values()].flat()),
+      items: FROZEN
+        ? applyRoster([...buckets.values()].flat(), { fillMissing: true })
+        : rank([...buckets.values()].flat()),
     }
   }, [buckets])
 
@@ -266,7 +304,8 @@ export default function App() {
           // 사람을 지우면, 방금 댓글을 단 사람이 조용히 사라진다.
           return count == null || count >= appliedMinFans
         })
-        .map((c, i) => ({ ...c, rank: i + 1 }))
+        // 명단이 확정된 뒤에는 걸러도 번호를 다시 매기지 않는다. 그 번호가 결과다.
+        .map((c, i) => (FROZEN ? c : { ...c, rank: i + 1 }))
     },
     [fans, appliedMinFans],
   )
@@ -440,7 +479,11 @@ export default function App() {
           <img className="brand-logo" src="./logo.png" alt="" width="48" height="48" />
           <div>
             <h1>아르마3 랜덤고지전3 좋아요 랭킹</h1>
-            <p>게시글 댓글을 좋아요 순으로 세우고, 개인별 증가량을 기록합니다.</p>
+            <p>
+              {FROZEN
+                ? '선발이 끝났습니다. 순위는 확정된 명단 그대로이며 더 이상 바뀌지 않습니다.'
+                : '게시글 댓글을 좋아요 순으로 세우고, 개인별 증가량을 기록합니다.'}
+            </p>
           </div>
         </div>
 
@@ -465,8 +508,10 @@ export default function App() {
         <>
           <section className="summary">
             <div className="stat">
-              <strong>{data.comments.length.toLocaleString()}</strong>
-              <span>원댓글</span>
+              <strong>
+                {(FROZEN ? FROZEN_ROSTER.length : data.comments.length).toLocaleString()}
+              </strong>
+              <span>{FROZEN ? '확정 명단' : '원댓글'}</span>
             </div>
             <div className="stat">
               <strong>{data.totalWithReplies.toLocaleString()}</strong>
