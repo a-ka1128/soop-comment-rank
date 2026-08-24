@@ -1,11 +1,36 @@
-# SOOP 댓글 좋아요 랭킹
+# SOOP 댓글 좋아요 랭킹 · 확정 명단
 
-SOOP(구 아프리카TV) 방송국 게시글의 댓글을 전부 불러와, **키워드 그룹별로 나누고 그룹
-안에서 좋아요 순위를 매기는** 도구입니다.
+SOOP(구 아프리카TV) 방송국 게시글의 댓글을 전부 불러와 **좋아요 순으로 세우고, 선발이
+끝나면 그 순위를 굳혀 명단으로 발표하는** 사이트입니다.
 
-"1·2·3번 전형 중 하나를 적고 신청, 선발은 100% 좋아요 수, 각 전형 TOP 33" 같은 공지에서
-누가 컷 안에 들었는지 한눈에 보려고 만들었습니다. 그룹 기준은 자유롭게 바꿀 수 있어
-전형 구분이 없는 글에도 씁니다.
+"신청은 댓글로, 선발은 100% 좋아요 수, 상위 120명" 같은 공지에서 누가 컷 안에 들었는지
+보려고 만들었습니다. 서버가 없습니다. 브라우저가 SOOP API를 직접 부르는 정적 사이트라
+GitHub Pages에 그대로 올라갑니다.
+
+지금 배포된 것: **아르마3 랜덤고지전3 확정 명단 120명** —
+<https://a-ka1128.github.io/soop-comment-rank/>
+
+---
+
+## 이 저장소에는 두 개의 화면이 있습니다
+
+선발은 두 단계로 갑니다. 화면도 둘입니다.
+
+| | **선발 중** | **선발 후 (지금)** |
+|---|---|---|
+| 어디에 있나 | `live-ranking` 태그 | `main` |
+| 순위 | 좋아요 따라 실시간으로 움직임 | 굳어 있음 |
+| 화면 | 한 줄 목록, 펼치면 댓글 | 왼쪽 명단 · 오른쪽 댓글 |
+| 있는 기능 | 10초 자동 갱신, 순위 변동 화살표, 검색, 애청자 수 필터, 닉네임 추출(CSV), 개인 증가량 그래프, 컷 라인 | 없음 |
+
+**`main`에는 선발용 기능이 없습니다.** 끝난 뒤에 다 걷어냈습니다. 다음 시즌을 시작할 땐
+지우고 다시 만드는 게 아니라 태그에서 꺼내 옵니다.
+
+```bash
+git checkout live-ranking
+```
+
+---
 
 ## 실행
 
@@ -14,59 +39,149 @@ npm install
 npm run dev
 ```
 
-http://localhost:5173 을 열면 [`src/lib/target.js`](src/lib/target.js)에 적힌 게시글을
-바로 불러옵니다. 다루는 글이 하나로 정해져 있어서 주소 입력칸은 없습니다.
-
-```js
-export const TARGET_POST = { bjId: 'ecvhao', postNo: '204516133', url: '...' }
-export const CUT_RANK = 119   // 이 순위 아래에 컷 라인이 그어진다. null 이면 안 그림
-```
-
-다른 글로 바꾸려면 이 파일과 [`collector/tracked.json`](collector/tracked.json)이
-같은 글을 가리키게 하면 됩니다.
-
-| 명령 | 설명 |
+| 명령 | 하는 일 |
 |---|---|
 | `npm run dev` | 개발 서버 (5173) |
 | `npm run build` | 정적 빌드 → `dist/` |
-| `npm run preview` | 빌드 결과 미리보기 |
+| `npm run preview` | 빌드 결과 미리보기 (4173) |
 | `npm run lint` | oxlint |
 
-## 배포
-
 `main`에 push하면 [GitHub Actions](.github/workflows/deploy.yml)가 빌드해서 GitHub Pages에
-올립니다. 서버가 필요 없는 순수 정적 파일이라 다른 정적 호스팅에도 `dist/`를 그대로
-올리면 됩니다.
+올립니다. `vite.config.js`의 `base: './'` 덕분에 도메인 루트든 `/저장소이름/` 하위든
+설정을 고치지 않고 동작합니다.
 
-`vite.config.js`의 `base: './'` 때문에 자산 경로가 상대 경로로 나옵니다. 도메인 루트든
-`/저장소이름/` 하위 경로든 설정을 고치지 않고 그대로 동작합니다.
+---
+
+## 새 게시글로 갈아끼우기
+
+### 1. 선발 시작 — 실시간 랭킹 화면 꺼내기
+
+```bash
+git checkout -b season4 live-ranking
+```
+
+[`src/lib/target.js`](src/lib/target.js) 한 곳만 고치면 대상이 바뀝니다.
+
+```js
+export const TARGET_POST = { bjId: 'ecvhao', postNo: '204516133', url: '...' }
+export const CUT_RANK = 119
+```
+
+`CUT_RANK`는 그 순위 아래에 컷 라인을 긋습니다. `null`이면 안 긋습니다.
+
+간판도 바꿉니다.
+
+| 무엇 | 어디 |
+|---|---|
+| 사이트 제목 | `src/App.jsx`의 `<h1>` |
+| 브라우저 탭 제목 | `index.html`의 `<title>` |
+| 로고 | `public/logo.png` 교체 |
+| 배경 | `public/camo.jpg` 교체, 색은 `src/index.css`의 `:root` |
+
+기록 서버(개인 증가량 그래프)까지 쓸 거면 [`collector/tracked.json`](collector/tracked.json)도
+같은 글을 가리키게 하세요. 안 쓰면 그래프 버튼만 "기록 없음"으로 뜹니다.
+
+### 2. 선발 끝 — 명단 굳히기
+
+좋아요는 마감 뒤에도 계속 들어옵니다. 그대로 두면 발표한 것과 다른 명단이 됩니다.
+[`scripts/freeze-roster.mjs`](scripts/freeze-roster.mjs)가 그 순간의 순위를
+[`src/lib/roster.js`](src/lib/roster.js)로 박아 넣습니다.
+
+그냥 상위 N명이면:
+
+```bash
+node scripts/freeze-roster.mjs --top 120
+```
+
+발표한 이미지처럼 정해진 순서가 따로 있으면 닉네임 배열 JSON을 주세요. 이번 시즌에 쓴 것이
+[`scripts/roster-order.json`](scripts/roster-order.json)입니다.
+
+```bash
+node scripts/freeze-roster.mjs --order scripts/roster-order.json --fixed ecvhao=우왁굳 --commander "TaeGeuk_,Fronty_,마린보이_"
+```
+
+- `--fixed id=닉` — 댓글 없이 맨 앞에 세울 사람. 좋아요 자리는 `—`로 비고, 없는 댓글로 가는
+  링크도 안 겁니다.
+- `--commander` — `--fixed` 다음 자리로 끌어올릴 사람들.
+
+> **이름을 눈으로 옮기지 마세요.** 스크립트가 모든 닉네임을 실제 댓글과 대조해서, 하나라도
+> 안 맞거나 같은 닉이 둘이면 멈춥니다. 이번에 116개 이름을 옮겼는데 이 검증을 통과하는 걸
+> 확인하고 나서야 넣었습니다.
+
+굳힌 뒤 다듬고 확인합니다.
+
+```bash
+npx prettier --write --single-quote --no-semi --print-width 100 src/lib/roster.js
+```
+
+`roster.js`가 있으면 **명단이 먼저고 댓글이 나중입니다.** 순서도 인원도 이 파일이 정하고,
+SOOP에서 가져오는 건 본문과 최신 좋아요뿐입니다. API가 죽어도 명단은 굳힌 값으로 그대로
+뜹니다. 명단에 있는 사람이 댓글을 지워도 자리를 지킵니다.
+
+### 3. 선발용 기능 걷어내기 (선택)
+
+발표만 남길 거면 `main`이 그 모습입니다. 무엇을 지웠는지는 `git show 5851bdf --stat`으로
+볼 수 있습니다.
+
+---
+
+## 시즌 배지
+
+[`src/lib/season1.js`](src/lib/season1.js) · [`src/lib/season2.js`](src/lib/season2.js)에
+지난 시즌 참가자를 담아 두면 명단에 배지가 붙습니다.
+
+```js
+export const SEASON2_USER_IDS = new Set(['collet11', '243000'])
+export const SEASON2_UNRESOLVED = ['우왁굳', '징버거']
+```
+
+**닉네임이 아니라 userId로 들고 있습니다.** 닉네임은 수시로 바뀌고 장식이 붙지만
+(시즌2 `마린보이7` ↔ 신청 `마린보이_`) userId는 그대로입니다.
+
+`UNRESOLVED`에 남은 이름은 [`src/lib/season.js`](src/lib/season.js)가 화면에서 실시간으로
+대조합니다. 명단에 있던 사람이 뒤늦게 댓글을 달면 그때 배지가 붙습니다. 대조는 장식을 떼고
+**완전 일치만** 인정합니다.
+
+```
+징버거☆  →  징버거    ○
+히키☆    →  히키      ×  '히키킹9' 과 다름
+제로!    →  제로      ×  '제로콜라학살자' 와 다름
+```
+
+접두·포함 일치는 일부러 안 넣었습니다. 그게 예전에 `히키킹9`을 `히키☆`(실제로는
+히키comori)에 붙였던 규칙인데, 실시간으로 돌면 사람이 걸러 줄 수가 없습니다. 편집거리 같은
+유사도는 더 나빴습니다 — 0.5 근처에서 `아이네`와 `에이레네` 같은 남남이 붙습니다.
+
+애매한 건 자동으로 붙이지 말고 파일 주석에 이유를 남겨 두세요. 나중에 "왜 이건 안 붙였지"
+하며 되살리는 걸 막습니다.
+
+---
 
 ## 동작 방식
 
-브라우저가 SOOP 공개 API를 직접 호출합니다. 로그인·토큰이 필요 없고 응답에
+브라우저가 SOOP 공개 API를 직접 호출합니다. 로그인·토큰이 필요 없고 응답의
 `Access-Control-Allow-Origin`이 요청 origin으로 되돌아오기 때문에 프록시 없이 붙습니다.
 
 ```
-GET https://api-channel.sooplive.com/v1.1/channel/{bjId}/post/{postNo}
-GET https://api-channel.sooplive.com/v1.1/channel/{bjId}/post/{postNo}/comment
-    ?page={n}&orderBy=like_cnt&cCommentNo=0
+GET /v1.1/channel/{bjId}/post/{postNo}
+GET /v1.1/channel/{bjId}/post/{postNo}/comment?page={n}&orderBy=like_cnt&cCommentNo=0
+GET /v1.1/channel/{userId}/station          → upd.fanCnt 가 애청자 수
 ```
 
-앞의 것이 본문(`content.content`에 HTML), 뒤의 것이 댓글입니다.
+호스트는 `https://api-channel.sooplive.com` 입니다.
 
 - 페이지당 30개 고정 → `meta.lastPage`까지 순회해 전부 모읍니다.
-- BEST 댓글은 1페이지 앞에 따로 붙어 오는데 본문 목록과 겹치지 않습니다. 그래도 안전하게
-  `pCommentNo` 기준으로 중복을 제거합니다.
-- **원댓글만** 다룹니다. 답글(`cComment`)은 세지 않으므로 화면의 "원댓글" 수와 SOOP이
-  표시하는 댓글 수(답글 포함)가 다를 수 있습니다.
-- 본문은 HTML 이스케이프된 채로 오므로(`&quot;` → `"`) 받는 즉시 디코딩합니다.
-  화면에는 텍스트로만 넣기 때문에 이렇게 풀어도 안전합니다.
+- **원댓글만** 다룹니다. 답글(`cComment`)은 세지 않으므로 SOOP이 표시하는 댓글 수(답글 포함)와
+  다를 수 있습니다.
+- 본문은 HTML 이스케이프된 채로 옵니다. 받는 즉시 풉니다.
+- 애청자 수는 사람마다 요청이 하나씩 붙습니다. 200명에 약 1.3초(동시 4). 선발 화면에서만
+  쓰고 localStorage에 6시간 캐시합니다.
 
 ### 비공식 API를 쓴다는 것
 
 SOOP은 방송국 게시글 댓글에 대한 공개 API를 제공하지 않습니다. 위 주소는 사이트가 내부적으로
-쓰는 것이라 언제든 예고 없이 바뀔 수 있고, 그건 막을 방법이 없습니다. 대신 **깨졌을 때
-조용히 틀린 답을 내놓지 않도록** 두 가지를 해 뒀습니다.
+쓰는 것이라 예고 없이 바뀔 수 있고, 그건 막을 방법이 없습니다. 대신 **깨졌을 때 조용히 틀린
+답을 내놓지 않도록** 두 가지를 해 뒀습니다.
 
 **1. 실패를 구분해서 알립니다.** 특히 세 번째가 중요합니다 — 예전에는 필드명만 바뀌어도
 에러 없이 "댓글 0개"로 보였습니다. 선발 기준이 좋아요 수인 글에서 그건 틀린 답을 자신 있게
@@ -74,209 +189,96 @@ SOOP은 방송국 게시글 댓글에 대한 공개 API를 제공하지 않습�
 
 | 깨지는 방식 | 화면에 나오는 말 |
 |---|---|
-| 연결 실패 (CORS 차단·오프라인) | 인터넷 연결이 끊겼거나 SOOP이 외부 접근을 막았을 수 있다 |
+| 연결 실패 (CORS 차단·오프라인) | 인터넷이 끊겼거나 SOOP이 외부 접근을 막았을 수 있다 |
 | 댓글 주소만 404 (본문은 정상) | 게시글은 찾았는데 댓글 주소가 응답하지 않는다 → API 변경 |
 | 200인데 응답 모양이 다름 | 어느 필드가 없어졌는지 짚어서 알림 |
 
 **2. 매일 자동으로 찔러 봅니다.** [`scripts/check-api.mjs`](scripts/check-api.mjs)가 CORS
-헤더·본문·댓글 수집·필드·분류 적중률을 확인하고,
-[워크플로](.github/workflows/api-health.yml)가 매일 06:20(KST) 돌려서 실패하면 이슈를
-엽니다(이미 열린 이슈가 있으면 댓글만 답니다). 직접 돌려볼 수도 있습니다:
+헤더·본문·댓글 수집·필드를 확인하고, [워크플로](.github/workflows/api-health.yml)가 매일
+06:20(KST) 돌려서 실패하면 이슈를 엽니다(이미 열린 이슈가 있으면 댓글만 답니다).
 
 ```bash
 node scripts/check-api.mjs
 ```
 
-표본 글은 [`src/lib/sample.js`](src/lib/sample.js) 한 곳에 있습니다. 그 글이 삭제되면
-헬스체크가 그렇게 알려 주니 다른 글로 바꾸면 됩니다.
+대상 글은 `src/lib/target.js`를 그대로 씁니다. API 주소 자체가 바뀌었을 땐
+[`src/lib/soop.js`](src/lib/soop.js)의 `API_BASE`만 고치면 됩니다.
 
-API 주소 자체가 바뀌었을 땐 [`src/lib/soop.js`](src/lib/soop.js)의 `API_BASE`만 고치면
-됩니다.
+---
 
-## 분류는 게시글이 정한다
+## 기록 서버 (지금 꺼져 있음)
 
-그룹 규칙을 손으로 쓰지 않습니다. 본문을 읽어서 분류를 찾아내고, 못 찾으면 그냥 좋아요
-순으로 한 줄 세웁니다.
+개인 증가량 그래프는 1분마다 좋아요를 찍어 둔 기록이 있어야 그려집니다. GCP VM의 수집기가
+Firebase Realtime Database에 쌓는 구조였고, **선발이 끝나 2026-08-22에 껐습니다.**
 
-**1. 후보 찾기** — 본문의 `<ol>` 번호 목록을 먼저 봅니다. 없으면 `1. xxx` / `1번 xxx`가
-1부터 연달아 나오는 줄을 찾습니다.
-
-**2. 검색어 만들기** — 후보 이름들을 서로 비교해 그 이름에만 나오는 낱말을 뽑고, 옆 낱말을
-붙여 구를 만듭니다. `인기 남자 버튜버 TOP 33` / `인기 여자 버튜버 TOP 33` → `남자 버튜버` /
-`여자 버튜버`. 여기에 `2번`, `②`, `/^\s*2[\s.,)]/`(→ `2.`, `2 `, `2)`)를 더해 검색어로 씁니다.
-이름에 `TOP 33`이 있으면 뽑을 인원수도 같이 가져옵니다.
-
-**3. 진짜 분류인지 검증** — 방송국 글은 합격자 명단이나 신청 양식도 번호 목록으로 씁니다.
-그런 걸로 그룹을 만들면 안 되므로, 후보로 실제 댓글을 분류해 보고 **적중률이 40% 미만이거나
-중복 매칭이 60%를 넘으면 버립니다.** 실측하면 갈리는 폭이 큽니다:
-
-| 게시글 | 목록 | 적중률 | 판정 |
-|---|---|---|---|
-| 배틀그라운드 인기 3종 세트 | 3개 전형 | 98.9% | 분류로 사용 |
-| 구독 이모티콘 작가 구인 | 5개 기재 항목 | 0% | 버림 |
-| 스모오라 합격자 발표 | 4명 명단 | 0% | 버림 |
-
-버려지면 분류 패널 자체가 뜨지 않고, 탭 없이 좋아요 순 한 줄로만 나옵니다.
-
-### 분류 세부 규칙
-
-- **공백은 무시합니다.** `여자 버튜버`는 `인기여자버튜버`에도 걸립니다.
-- **여러 분류에 걸리면 본문에서 먼저 나온 쪽이 이깁니다.** 그 댓글에는 `중복` 배지가 붙습니다.
-- **댓글 전문을 검사합니다.** 한때 "앞부분 N자만" 옵션을 뒀지만, 실측해 보니 대부분의
-  댓글이 1000자 안쪽이라 분류율·중복률이 똑같아서(배정 1건 차이) 없앴습니다.
-- 어디에도 안 걸리면 **미분류** 탭으로 갑니다. 각 댓글 하단 셀렉트로 **수동 지정**할 수
-  있고, 수동 지정 내역은 게시글별로 브라우저에 저장됩니다.
-
-예시 글 기준으로 댓글 179개 중 177개가 자동 분류되고 2개만 미분류로 남습니다.
-
-## 순위와 닉네임 추출
-
-순위는 좋아요 내림차순, 동점이면 **먼저 쓴 댓글이 위**입니다.
-
-**닉네임 추출** 버튼을 누르면 분류별로 상위 N명의 닉네임만 뽑아 줍니다. N은 이름에서 읽은
-`TOP 33`이 기본값이고 직접 고칠 수 있습니다. 줄바꿈/쉼표, 순위·좋아요 표시 여부를 고른 뒤
-분류별로 또는 한 번에 복사합니다.
-
-N번째와 N+1번째의 좋아요가 같으면 **동점 경고**가 뜹니다. 거기서 자르는 건 자의적이므로
-직접 판단해야 합니다.
-
-
-## 개인 증가량 그래프 (기록 서버)
-
-화면 안에서 쌓는 증가량은 창을 닫으면 사라집니다. **개인별 좋아요 추이**를 오래 보려면
-누군가 계속 SOOP을 찔러 기록해야 합니다. 그 역할을 VM의 수집기가 맡고, 저장은 Firebase
-Realtime Database에 합니다.
-
-```
-VM (systemd 타이머, 1분)          Firebase RTDB (무료 Spark)        GitHub Pages
-collector/collect.mjs  ──쓰기──▶  posts/{bjId}_{postNo}/  ──읽기──▶  개인 증가량 그래프
-                                    meta / comments / points
-```
-
-**Firebase 무료 한도 안에서 돌아갑니다.** 단 스케줄러는 Firebase 밖에 두어야 합니다 —
-Cloud Functions는 배포 자체가 Blaze(카드 등록) 요금제를 요구하기 때문입니다. 수집기를 VM에서
-돌리면 Firebase는 Spark 그대로 씁니다. RTDB Spark 한도는 저장 1GB / 월 다운로드 10GB이고,
-연산당 과금이 없어 1분 간격 쓰기에 적합합니다. 게시글 하나에 하루 약 15MB가 쌓이므로,
-하루 지난 구간은 수집기가 5분 간격만 남기고 솎아냅니다.
-
-### Firebase 쪽 준비 (한 번만)
-
-1. [Firebase 콘솔](https://console.firebase.google.com)에서 프로젝트를 만들거나 고릅니다.
-2. **Realtime Database**를 만듭니다. 지역은 아무거나. 만들 때 "잠금 모드"를 고릅니다.
-3. 규칙에 이 저장소의 [`database.rules.json`](database.rules.json) 내용을 붙여넣습니다.
-   브라우저는 읽기만 되고 쓰기는 전부 막힙니다 (수집기는 서비스 계정이라 규칙을 우회합니다).
-   규칙에는 주석을 넣지 마세요 — 점으로 시작하지 않는 키는 전부 하위 경로 이름으로
-   해석돼서 `"//": "설명"` 같은 줄은 저장이 거부됩니다.
-4. 프로젝트 설정 → 서비스 계정 → **새 비공개 키 생성**으로 JSON을 내려받습니다.
-   이 파일은 비밀입니다. 저장소에 넣지 마세요 (`.gitignore`에 이미 있습니다).
-5. 저장소 Settings → Secrets and variables → Actions → **Variables**에
-   `RTDB_URL` 을 데이터베이스 주소(`https://...firebaseio.com`)로 추가합니다.
-   넣지 않으면 배포본에서 이 그래프만 조용히 꺼진 채로 나갑니다.
-
-### VM 쪽 준비
+다시 켤 일이 있으면 [`collector/`](collector/)와 [`deploy/`](deploy/)가 그대로 있습니다.
+VM에서:
 
 ```bash
-# Node 22 (없다면)
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
-
-git clone https://github.com/a-ka1128/soop-comment-rank.git
-cd soop-comment-rank
-
-cp collector.env.example collector.env
-nano collector.env            # RTDB 주소와 서비스 계정 JSON 경로
-# 4번에서 받은 키를 service-account.json 으로 올려 둔다
-
-node collector/collect.mjs    # 한 번 수동 실행해서 기록되는지 확인
+cd ~/soop-comment-rank && git pull && setsid nohup deploy/loop-collector.sh >/dev/null 2>&1 &
 ```
 
-수집할 게시글은 [`collector/tracked.json`](collector/tracked.json)에 적습니다. 여기 적은
-글만 수집하므로 부하가 예측 가능합니다.
+- `collector.env`에 `SOOP_RTDB_URL`, `SOOP_SERVICE_ACCOUNT`(서비스 계정 JSON 경로)가 필요합니다.
+  **둘 다 gitignore 대상입니다. 커밋하지 마세요.**
+- 프런트는 `.env`의 `VITE_RTDB_URL`을 봅니다. 비어 있으면 그래프 기능만 조용히 꺼집니다.
+- RTDB 규칙은 [`database.rules.json`](database.rules.json) — `posts/*`만 읽기 공개, 쓰기는
+  서비스 계정만. **규칙 파일에는 주석을 쓸 수 없습니다.** `"//"` 같은 키를 넣으면 하위 경로로
+  해석돼 배포가 거부됩니다.
+- 쓰기는 **좁은 경로로** 해야 합니다. RTDB는 "쓰는 위치에 이미 있는 데이터"의 크기로 한계를
+  거는데, 예전에 루트에 PATCH했다가 데이터가 커지자 하루 만에 거부당했습니다
+  (`Data to write exceeds the maximum size`). 지금은 사람별 경로로 나눠 씁니다.
+- Cloud Functions는 Blaze(유료) 플랜이 필요해서 스케줄러를 Firebase 안에 둘 수 없습니다.
+  그래서 VM에서 돌립니다.
 
-수집기는 상주하지 않고 1분마다 한 번 실행되고 끝납니다. 죽은 프로세스를 지키는 것보다
-못 돈 1분이 낫습니다. 1분마다 깨우는 방법은 두 가지입니다.
-
-**상주 루프 (sudo 도 cron 도 없을 때)**
-
-이 저장소가 실제로 도는 GCP VM 이 그런 경우다. sudo 가 아예 없어 cron 설치도
-`loginctl enable-linger` 도 막힌다. systemd 사용자 타이머는 로그아웃 **8분 뒤** 사용자
-매니저와 함께 정리됐다(실측). 대신 logind 의 `KillUserProcesses` 기본값이 `no` 라,
-세션에서 떼어 낸 프로세스는 살아남는다.
+수집기를 멈추려면:
 
 ```bash
-setsid nohup ~/soop-comment-rank/deploy/loop-collector.sh >/dev/null 2>&1 &
+systemctl --user disable --now soop-collector.timer; pkill -9 -f loop-collector; pkill -9 -f run-collector; pkill -9 -f collect.mjs; rm -f ~/soop-comment-rank/collector.pid
 ```
 
-확인·중지:
-```bash
-tail -f ~/soop-comment-rank/collector.log
-kill $(cat ~/soop-comment-rank/collector.pid)
-```
+그다음 `ps -ef | grep -E 'collector|collect.mjs' | grep -v grep`에 아무것도 안 나오면 끝입니다.
+부팅할 때 되살아나게 걸어 뒀다면 GCP 콘솔 → VM 인스턴스 → 수정 → 메타데이터에서
+`startup-script`를 지워야 합니다.
 
-**재부팅 후 자동 기동** — 루프 자체는 재부팅을 못 견딘다. GCP 콘솔에서
-VM → 수정 → 메타데이터에 키 `startup-script` 로
-[`deploy/gcp-startup-script.sh`](deploy/gcp-startup-script.sh) 내용을 넣으면, 부팅할 때마다
-root 가 linger 를 켜고 루프를 사용자 권한으로 띄운다. VM 안에 sudo 가 없어도 된다.
+---
 
-**cron (설치돼 있고 쓸 수 있을 때)**
-
-```bash
-crontab -e
-```
-```cron
-* * * * * /home/사용자이름/soop-comment-rank/deploy/run-collector.sh
-```
-
-[`deploy/run-collector.sh`](deploy/run-collector.sh)가 `collector.env`를 읽고 node 경로를
-찾아 줍니다 — cron은 `.bashrc`를 읽지 않아서 PATH가 비어 있기 때문입니다. 홈에 풀어 둔
-node도 자동으로 찾습니다. 로그는 `collector.log`에 쌓이고 5000줄이 넘으면 알아서 잘립니다.
-
-```bash
-tail -f ~/soop-comment-rank/collector.log
-```
-
-**systemd (root 권한이 있을 때)**
-
-```bash
-sudo cp deploy/soop-collector.* /etc/systemd/system/
-sudo nano /etc/systemd/system/soop-collector.service   # User/경로를 실제에 맞게
-sudo systemctl daemon-reload
-sudo systemctl enable --now soop-collector.timer
-
-systemctl list-timers soop-collector.timer   # 다음 실행 시각 확인
-journalctl -u soop-collector.service -f      # 기록 로그
-```
-
-### 그래프
-
-`개인 증가량 그래프` 버튼에서 최대 5명까지 고르면 선이 그려집니다. 기본은 **구간 증가분**입니다 —
-1위(6천)와 100위(80)를 같은 축에 누적값으로 놓으면 아래쪽 선이 바닥에 붙어 보이지 않기
-때문에, 구간 시작을 0으로 맞춰 서로 비교되게 합니다. 누적값도 토글로 볼 수 있습니다.
-
-화면은 1분마다 고른 사람 **전원**의 기록을 다시 읽습니다. 처음엔 아직 안 받아 온 사람만
-받았는데, 그러면 한 번 받은 사람이 그 시점에 멈춰서 선들의 끝 시각이 서로 어긋났습니다.
-
-선 색은 화면의 올리브·갈색 팔레트를 쓰지 않습니다. 한 계열이라 선끼리 구분되지 않고
-색약에서는 더 붙어 버립니다. 검증을 통과한 다섯 색을 여기만 따로 쓰고, 선 끝마다 닉네임을
-직접 붙여 색만으로 구분하지 않아도 되게 했습니다.
-
-## 구조
+## 파일 지도
 
 ```
-scripts/check-api.mjs            SOOP API가 아직 기대대로인지 확인 (매일 자동 실행)
 src/
-  App.jsx                        화면 전체 상태 (불러오기, 실시간 갱신, 탭, 검색)
-deploy/loop-collector.sh         sudo·cron 없이 1분마다 도는 상주 루프
-  lib/target.js                  다루는 게시글과 컷 순위 (앱·헬스체크가 공유)
-  lib/soop.js                    URL 파싱 · API 순회 · 실패 구분 · 엔티티 디코딩
-  lib/categories.js              본문에서 분류 감지 + 검색어 생성
-  lib/groups.js                  분류 · 검증 · 순위 · 상위 N명
-  components/GroupPanel.jsx      감지된 분류 표시 (못 찾으면 아예 안 뜸)
-  hooks/useFlipReorder.js        순위 변동 시 줄이 미끄러지는 효과
-  components/NicknameExport.jsx  상위 N명 닉네임 추출
-  components/CommentCard.jsx     댓글 카드 + 수동 분류 지정
-  components/PersonChart.jsx     개인별 좋아요 추이 (기록 서버)
-  lib/history.js                 RTDB 읽기 (SDK 없이 REST)
-collector/collect.mjs            1분마다 SOOP을 찍어 RTDB에 기록 (VM)
-deploy/                          systemd 유닛
+  App.jsx              화면 전체. 명단을 만들고 좌우 두 칸으로 배치한다
+  components/
+    RosterRow.jsx      명단 한 줄
+    CommentDetail.jsx  고른 사람의 댓글을 크게 보여 주는 칸
+  lib/
+    target.js          [*] 어느 글을 다루는지. 갈아끼울 때 첫 번째로 고칠 파일
+    roster.js          [*] 확정 명단. freeze-roster.mjs 가 만든다. 손으로 고치지 말 것
+    soop.js            API 클라이언트. 실패를 kind 로 구분해 던진다
+    season.js          시즌 배지 판정 (userId + 닉네임 실시간 대조)
+    season1.js         시즌1 명단
+    season2.js         시즌2 명단
+    categories.js      본문에서 분류를 찾아낸다 — 지금 화면에선 안 쓴다
+    groups.js          분류·순위·닉네임 추출 — 헬스체크와 live-ranking 이 쓴다
+scripts/
+  freeze-roster.mjs    [*] 명단 굳히기
+  roster-order.json    이번 시즌에 발표된 순서 (이미지에서 옮긴 것)
+  check-api.mjs        API 헬스체크
+collector/, deploy/    기록 서버 (지금 꺼짐)
+```
+
+`categories.js`와 `groups.js`는 지금 화면이 쓰지 않지만 지우지 마세요. 매일 도는 헬스체크가
+이걸로 응답 형식을 검사하고, `live-ranking` 화면이 통째로 의존합니다.
+
+---
+
+## 갈아끼울 때 밟을 순서
+
+```
+1. git checkout -b season4 live-ranking
+2. src/lib/target.js       게시글 주소
+3. index.html / App.jsx    제목,  public/logo.png  로고
+4. src/lib/season*.js      지난 시즌 배지 (필요하면)
+5. (선발 진행)
+6. node scripts/freeze-roster.mjs --top N
+7. npm run build && git push
 ```
