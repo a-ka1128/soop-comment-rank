@@ -29,12 +29,12 @@ function RosterRow({ row, selected, onSelect }) {
       {/* 열이 좁아 글자로 쓰면 이름을 밀어낸다. 표식 하나로 줄인다. */}
       {row.role === 'leader' && (
         <span className="badge mark leader" title="총지휘관" aria-label="총지휘관">
-          👑
+          🎖️
         </span>
       )}
       {row.role === 'commander' && (
         <span className="badge mark commander" title="지휘관" aria-label="지휘관">
-          ★
+          🪖
         </span>
       )}
       {seasons.season1 && (
