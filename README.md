@@ -7,7 +7,7 @@ SOOP(구 아프리카TV) 방송국 게시글의 댓글을 전부 불러와 **좋
 보려고 만들었습니다. 서버가 없습니다. 브라우저가 SOOP API를 직접 부르는 정적 사이트라
 GitHub Pages에 그대로 올라갑니다.
 
-지금 배포된 것: **아르마3 랜덤고지전3 확정 명단 120명** —
+지금 배포된 것: **아르마3 랜덤고지전3 확정 명단 120명 · 3개 팀** —
 <https://a-ka1128.github.io/soop-comment-rank/>
 
 ---
@@ -20,7 +20,7 @@ GitHub Pages에 그대로 올라갑니다.
 |---|---|---|
 | 어디에 있나 | `live-ranking` 태그 | `main` |
 | 순위 | 좋아요 따라 실시간으로 움직임 | 굳어 있음 |
-| 화면 | 한 줄 목록, 펼치면 댓글 | 왼쪽 명단 · 오른쪽 댓글 |
+| 화면 | 한 줄 목록, 펼치면 댓글 | 팀 3열 · 고른 사람 댓글 |
 | 있는 기능 | 10초 자동 갱신, 순위 변동 화살표, 검색, 애청자 수 필터, 닉네임 추출(CSV), 개인 증가량 그래프, 컷 라인 | 없음 |
 
 **`main`에는 선발용 기능이 없습니다.** 끝난 뒤에 다 걷어냈습니다. 다음 시즌을 시작할 땐
@@ -118,7 +118,36 @@ npx prettier --write --single-quote --no-semi --print-width 100 src/lib/roster.j
 SOOP에서 가져오는 건 본문과 최신 좋아요뿐입니다. API가 죽어도 명단은 굳힌 값으로 그대로
 뜹니다. 명단에 있는 사람이 댓글을 지워도 자리를 지킵니다.
 
-### 3. 선발용 기능 걷어내기 (선택)
+### 3. 팀 나누기
+
+편성이 나오면 [`scripts/team-order.json`](scripts/team-order.json)에 팀별 닉네임을 순서대로
+적고 돌립니다.
+
+```bash
+node scripts/build-teams.mjs
+```
+
+[`src/lib/teams.js`](src/lib/teams.js)가 나옵니다. 사람 정보(순위·좋아요·userId)는 확정
+명단에서 그대로 가져오고, 이 파일은 **누가 어느 팀 몇 번째인지만** 정합니다.
+
+`leader`(총지휘관)와 `commander`(지휘관)는 팀마다 닉네임으로 지정합니다.
+
+```json
+{ "id": "blue", "name": "BLUE", "faction": "NATO", "color": "#6d8fb8",
+  "leader": "비챤", "commander": "Fronty_", "order": ["비챤", "Fronty_", "..."] }
+```
+
+여기서도 손으로 옮기다 나는 실수 세 가지를 검사하고, 하나라도 걸리면 파일을 쓰지 않습니다.
+
+| 검사 | 걸리는 경우 |
+|---|---|
+| 명단에 없는 이름 | 닉네임을 잘못 옮겼다 |
+| 두 팀에 있는 사람 | 옮기다 한 줄을 두 번 넣었다 |
+| 어느 팀에도 없는 사람 | 한 명을 빠뜨렸다 |
+
+`color`는 그 팀 열의 강조색입니다. 열 위쪽 띠, 줄 왼쪽 선, 순번 숫자에 쓰입니다.
+
+### 4. 선발용 기능 걷어내기 (선택)
 
 발표만 남길 거면 `main`이 그 모습입니다. 무엇을 지웠는지는 `git show 5851bdf --stat`으로
 볼 수 있습니다.
@@ -253,6 +282,7 @@ src/
   lib/
     target.js          [*] 어느 글을 다루는지. 갈아끼울 때 첫 번째로 고칠 파일
     roster.js          [*] 확정 명단. freeze-roster.mjs 가 만든다. 손으로 고치지 말 것
+    teams.js           [*] 팀 편성. build-teams.mjs 가 만든다. 손으로 고치지 말 것
     soop.js            API 클라이언트. 실패를 kind 로 구분해 던진다
     season.js          시즌 배지 판정 (userId + 닉네임 실시간 대조)
     season1.js         시즌1 명단
@@ -262,6 +292,8 @@ src/
 scripts/
   freeze-roster.mjs    [*] 명단 굳히기
   roster-order.json    이번 시즌에 발표된 순서 (이미지에서 옮긴 것)
+  build-teams.mjs      [*] 팀 나누기
+  team-order.json      이번 시즌 팀 편성 (이미지에서 옮긴 것)
   check-api.mjs        API 헬스체크
 collector/, deploy/    기록 서버 (지금 꺼짐)
 ```
@@ -280,5 +312,6 @@ collector/, deploy/    기록 서버 (지금 꺼짐)
 4. src/lib/season*.js      지난 시즌 배지 (필요하면)
 5. (선발 진행)
 6. node scripts/freeze-roster.mjs --top N
-7. npm run build && git push
+7. scripts/team-order.json 채우고  node scripts/build-teams.mjs
+8. npm run build && git push
 ```

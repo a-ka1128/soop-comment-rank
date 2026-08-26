@@ -16,7 +16,9 @@ export default function CommentDetail({ row, bjId, postNo }) {
   return (
     <article className="detail">
       <header className="detail-head">
-        <span className="detail-rank">{row.rank}</span>
+        <span className="detail-rank" title="확정 명단 전체 순위">
+          {row.rank}
+        </span>
         {row.profile ? (
           <img className="detail-avatar" src={row.profile} alt="" />
         ) : (
@@ -33,7 +35,7 @@ export default function CommentDetail({ row, bjId, postNo }) {
       </header>
 
       <div className="detail-badges">
-        {row.role === 'fixed' && <span className="badge fixed">우왁굳</span>}
+        {row.role === 'leader' && <span className="badge leader">총지휘관</span>}
         {row.role === 'commander' && <span className="badge commander">지휘관</span>}
         {seasons.season1 && <span className="badge season1">시즌1</span>}
         {seasons.season2 && <span className="badge season2">시즌2</span>}

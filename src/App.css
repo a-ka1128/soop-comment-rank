@@ -1,7 +1,7 @@
 .app {
   position: relative;
   z-index: 1;
-  max-width: 1440px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 28px 20px 80px;
 }
@@ -81,11 +81,11 @@
 
 /* ---------- 좌우 두 칸 ---------- */
 
-/* 명단은 한 줄이 짧아 넓힐 이유가 없다. 남는 너비는 전부 댓글 쪽에 준다. */
+/* 팀 셋을 나란히 세우고, 고른 사람의 댓글은 오른쪽 끝 칸에 둔다. */
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 500px) minmax(0, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(300px, 400px);
+  gap: 16px;
   align-items: start;
 }
 
@@ -95,6 +95,64 @@
   top: 20px;
 }
 
+/* ---------- 팀 ---------- */
+
+.team-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--team);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.team-name {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.team-name strong {
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  color: var(--team);
+}
+
+.team-faction {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.team-count {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* 총지휘관 이름. 자리가 모자라면 이게 먼저 줄어든다 — 아래 첫 줄에 또 나온다. */
+.team-leader {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team .row {
+  border-left-color: var(--team);
+}
+
+.team .rank-no {
+  color: var(--team);
+}
+
 /* ---------- 명단 한 줄 ---------- */
 
 .row {
@@ -102,8 +160,8 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  margin-bottom: 6px;
-  padding: 9px 14px;
+  margin-bottom: 5px;
+  padding: 8px 10px;
   border: 1px solid var(--line);
   border-left: 3px solid var(--accent);
   border-radius: var(--radius);
@@ -122,9 +180,9 @@
 }
 
 .rank-no {
-  min-width: 32px;
+  min-width: 24px;
   font-family: var(--mono);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--accent);
@@ -207,6 +265,11 @@
 .badge.commander {
   background: color-mix(in srgb, #cf7a5a 26%, transparent);
   color: #e0a087;
+}
+
+.badge.leader {
+  background: var(--brass);
+  color: var(--bg);
 }
 
 /* ---------- 댓글 칸 ---------- */
@@ -318,25 +381,26 @@
 
 /* ---------- 좁은 화면 ---------- */
 
-@media (max-width: 1120px) {
+/* 댓글 칸까지 나란히 두기엔 좁아지면, 팀 셋만 남기고 댓글은 위로 올린다.
+   누른 결과가 화면 밖에 있으면 답이 아니므로 붙여 둔다. */
+@media (max-width: 1400px) {
   .layout {
-    grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
-  }
-}
-
-@media (max-width: 860px) {
-  .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  /* 한 줄로 세우면 댓글 칸이 명단 아래로 밀려 누른 결과가 화면 밖에 있게 된다.
-     위로 올리고 붙여 둔다. 긴 댓글은 이 칸 안에서 스크롤한다. */
   .detail-pane {
+    grid-column: 1 / -1;
     order: -1;
     top: 0;
     z-index: 2;
-    max-height: 60vh;
+    max-height: 55vh;
     overflow: auto;
     background: var(--bg);
+  }
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
   }
 }

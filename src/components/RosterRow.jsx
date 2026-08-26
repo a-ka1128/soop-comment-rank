@@ -16,7 +16,7 @@ function RosterRow({ row, selected, onSelect }) {
       onClick={() => onSelect(row.id)}
       aria-pressed={selected}
     >
-      <span className="rank-no">{row.rank}</span>
+      <span className="rank-no">{row.seat}</span>
 
       {row.profile ? (
         <img className="avatar" src={row.profile} alt="" loading="lazy" />
@@ -25,16 +25,15 @@ function RosterRow({ row, selected, onSelect }) {
       )}
 
       <span className="nick">{row.nick}</span>
-      <span className="uid">{row.userId}</span>
 
-      {row.role === 'fixed' && (
-        <span className="badge fixed" title="우왁굳 방송국">
-          우왁굳
+      {row.role === 'leader' && (
+        <span className="badge leader" title="총지휘관">
+          총
         </span>
       )}
       {row.role === 'commander' && (
-        <span className="badge commander" title="지휘관입니다">
-          지휘관
+        <span className="badge commander" title="지휘관">
+          지휘
         </span>
       )}
       {seasons.season1 && (
