@@ -268,8 +268,20 @@
 }
 
 .badge.leader {
-  background: var(--brass);
-  color: var(--bg);
+  background: color-mix(in srgb, var(--brass) 26%, transparent);
+  color: var(--brass);
+}
+
+/* 명단 줄에 붙는 표식. 색칠한 알약 안에 이모지를 넣으면 지저분해서 글리프만 남긴다. */
+.badge.mark {
+  padding: 0 1px;
+  background: none;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.badge.mark.commander {
+  font-size: 12px;
 }
 
 /* ---------- 댓글 칸 ---------- */
