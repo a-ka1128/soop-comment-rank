@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import RosterRow from './components/RosterRow'
 import CommentDetail from './components/CommentDetail'
 import { fetchAllComments } from './lib/soop'
-import { TARGET_POST } from './lib/target'
+import { HAS_TARGET, TARGET_POST } from './lib/target'
+import { EVENT } from './lib/event'
 import { ALL_MEMBERS, TEAMS } from './lib/teams'
 
 import './App.css'
@@ -16,7 +17,7 @@ import './App.css'
 function mergeLive(member, live) {
   const found = live.get(member.id)
   if (!found) {
-    // 댓글이 없는 줄(우왁굳)이거나 지워진 줄.
+    // 댓글 없이 세운 줄이거나, 댓글이 지워진 줄.
     return { ...member, synthetic: true, text: '', date: '', profile: '', photo: '', replyCount: 0 }
   }
   return {
@@ -30,6 +31,30 @@ function mergeLive(member, live) {
   }
 }
 
+/** 아직 아무것도 안 채운 상태. 다음에 뭘 해야 하는지만 말해 준다. */
+function Empty() {
+  return (
+    <section className="empty">
+      <h2>명단이 아직 없습니다</h2>
+      <ol>
+        <li>
+          <code>src/lib/target.js</code> 에 대상 게시글을 적습니다.
+        </li>
+        <li>
+          선발이 끝나면 <code>node scripts/freeze-roster.mjs --top N</code> 으로 순위를 굳힙니다.
+        </li>
+        <li>
+          <code>scripts/team-order.json</code> 에 편성을 적고{' '}
+          <code>node scripts/build-teams.mjs</code> 를 돌립니다.
+        </li>
+      </ol>
+      <p>
+        간판(제목 · 역할 이름 · 로고)은 <code>src/lib/event.js</code> 한 곳에 있습니다.
+      </p>
+    </section>
+  )
+}
+
 export default function App() {
   const [live, setLive] = useState(() => new Map())
   const [selectedId, setSelectedId] = useState(null)
@@ -37,6 +62,9 @@ export default function App() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    // 대상 글이 없으면 부를 데가 없다. 빈 주소로 찔러 봐야 에러만 뜬다.
+    if (!HAS_TARGET) return
+
     const controller = new AbortController()
     fetchAllComments(TARGET_POST.bjId, TARGET_POST.postNo, {
       signal: controller.signal,
@@ -58,18 +86,18 @@ export default function App() {
   }, [live])
 
   const selected = selectedId === null ? null : (rowsById.get(selectedId) ?? null)
+  const leaderLabel = EVENT.roles.leader?.label ?? ''
 
   return (
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <img className="brand-logo" src="./logo.png" alt="" width="48" height="48" />
+          {EVENT.logo && (
+            <img className="brand-logo" src={EVENT.logo} alt="" width="48" height="48" />
+          )}
           <div>
-            <h1>아르마3 랜덤고지전 확정 명단</h1>
-            <p>
-              최종 합격자 {ALL_MEMBERS.length}명 · {TEAMS.length}개 팀. 이름을 누르면 그 사람의
-              댓글이 보입니다.
-            </p>
+            <h1>{EVENT.title}</h1>
+            {EVENT.description && <p>{EVENT.description}</p>}
           </div>
         </div>
 
@@ -88,36 +116,44 @@ export default function App() {
         {error && <p className="error">{error}</p>}
       </header>
 
-      <div className="layout">
-        {TEAMS.map((team) => {
-          const leader = team.members.find((m) => m.role === 'leader')
-          return (
-            <section className="team" key={team.id} style={{ '--team': team.color }}>
-              <header className="team-head">
-                <div className="team-name">
-                  <strong>{team.name}</strong>
-                  <span className="team-faction">{team.faction}</span>
-                </div>
-                <span className="team-count">{team.members.length}명</span>
-                {leader && <span className="team-leader">총지휘관 {leader.nick}</span>}
-              </header>
+      {TEAMS.length === 0 ? (
+        <Empty />
+      ) : (
+        <div className="layout" style={{ '--team-count': TEAMS.length }}>
+          {TEAMS.map((team) => {
+            const leader = team.members.find((m) => m.role === 'leader')
+            return (
+              <section className="team" key={team.id} style={{ '--team': team.color }}>
+                <header className="team-head">
+                  <div className="team-name">
+                    <strong>{team.name}</strong>
+                    {team.faction && <span className="team-faction">{team.faction}</span>}
+                  </div>
+                  <span className="team-count">{team.members.length}명</span>
+                  {leader && (
+                    <span className="team-leader">
+                      {leaderLabel} {leader.nick}
+                    </span>
+                  )}
+                </header>
 
-              {team.members.map((member) => (
-                <RosterRow
-                  key={member.id}
-                  row={rowsById.get(member.id)}
-                  selected={member.id === selectedId}
-                  onSelect={setSelectedId}
-                />
-              ))}
-            </section>
-          )
-        })}
+                {team.members.map((member) => (
+                  <RosterRow
+                    key={member.id}
+                    row={rowsById.get(member.id)}
+                    selected={member.id === selectedId}
+                    onSelect={setSelectedId}
+                  />
+                ))}
+              </section>
+            )
+          })}
 
-        <aside className="detail-pane">
-          <CommentDetail row={selected} bjId={TARGET_POST.bjId} postNo={TARGET_POST.postNo} />
-        </aside>
-      </div>
+          <aside className="detail-pane">
+            <CommentDetail row={selected} bjId={TARGET_POST.bjId} postNo={TARGET_POST.postNo} />
+          </aside>
+        </div>
+      )}
     </div>
   )
 }

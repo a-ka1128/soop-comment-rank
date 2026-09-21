@@ -5,7 +5,7 @@
  * 그걸로 순서가 바뀌면 그건 이미 발표한 것과 다른 명단이다.
  *
  *   node scripts/freeze-roster.mjs --top 120
- *   node scripts/freeze-roster.mjs --order order.json --fixed ecvhao=우왁굳 --commander "A,B,C"
+ *   node scripts/freeze-roster.mjs --order order.json --fixed 방송국주소=닉네임 --commander "A,B,C"
  *
  * --top N        좋아요 상위 N명을 그 순서대로 굳힌다.
  * --order 파일   닉네임 배열 JSON. 발표한 이미지처럼 정해진 순서가 따로 있을 때 쓴다.
@@ -18,7 +18,7 @@
  */
 import { readFile, writeFile } from 'node:fs/promises'
 import { fetchAllComments } from '../src/lib/soop.js'
-import { TARGET_POST } from '../src/lib/target.js'
+import { HAS_TARGET, TARGET_POST } from '../src/lib/target.js'
 
 function arg(name, fallback = null) {
   const i = process.argv.indexOf(`--${name}`)
@@ -30,6 +30,11 @@ const top = Number(arg('top', 0))
 const orderPath = arg('order')
 const fixed = arg('fixed')
 const commanders = (arg('commander') ?? '').split(',').map((s) => s.trim()).filter(Boolean)
+
+if (!HAS_TARGET) {
+  console.error('src/lib/target.js 에 대상 게시글을 먼저 적으세요.')
+  process.exit(2)
+}
 
 if (!top && !orderPath) {
   console.error('--top 이나 --order 중 하나는 있어야 합니다.')
@@ -125,5 +130,5 @@ const body = [
 await writeFile(out, body, 'utf8')
 console.log(`${out} 에 ${rows.length}명을 적었습니다.`)
 console.log(`  1위 ${rows[0].nick}   ...   ${rows.length}위 ${rows[rows.length - 1].nick}`)
-if (fixed) console.log('  고정 1명, 지휘관', commanders.length, '명')
+if (fixed) console.log('  고정 1명, 부리더', commanders.length, '명')
 console.log('prettier 로 한 번 다듬으세요: npx prettier --write --single-quote --no-semi --print-width 100', out)

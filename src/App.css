@@ -81,10 +81,13 @@
 
 /* ---------- 좌우 두 칸 ---------- */
 
-/* 팀 셋을 나란히 세우고, 고른 사람의 댓글은 오른쪽 끝 칸에 둔다. */
+/*
+ * 팀을 나란히 세우고, 고른 사람의 댓글은 오른쪽 끝 칸에 둔다.
+ * --team-count 는 App.jsx 가 TEAMS.length 로 넣어 준다 (없으면 3).
+ */
 .layout {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(300px, 400px);
+  grid-template-columns: repeat(var(--team-count, 3), minmax(0, 1fr)) minmax(300px, 400px);
   gap: 16px;
   align-items: start;
 }
@@ -93,6 +96,47 @@
 .detail-pane {
   position: sticky;
   top: 20px;
+}
+
+/* ---------- 아직 아무것도 없을 때 ---------- */
+
+.empty {
+  max-width: 640px;
+  padding: 24px 28px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.empty h2 {
+  margin: 0 0 14px;
+  font-size: 17px;
+}
+
+.empty ol {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.empty li {
+  margin-bottom: 8px;
+}
+
+.empty p {
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.empty code {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent-hi);
 }
 
 /* ---------- 팀 ---------- */
@@ -133,7 +177,7 @@
   color: var(--muted);
 }
 
-/* 총지휘관 이름. 자리가 모자라면 이게 먼저 줄어든다 — 아래 첫 줄에 또 나온다. */
+/* 리더 이름. 자리가 모자라면 이게 먼저 줄어든다 — 아래 첫 줄에 또 나온다. */
 .team-leader {
   flex: 1;
   min-width: 0;
@@ -174,8 +218,8 @@
 }
 
 .row.is-selected {
-  border-color: var(--brass);
-  border-left-color: var(--brass);
+  border-color: var(--accent-hi);
+  border-left-color: var(--accent-hi);
   background: var(--panel-2);
 }
 
@@ -190,7 +234,7 @@
 }
 
 .row.is-selected .rank-no {
-  color: var(--brass);
+  color: var(--accent-hi);
 }
 
 .avatar {
@@ -228,7 +272,7 @@
   font-family: var(--mono);
   font-size: 14px;
   font-weight: 600;
-  color: var(--brass);
+  color: var(--accent-hi);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -255,21 +299,15 @@
   color: #b9adff;
 }
 
-/* 좋아요로 얻은 자리가 아닌 줄 — 우왁굳과 지휘관.
-   시즌 배지(청록·보라)와 나란히 서므로 황동색 계열로 확실히 갈라 둔다. */
-.badge.fixed {
-  background: color-mix(in srgb, var(--brass) 26%, transparent);
-  color: var(--brass);
+/* 역할 배지. 시즌 배지(청록·보라)와 나란히 서므로 확실히 다른 색을 준다. */
+.badge.leader {
+  background: color-mix(in srgb, var(--accent-hi) 26%, transparent);
+  color: var(--accent-hi);
 }
 
 .badge.commander {
-  background: color-mix(in srgb, #cf7a5a 26%, transparent);
-  color: #e0a087;
-}
-
-.badge.leader {
-  background: color-mix(in srgb, var(--brass) 26%, transparent);
-  color: var(--brass);
+  background: color-mix(in srgb, var(--danger) 24%, transparent);
+  color: #e8a98e;
 }
 
 /* 명단 줄에 붙는 표식. 색칠한 알약 안에 이모지를 넣으면 지저분해서 글리프만 남긴다. */
@@ -313,7 +351,7 @@
   font-size: 22px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--brass);
+  color: var(--accent-hi);
   flex: none;
 }
 
@@ -382,7 +420,7 @@
 }
 
 .channel {
-  color: var(--brass);
+  color: var(--accent-hi);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -393,11 +431,11 @@
 
 /* ---------- 좁은 화면 ---------- */
 
-/* 댓글 칸까지 나란히 두기엔 좁아지면, 팀 셋만 남기고 댓글은 위로 올린다.
+/* 댓글 칸까지 나란히 두기엔 좁아지면, 팀만 남기고 댓글은 위로 올린다.
    누른 결과가 화면 밖에 있으면 답이 아니므로 붙여 둔다. */
 @media (max-width: 1400px) {
   .layout {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--team-count, 3), minmax(0, 1fr));
   }
 
   .detail-pane {

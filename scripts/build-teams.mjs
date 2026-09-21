@@ -46,7 +46,7 @@ for (const team of teams) {
     return { seat: i + 1, ...entry, role }
   })
 
-  if (team.leader && !used.has(team.leader)) throw new Error(`[${team.name}] 총지휘관이 명단에 없습니다.`)
+  if (team.leader && !used.has(team.leader)) throw new Error(`[${team.name}] 리더 '${team.leader}' 가 명단에 없습니다.`)
   built.push({ ...team, members })
 }
 
@@ -66,7 +66,7 @@ const block = (t) =>
     '  {',
     `    id: ${q(t.id)},`,
     `    name: ${q(t.name)},`,
-    `    faction: ${q(t.faction)},`,
+    `    faction: ${t.faction == null ? 'null' : q(t.faction)},`,
     `    color: ${q(t.color)},`,
     '    members: [',
     t.members.map(member).join('\n'),
@@ -83,7 +83,7 @@ const body = [
   ' *',
   ' *   rank  전체 확정 명단에서의 순위',
   ' *   seat  팀 안에서의 자리',
-  ' *   role  leader 총지휘관 · commander 지휘관',
+  ' *   role  src/lib/event.js 의 roles 키 (leader · commander)',
   ' */',
   'export const TEAMS = [',
   built.map(block).join('\n'),
@@ -100,8 +100,8 @@ for (const t of built) {
   const leader = t.members.find((m) => m.role === 'leader')
   const commander = t.members.find((m) => m.role === 'commander')
   console.log(
-    `  ${t.name} (${t.faction}) ${t.members.length}명` +
-      ` — 총지휘관 ${leader?.nick ?? '없음'} · 지휘관 ${commander?.nick ?? '없음'}`
+    `  ${t.name}${t.faction ? ` (${t.faction})` : ''} ${t.members.length}명` +
+      ` — 리더 ${leader?.nick ?? '없음'} · 부리더 ${commander?.nick ?? '없음'}`
   )
 }
 console.log(`  합계 ${built.reduce((n, t) => n + t.members.length, 0)}명 / 명단 ${FROZEN_ROSTER.length}명`)

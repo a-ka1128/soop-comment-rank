@@ -1,5 +1,6 @@
 import { channelUrl, commentUrl } from '../lib/soop'
 import { seasonMatch } from '../lib/season'
+import { EVENT } from '../lib/event'
 
 /** 고른 사람의 댓글을 크게 보여 주는 칸. */
 export default function CommentDetail({ row, bjId, postNo }) {
@@ -12,6 +13,7 @@ export default function CommentDetail({ row, bjId, postNo }) {
   }
 
   const seasons = seasonMatch(row)
+  const role = row.role ? EVENT.roles[row.role] : null
 
   return (
     <article className="detail">
@@ -35,8 +37,11 @@ export default function CommentDetail({ row, bjId, postNo }) {
       </header>
 
       <div className="detail-badges">
-        {row.role === 'leader' && <span className="badge leader">🎖️ 총지휘관</span>}
-        {row.role === 'commander' && <span className="badge commander">🪖 지휘관</span>}
+        {role && (
+          <span className={`badge ${row.role}`}>
+            {role.mark} {role.label}
+          </span>
+        )}
         {seasons.season1 && <span className="badge season1">시즌1</span>}
         {seasons.season2 && <span className="badge season2">시즌2</span>}
       </div>

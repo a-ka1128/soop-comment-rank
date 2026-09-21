@@ -36,7 +36,7 @@ export function parsePostUrl(input) {
     raw.match(/ch\.sooplive\.co\.kr\/([^/?#]+)\/post\/(\d+)/i)
   if (urlMatch) return { bjId: urlMatch[1], postNo: urlMatch[2] }
 
-  // "ecvhao/203249055", "ecvhao 203249055"
+  // "bjid/203249055", "bjid 203249055"
   const pairMatch = raw.match(/^([A-Za-z0-9_-]+)[\s/]+(\d+)$/)
   if (pairMatch) return { bjId: pairMatch[1], postNo: pairMatch[2] }
 

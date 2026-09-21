@@ -10,9 +10,17 @@
  * 실패하면 exit 1. 워크플로가 그걸 보고 이슈를 연다.
  */
 import { API_BASE, fetchAllComments, fetchPost } from '../src/lib/soop.js'
-import { TARGET_POST } from '../src/lib/target.js'
+import { HAS_TARGET, TARGET_POST } from '../src/lib/target.js'
 import { detectCategories, buildGroups } from '../src/lib/categories.js'
 import { classify, UNGROUPED_ID } from '../src/lib/groups.js'
+
+// 대상 글이 아직 없으면 찔러 볼 데가 없다. 매일 실패하며 이슈를 열면
+// 알림만 무의미해지므로, 조용히 통과시키고 왜 건너뛰는지만 남긴다.
+if (!HAS_TARGET) {
+  console.log('SOOP API 헬스체크 — 건너뜀')
+  console.log('  src/lib/target.js 에 대상 게시글이 아직 없습니다.')
+  process.exit(0)
+}
 
 const { bjId, postNo, url } = TARGET_POST
 const failures = []
@@ -74,7 +82,7 @@ if (post) {
 }
 
 // 4. 분류 감지. 분류가 있는 글인지 아닌지는 그 글이 정하는 것이라 없다고 실패는 아니다.
-//    (대상 글이 아르마3처럼 번호 목록이 없으면 여기는 그냥 "없음"이 정상이다.)
+//    (대상 글에 번호 목록이 없으면 여기는 그냥 "없음"이 정상이다.)
 //    분류가 있는 글일 때만 적중률까지 확인한다. 그게 깨지면 본문 HTML 구조가 바뀐 것이다.
 if (post && comments.length > 0) {
   const categories = detectCategories(post.html)

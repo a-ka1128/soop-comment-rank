@@ -7,8 +7,10 @@ SOOP(구 아프리카TV) 방송국 게시글의 댓글을 전부 불러와 **좋
 보려고 만들었습니다. 서버가 없습니다. 브라우저가 SOOP API를 직접 부르는 정적 사이트라
 GitHub Pages에 그대로 올라갑니다.
 
-지금 배포된 것: **아르마3 랜덤고지전3 확정 명단 120명 · 3개 팀** —
-<https://a-ka1128.github.io/soop-comment-rank/>
+**지금은 빈 상태입니다.** 지난 이벤트(아르마3 랜덤고지전3, 120명 · 3개 팀)를 걷어내고
+다음 이벤트를 기다리는 뼈대만 남겼습니다. 화면은 "명단이 아직 없습니다"와 다음에 할 일
+세 줄을 띄웁니다. 지난 이벤트의 명단과 편성은 지운 게 아니라 커밋 히스토리에 남아 있고,
+`git log -- src/lib/roster.js` 로 꺼낼 수 있습니다.
 
 ---
 
@@ -16,11 +18,11 @@ GitHub Pages에 그대로 올라갑니다.
 
 선발은 두 단계로 갑니다. 화면도 둘입니다.
 
-| | **선발 중** | **선발 후 (지금)** |
+| | **선발 중** | **선발 후 (지금 `main`)** |
 |---|---|---|
 | 어디에 있나 | `live-ranking` 태그 | `main` |
 | 순위 | 좋아요 따라 실시간으로 움직임 | 굳어 있음 |
-| 화면 | 한 줄 목록, 펼치면 댓글 | 팀 3열 · 고른 사람 댓글 |
+| 화면 | 한 줄 목록, 펼치면 댓글 | 팀별 열 · 고른 사람 댓글 |
 | 있는 기능 | 10초 자동 갱신, 순위 변동 화살표, 검색, 애청자 수 필터, 닉네임 추출(CSV), 개인 증가량 그래프, 컷 라인 | 없음 |
 
 **`main`에는 선발용 기능이 없습니다.** 끝난 뒤에 다 걷어냈습니다. 다음 시즌을 시작할 땐
@@ -52,7 +54,7 @@ npm run dev
 
 ---
 
-## 새 게시글로 갈아끼우기
+## 새 이벤트로 갈아끼우기
 
 ### 1. 선발 시작 — 실시간 랭킹 화면 꺼내기
 
@@ -63,20 +65,38 @@ git checkout -b season4 live-ranking
 [`src/lib/target.js`](src/lib/target.js) 한 곳만 고치면 대상이 바뀝니다.
 
 ```js
-export const TARGET_POST = { bjId: 'ecvhao', postNo: '204516133', url: '...' }
+export const TARGET_POST = { bjId: '방송국주소', postNo: '게시글번호', url: '...' }
 export const CUT_RANK = 119
 ```
 
-`CUT_RANK`는 그 순위 아래에 컷 라인을 긋습니다. `null`이면 안 긋습니다.
+`CUT_RANK`는 그 순위 아래에 컷 라인을 긋습니다. `null`이면 안 긋습니다. 비워 두면
+`HAS_TARGET`이 `false`가 되고, 화면은 API를 부르지 않고 스크립트는 일찍 멈춥니다.
 
-간판도 바꿉니다.
+간판은 [`src/lib/event.js`](src/lib/event.js) 한 곳에 모여 있습니다.
 
-| 무엇 | 어디 |
-|---|---|
-| 사이트 제목 | `src/App.jsx`의 `<h1>` |
-| 브라우저 탭 제목 | `index.html`의 `<title>` |
-| 로고 | `public/logo.png` 교체 |
-| 배경 | `public/camo.jpg` 교체, 색은 `src/index.css`의 `:root` |
+```js
+export const EVENT = {
+  title: '확정 명단',
+  description: '이름을 누르면 그 사람의 댓글이 보입니다.',
+  logo: null,                                    // './logo.png' 처럼. null 이면 자리를 비운다
+  roles: {
+    leader: { label: '리더', mark: '★' },
+    commander: { label: '부리더', mark: '☆' },
+  },
+}
+```
+
+`mark`는 명단 줄에 붙는 한 글자입니다. 열이 좁아 글자로 쓰면 이름을 밀어내서 표식 하나로
+줄였습니다. `label`은 댓글 칸과 팀 머리말에 글자로 나옵니다.
+
+여기서 못 고치는 것도 있습니다.
+
+| 무엇 | 어디 | 왜 |
+|---|---|---|
+| 브라우저 탭 제목 | `index.html`의 `<title>` | 빌드 전 정적 파일이라 `event.js` 값을 못 가져갑니다 |
+| 파비콘 | `public/favicon.svg` 교체 | 지금 건 자리 지킴이입니다 |
+| 색 | `src/index.css`의 `:root` | 지금은 중립 다크. 열 줄만 바꾸면 화면 전체가 따라옵니다 |
+| 배경 이미지 | `src/index.css`의 `body` | 주석에 되살리는 법을 적어 뒀습니다 |
 
 기록 서버(개인 증가량 그래프)까지 쓸 거면 [`collector/tracked.json`](collector/tracked.json)도
 같은 글을 가리키게 하세요. 안 쓰면 그래프 버튼만 "기록 없음"으로 뜹니다.
@@ -93,20 +113,20 @@ export const CUT_RANK = 119
 node scripts/freeze-roster.mjs --top 120
 ```
 
-발표한 이미지처럼 정해진 순서가 따로 있으면 닉네임 배열 JSON을 주세요. 이번 시즌에 쓴 것이
-[`scripts/roster-order.json`](scripts/roster-order.json)입니다.
+발표한 이미지처럼 정해진 순서가 따로 있으면 닉네임 배열 JSON을 주세요.
+[`scripts/roster-order.json`](scripts/roster-order.json)이 그 자리입니다(지금은 비어 있습니다).
 
 ```bash
-node scripts/freeze-roster.mjs --order scripts/roster-order.json --fixed ecvhao=우왁굳 --commander "TaeGeuk_,Fronty_,마린보이_"
+node scripts/freeze-roster.mjs --order scripts/roster-order.json --fixed 방송국주소=닉네임 --commander "A,B,C"
 ```
 
-- `--fixed id=닉` — 댓글 없이 맨 앞에 세울 사람. 좋아요 자리는 `—`로 비고, 없는 댓글로 가는
-  링크도 안 겁니다.
+- `--fixed id=닉` — 댓글 없이 맨 앞에 세울 사람(방송인 본인 등). 좋아요 자리는 `—`로 비고,
+  없는 댓글로 가는 링크도 안 겁니다.
 - `--commander` — `--fixed` 다음 자리로 끌어올릴 사람들.
 
 > **이름을 눈으로 옮기지 마세요.** 스크립트가 모든 닉네임을 실제 댓글과 대조해서, 하나라도
-> 안 맞거나 같은 닉이 둘이면 멈춥니다. 이번에 116개 이름을 옮겼는데 이 검증을 통과하는 걸
-> 확인하고 나서야 넣었습니다.
+> 안 맞거나 같은 닉이 둘이면 멈춥니다. 지난 시즌에 116개 이름을 옮겼는데 이 검증을 통과하는
+> 걸 확인하고 나서야 넣었습니다.
 
 굳힌 뒤 다듬고 확인합니다.
 
@@ -114,28 +134,32 @@ node scripts/freeze-roster.mjs --order scripts/roster-order.json --fixed ecvhao=
 npx prettier --write --single-quote --no-semi --print-width 100 src/lib/roster.js
 ```
 
-`roster.js`가 있으면 **명단이 먼저고 댓글이 나중입니다.** 순서도 인원도 이 파일이 정하고,
+`roster.js`가 차 있으면 **명단이 먼저고 댓글이 나중입니다.** 순서도 인원도 이 파일이 정하고,
 SOOP에서 가져오는 건 본문과 최신 좋아요뿐입니다. API가 죽어도 명단은 굳힌 값으로 그대로
 뜹니다. 명단에 있는 사람이 댓글을 지워도 자리를 지킵니다.
 
 ### 3. 팀 나누기
 
 편성이 나오면 [`scripts/team-order.json`](scripts/team-order.json)에 팀별 닉네임을 순서대로
-적고 돌립니다.
+적고 돌립니다. 지금은 A팀·B팀 두 칸짜리 빈 틀이 들어 있습니다.
 
 ```bash
 node scripts/build-teams.mjs
 ```
 
 [`src/lib/teams.js`](src/lib/teams.js)가 나옵니다. 사람 정보(순위·좋아요·userId)는 확정
-명단에서 그대로 가져오고, 이 파일은 **누가 어느 팀 몇 번째인지만** 정합니다.
+명단에서 그대로 가져오고, 이 파일은 **누가 어느 팀 몇 번째인지만** 정합니다. 팀이 몇 개든
+화면이 그만큼 열을 만듭니다(`--team-count`).
 
-`leader`(총지휘관)와 `commander`(지휘관)는 팀마다 닉네임으로 지정합니다.
+`leader`와 `commander`는 팀마다 닉네임으로 지정합니다. 화면에 뭐라고 나올지는
+`event.js`의 `roles`가 정합니다.
 
 ```json
-{ "id": "blue", "name": "BLUE", "faction": "NATO", "color": "#6d8fb8",
-  "leader": "비챤", "commander": "Fronty_", "order": ["비챤", "Fronty_", "..."] }
+{ "id": "a", "name": "A팀", "faction": null, "color": "#7f8b9e",
+  "leader": "닉네임", "commander": "닉네임", "order": ["...", "..."] }
 ```
+
+`faction`은 팀 이름 옆에 붙는 작은 부제입니다. `null`이면 안 그립니다.
 
 여기서도 손으로 옮기다 나는 실수 세 가지를 검사하고, 하나라도 걸리면 파일을 쓰지 않습니다.
 
@@ -157,15 +181,16 @@ node scripts/build-teams.mjs
 ## 시즌 배지
 
 [`src/lib/season1.js`](src/lib/season1.js) · [`src/lib/season2.js`](src/lib/season2.js)에
-지난 시즌 참가자를 담아 두면 명단에 배지가 붙습니다.
+지난 시즌 참가자를 담아 두면 명단에 배지가 붙습니다. **지금은 둘 다 비어 있어 배지가 안
+붙습니다.**
 
 ```js
 export const SEASON2_USER_IDS = new Set(['collet11', '243000'])
-export const SEASON2_UNRESOLVED = ['우왁굳', '징버거']
+export const SEASON2_UNRESOLVED = ['닉네임A', '닉네임B']
 ```
 
 **닉네임이 아니라 userId로 들고 있습니다.** 닉네임은 수시로 바뀌고 장식이 붙지만
-(시즌2 `마린보이7` ↔ 신청 `마린보이_`) userId는 그대로입니다.
+(`마린보이7` ↔ `마린보이_`) userId는 그대로입니다.
 
 `UNRESOLVED`에 남은 이름은 [`src/lib/season.js`](src/lib/season.js)가 화면에서 실시간으로
 대조합니다. 명단에 있던 사람이 뒤늦게 댓글을 달면 그때 배지가 붙습니다. 대조는 장식을 떼고
@@ -230,8 +255,9 @@ SOOP은 방송국 게시글 댓글에 대한 공개 API를 제공하지 않습�
 node scripts/check-api.mjs
 ```
 
-대상 글은 `src/lib/target.js`를 그대로 씁니다. API 주소 자체가 바뀌었을 땐
-[`src/lib/soop.js`](src/lib/soop.js)의 `API_BASE`만 고치면 됩니다.
+대상 글은 `src/lib/target.js`를 그대로 씁니다. **지금처럼 대상 글이 비어 있으면 헬스체크는
+조용히 통과합니다** — 찔러 볼 데가 없는데 매일 실패해서 이슈를 열면 알림이 무의미해집니다.
+API 주소 자체가 바뀌었을 땐 [`src/lib/soop.js`](src/lib/soop.js)의 `API_BASE`만 고치면 됩니다.
 
 ---
 
@@ -247,6 +273,7 @@ VM에서:
 cd ~/soop-comment-rank && git pull && setsid nohup deploy/loop-collector.sh >/dev/null 2>&1 &
 ```
 
+- `collector/tracked.json`의 `posts`가 비어 있으면 수집할 게 없습니다. 먼저 채우세요.
 - `collector.env`에 `SOOP_RTDB_URL`, `SOOP_SERVICE_ACCOUNT`(서비스 계정 JSON 경로)가 필요합니다.
   **둘 다 gitignore 대상입니다. 커밋하지 마세요.**
 - 프런트는 `.env`의 `VITE_RTDB_URL`을 봅니다. 비어 있으면 그래프 기능만 조용히 꺼집니다.
@@ -273,28 +300,33 @@ systemctl --user disable --now soop-collector.timer; pkill -9 -f loop-collector;
 
 ## 파일 지도
 
+`[*]`는 새 이벤트로 갈아끼울 때 손대는 파일입니다. `[비어 있음]`은 지금 뼈대만 남은 파일.
+
 ```
 src/
-  App.jsx              화면 전체. 명단을 만들고 좌우 두 칸으로 배치한다
+  App.jsx              화면 전체. 팀별로 열을 세우고 오른쪽에 댓글 칸을 둔다
   components/
     RosterRow.jsx      명단 한 줄
     CommentDetail.jsx  고른 사람의 댓글을 크게 보여 주는 칸
   lib/
-    target.js          [*] 어느 글을 다루는지. 갈아끼울 때 첫 번째로 고칠 파일
-    roster.js          [*] 확정 명단. freeze-roster.mjs 가 만든다. 손으로 고치지 말 것
-    teams.js           [*] 팀 편성. build-teams.mjs 가 만든다. 손으로 고치지 말 것
+    event.js       [*] 간판 — 제목·설명·로고·역할 이름. 갈아끼울 때 첫 번째로 고칠 파일
+    target.js      [*] 어느 글을 다루는지          [비어 있음]
+    roster.js      [*] 확정 명단. freeze-roster.mjs 가 만든다. 손으로 고치지 말 것  [비어 있음]
+    teams.js       [*] 팀 편성. build-teams.mjs 가 만든다. 손으로 고치지 말 것      [비어 있음]
     soop.js            API 클라이언트. 실패를 kind 로 구분해 던진다
     season.js          시즌 배지 판정 (userId + 닉네임 실시간 대조)
-    season1.js         시즌1 명단
-    season2.js         시즌2 명단
+    season1.js     [*] 지난 시즌 명단                                              [비어 있음]
+    season2.js     [*] 지난 시즌 명단                                              [비어 있음]
     categories.js      본문에서 분류를 찾아낸다 — 지금 화면에선 안 쓴다
     groups.js          분류·순위·닉네임 추출 — 헬스체크와 live-ranking 이 쓴다
 scripts/
   freeze-roster.mjs    [*] 명단 굳히기
-  roster-order.json    이번 시즌에 발표된 순서 (이미지에서 옮긴 것)
+  roster-order.json    발표된 순서를 적는 자리                                     [비어 있음]
   build-teams.mjs      [*] 팀 나누기
-  team-order.json      이번 시즌 팀 편성 (이미지에서 옮긴 것)
-  check-api.mjs        API 헬스체크
+  team-order.json      팀 편성을 적는 자리 (A팀·B팀 빈 틀)                         [비어 있음]
+  check-api.mjs        API 헬스체크. 대상 글이 없으면 건너뛴다
+public/
+  favicon.svg          자리 지킴이. 로고가 생기면 갈아끼운다
 collector/, deploy/    기록 서버 (지금 꺼짐)
 ```
 
@@ -308,7 +340,9 @@ collector/, deploy/    기록 서버 (지금 꺼짐)
 ```
 1. git checkout -b season4 live-ranking
 2. src/lib/target.js       게시글 주소
-3. index.html / App.jsx    제목,  public/logo.png  로고
+3. src/lib/event.js        제목 · 역할 이름 · 로고
+   index.html              탭 제목,  public/favicon.svg  파비콘
+   src/index.css           색 (필요하면)
 4. src/lib/season*.js      지난 시즌 배지 (필요하면)
 5. (선발 진행)
 6. node scripts/freeze-roster.mjs --top N

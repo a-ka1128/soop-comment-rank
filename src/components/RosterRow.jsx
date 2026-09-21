@@ -1,13 +1,15 @@
 import { memo } from 'react'
 import { seasonMatch } from '../lib/season'
+import { EVENT } from '../lib/event'
 
 /**
  * 명단 한 줄. 누르면 오른쪽 칸에 그 사람의 댓글이 펼쳐진다.
  *
- * 줄이 120개라 고른 줄만 다시 그려지도록 memo 를 씌운다.
+ * 줄이 백 개를 넘어가므로 고른 줄만 다시 그려지도록 memo 를 씌운다.
  */
 function RosterRow({ row, selected, onSelect }) {
   const seasons = seasonMatch(row)
+  const role = row.role ? EVENT.roles[row.role] : null
 
   return (
     <button
@@ -27,14 +29,9 @@ function RosterRow({ row, selected, onSelect }) {
       <span className="nick">{row.nick}</span>
 
       {/* 열이 좁아 글자로 쓰면 이름을 밀어낸다. 표식 하나로 줄인다. */}
-      {row.role === 'leader' && (
-        <span className="badge mark leader" title="총지휘관" aria-label="총지휘관">
-          🎖️
-        </span>
-      )}
-      {row.role === 'commander' && (
-        <span className="badge mark commander" title="지휘관" aria-label="지휘관">
-          🪖
+      {role && (
+        <span className={`badge mark ${row.role}`} title={role.label} aria-label={role.label}>
+          {role.mark}
         </span>
       )}
       {seasons.season1 && (

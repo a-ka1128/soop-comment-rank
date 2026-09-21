@@ -1,0 +1,9 @@
+<!-- 자리 지킴이. 이벤트 로고가 생기면 이 파일과 index.html 의 링크를 갈아끼운다. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="3" fill="#1b1e24"/>
+  <g fill="#aab7cc">
+    <rect x="7" y="9" width="18" height="3" rx="1.5"/>
+    <rect x="7" y="15" width="13" height="3" rx="1.5"/>
+    <rect x="7" y="21" width="8" height="3" rx="1.5"/>
+  </g>
+</svg>

@@ -1,22 +1,20 @@
 :root {
   /*
-   * 밀리터리 그린 팔레트 네 색을 그대로 역할에 앉힌 것.
-   *   #8C8159 올리브   #A39A7A 카키   #46412D 다크브라운   #E8E6DE 오프화이트
+   * 중립 다크 팔레트. 이벤트 색이 아직 없는 상태의 기본값이다 -- 이벤트가 정해지면
+   * 여기 열 줄만 바꾸면 화면 전체가 따라온다.
    *
-   * 어두운 배경 두 단계와 수치용 밝은 한 단계만 같은 계열에서 파생시켰다.
-   * 네 색만으로는 배경(더 어두워야 함)과 수치(더 밝아야 함)가 나오지 않는다.
-   * 대비는 전부 패널 표면 기준으로 측정했다 — 아래 주석의 수치가 실측값이다.
+   * 대비는 전부 패널 표면(--panel) 기준으로 측정했다. 아래 주석의 수치가 실측값이다.
    */
-  --bg: #1a1710;
-  --panel: #221e15;
-  --panel-2: #2d2819;
-  --line: #46412d; /* 팔레트 — 경계선. 1.62:1, 의도적으로 물러나 있음 */
-  --text: #e8e6de; /* 팔레트 — 13.29:1 */
-  --muted: #a39a7a; /* 팔레트 — 5.90:1 */
-  --accent: #8c8159; /* 팔레트 — 4.27:1. 주버튼 배경으로 쓸 땐 어두운 글자 4.77:1 */
-  --brass: #c6b683; /* 파생 — 좋아요·수치. 8.24:1 */
-  --slate: #a39a7a; /* 하락 표시. 상승(--brass)과 밝기로 갈리고 화살표가 뜻을 지고 있다 */
-  --danger: #cf7a5a; /* 오류. 5.21:1 */
+  --bg: #14161a;
+  --panel: #1b1e24;
+  --panel-2: #252932;
+  --line: #363b45; /* 경계선. 1.49:1, 의도적으로 물러나 있음 */
+  --text: #e6e8ec; /* 13.61:1 */
+  --muted: #9aa2b1; /* 6.50:1 */
+  --accent: #7f8b9e; /* 4.84:1. 주버튼 배경으로 쓸 땐 어두운 글자 5.25:1 */
+  --accent-hi: #aab7cc; /* 좋아요, 수치. 8.23:1 */
+  --slate: #8a93a3; /* 하락 표시. 이 화면은 안 쓰고 live-ranking 이 쓴다 */
+  --danger: #e08a6a; /* 오류. 6.37:1 */
 
   /* 각진 모서리가 이 화면의 성격을 정한다. 둥글리지 않는다. */
   --radius: 3px;
@@ -39,21 +37,21 @@ body {
   color: var(--text);
 }
 
+/*
+ * 배경 이미지를 깔 거면 public/ 에 넣고 여기서 부른다. 무늬가 있는 이미지는
+ * 그 자체가 노이즈라 위에 글을 얹으면 읽히지 않으므로, 짙은 막을 한 겹 덮어
+ * 대비를 배경색 수준으로 되돌릴 것 (아래 body::before 를 되살린다).
+ *
+ *   background: var(--bg) url('/배경.jpg') center / cover no-repeat fixed;
+ *
+ *   body::before {
+ *     content: ''; position: fixed; inset: 0; pointer-events: none;
+ *     background: color-mix(in srgb, var(--bg) 90%, transparent);
+ *   }
+ */
 body {
   min-height: 100vh;
-  background: var(--bg) url('/camo.jpg') center / cover no-repeat fixed;
-}
-
-/*
- * 카모는 그 자체가 고대비 노이즈라, 위에 글을 얹으면 읽히지 않는다.
- * 짙은 막을 한 겹 덮어 무늬는 남기고 대비는 배경색 수준으로 되돌린다.
- */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: color-mix(in srgb, var(--bg) 90%, transparent);
-  pointer-events: none;
+  background: var(--bg);
 }
 
 button,
