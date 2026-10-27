@@ -148,13 +148,29 @@ export async function fetchPost(bjId, postNo, { signal } = {}) {
  * @returns {number|null} 응답에 수가 없으면 null
  */
 export async function fetchFanCount(userId, { signal } = {}) {
+  return (await fetchStation(userId, { signal })).fans
+}
+
+/**
+ * 방송국 정보 중 이 사이트가 쓰는 것: 애청자 수와 방송국 가입일.
+ *
+ * 가입일(station.joinTime)은 SOOP 계정을 만든 날이다. 데뷔일과 같지는 않지만
+ * (다른 플랫폼에서 넘어온 사람은 훨씬 뒤다) 공개 API 로 얻을 수 있는 유일한 날짜다.
+ *
+ * @returns {Promise<{fans: number|null, joined: string|null}>} joined 는 'YYYY-MM-DD'
+ */
+export async function fetchStation(userId, { signal } = {}) {
   const data = await fetchJson(
     `${API_BASE}/${encodeURIComponent(userId)}/station`,
     signal,
     'notfound'
   )
   const count = data?.upd?.fanCnt
-  return Number.isFinite(count) ? count : null
+  const joinTime = data?.station?.joinTime
+  return {
+    fans: Number.isFinite(count) ? count : null,
+    joined: typeof joinTime === 'string' ? joinTime.slice(0, 10) : null,
+  }
 }
 
 /**

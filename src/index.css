@@ -41,7 +41,8 @@ body {
 
 body {
   min-height: 100vh;
-  background: var(--bg) url('/camo.jpg') center / cover no-repeat fixed;
+  /* 지난 이벤트(아르마3)의 카모 배경은 뗐다. 되살리려면 url('/camo.jpg') center / cover no-repeat fixed */
+  background: var(--bg);
 }
 
 /*

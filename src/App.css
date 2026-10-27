@@ -503,6 +503,77 @@ button:disabled {
   cursor: help;
 }
 
+/* 같이 고민 중인 직업. 정해진 게 아니라 물러나 있게 테두리만 둔다. */
+.badge.considering {
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.badge.debut {
+  background: color-mix(in srgb, #e6c46a 22%, transparent);
+  color: #e6c46a;
+}
+
+/* 자기소개 꼬리표 — 본인이 쓴 말이라 확인된 크루보다 한 단계 약하게. */
+.badge.tag-self {
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+  color: var(--text);
+  font-weight: 500;
+}
+
+.badge.tag-crew {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--brass);
+}
+
+.station-info {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- tag filter ---------- */
+
+.tagbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: -4px 0 14px;
+}
+
+.tagbar-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-right: 2px;
+  cursor: help;
+}
+
+.tag {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.tag em {
+  font-family: var(--mono);
+  font-style: normal;
+  opacity: 0.7;
+  margin-left: 3px;
+}
+
+.tag.active {
+  border-color: var(--brass);
+  color: var(--text);
+  background: color-mix(in srgb, var(--brass) 16%, var(--panel));
+}
+
 .text {
   margin: 8px 0 0;
   font-size: 14px;

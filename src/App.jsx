@@ -1,19 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import GroupPanel from './components/GroupPanel'
 import NicknameExport from './components/NicknameExport'
 import CommentCard from './components/CommentCard'
 import PersonChart from './components/PersonChart'
 import { fetchAllComments, fetchPost, postUrl } from './lib/soop'
-import { buildGroups, detectCategories } from './lib/categories'
 import { FAN_MAX, FAN_STEP, loadFanCounts } from './lib/fans'
-import { UNGROUPED_ID, classify, rank, validateGrouping } from './lib/groups'
-import { CUT_RANK, TARGET_POST } from './lib/target'
+import { UNGROUPED_ID, rank } from './lib/groups'
+import { CUT_RANK, DEBUT_POST, TARGET_POST } from './lib/target'
+import { WOW_CLASSES, classifyByClass, tagsOf } from './lib/wow'
 import { useFlipReorder } from './hooks/useFlipReorder'
 import './App.css'
 
 const overrideKey = (bjId, postNo) => `soopcomment.overrides.${bjId}.${postNo}`
 
 const ALL_TAB = '__all__'
+const DEBUT_TAB = '__debut__'
+/** 신청 조건이 "즐찾 컷 1000명"이라 열자마자 그 기준으로 걸러 둔다. */
+const MIN_FANS_RULE = 1000
+const DEBUT_COLOR = '#e6c46a'
 // 특정 분류에 속하지 않는 줄(전체·미분류)의 색. 순위 숫자에 그대로 쓰이므로
 // 어두운 바탕에서 충분히 읽혀야 한다.
 const NEUTRAL_COLOR = '#a39a7a'
@@ -35,6 +38,9 @@ function loadStored(key, fallback) {
 
 export default function App() {
   const [data, setData] = useState(null)
+  /** 「리얼 뉴 와튜버 데뷔 하기」 글의 댓글. 못 불러와도 본 화면은 그대로 뜬다. */
+  const [debut, setDebut] = useState(null)
+  const [tagFilter, setTagFilter] = useState(null)
   const [overrides, setOverrides] = useState({})
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(null)
@@ -48,10 +54,12 @@ export default function App() {
 
   /** userId -> 애청자 수. null 은 '알 수 없음'이고, 그 사람은 걸러 내지 않는다. */
   const [fans, setFans] = useState(() => new Map())
+  /** userId -> 방송국 가입일('YYYY-MM-DD'). 애청자 수와 같은 요청에서 같이 온다. */
+  const [joined, setJoined] = useState(() => new Map())
   const [fansLoading, setFansLoading] = useState(false)
-  const [minFans, setMinFans] = useState(0)
+  const [minFans, setMinFans] = useState(MIN_FANS_RULE)
   /** 실제로 목록에 적용된 하한. 손잡이를 놓거나 잠깐 멈췄을 때 따라온다. */
-  const [appliedMinFans, setAppliedMinFans] = useState(0)
+  const [appliedMinFans, setAppliedMinFans] = useState(MIN_FANS_RULE)
 
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [refreshedAt, setRefreshedAt] = useState(null)
@@ -82,20 +90,35 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  /** 본문에서 뽑은 후보 그룹과, 그게 실제 댓글에 들어맞는지에 대한 판정. */
-  const detection = useMemo(() => {
-    if (!data) return null
-    const candidates = buildGroups(data.categories)
-    return { candidates, check: validateGrouping(data.comments, candidates) }
-  }, [data])
-
-  const groups = useMemo(() => (detection?.check.ok ? detection.candidates : []), [detection])
-  const grouped = groups.length > 0
+  /** 분류는 본문에서 찾지 않고 와우 직업으로 고정한다. 댓글 양식 첫 줄이 직업이다. */
+  const groups = useMemo(
+    () => WOW_CLASSES.map((c) => ({ id: c.id, name: c.name, color: c.color, topN: null })),
+    [],
+  )
+  const grouped = true
 
   const buckets = useMemo(
-    () => (data ? classify(data.comments, groups, overrides) : null),
-    [data, groups, overrides],
+    () => (data ? classifyByClass(data.comments, overrides) : null),
+    [data, overrides],
   )
+
+  /** 데뷔 글 댓글. 직업 색을 칠하려고 같은 규칙으로 나눈 뒤 한 줄로 편다. */
+  const debutSection = useMemo(() => {
+    if (!debut) return null
+    const items = [...classifyByClass(debut.comments).values()]
+      .flat()
+      .map((c) => ({ ...c, postNo: debut.postNo }))
+    return {
+      id: DEBUT_TAB,
+      name: '뉴 와튜버 데뷔',
+      color: DEBUT_COLOR,
+      topN: null,
+      items: rank(items),
+    }
+  }, [debut])
+
+  /** 데뷔 글에도 댓글을 단 길드 신청자. 카드에 표시한다. */
+  const debutUserIds = useMemo(() => new Set(debut?.comments.map((c) => c.userId) ?? []), [debut])
 
   /** 그룹 탭들. 그룹이 하나도 없으면 빈 배열이고 전체 탭만 남는다. */
   const sections = useMemo(() => {
@@ -150,11 +173,31 @@ export default function App() {
   }, [groups])
 
   const activeSection =
-    activeTab === ALL_TAB ? allSection : (sections.find((s) => s.id === activeTab) ?? allSection)
+    activeTab === ALL_TAB
+      ? allSection
+      : activeTab === DEBUT_TAB
+        ? (debutSection ?? allSection)
+        : (sections.find((s) => s.id === activeTab) ?? allSection)
+
+  /** 지금 탭에 있는 꼬리표와 사람 수. 누르면 그 꼬리표가 붙은 사람만 남는다. */
+  const tagCounts = useMemo(() => {
+    const map = new Map()
+    for (const c of activeSection?.items ?? []) {
+      for (const t of tagsOf(c)) {
+        const entry = map.get(t.id) ?? { ...t, count: 0 }
+        entry.count += 1
+        map.set(t.id, entry)
+      }
+    }
+    return [...map.values()]
+  }, [activeSection])
 
   // 갱신 직전 순위를 찍어 두기 위해, 화면에 그려진 최신 결과를 항상 들고 있는다.
   useEffect(() => {
-    renderRef.current = { allSection, sections }
+    renderRef.current = {
+      allSection,
+      sections: debutSection ? [...sections, debutSection] : sections,
+    }
   })
 
   // 자동 갱신. 탭이 뒤에 있을 때는 쉬게 해서 헛된 요청을 보내지 않는다.
@@ -183,29 +226,42 @@ export default function App() {
    */
   useEffect(() => {
     if (!data) return
-    const missing = data.comments
+    const missing = [...data.comments, ...(debut?.comments ?? [])]
       .map((c) => c.userId)
       .filter((id) => id && !fansAskedRef.current.has(id))
     if (missing.length === 0) return
-    for (const id of missing) fansAskedRef.current.add(id)
+    const asked = fansAskedRef.current
+    for (const id of missing) asked.add(id)
+    /** 아직 답을 못 받은 사람. 중간에 끊기면 다음 차례에 다시 묻도록 '물어봄'에서 뺀다. */
+    const pending = new Set(missing)
 
     const controller = new AbortController()
     setFansLoading(true)
     loadFanCounts(missing, {
       signal: controller.signal,
-      onUpdate: (partial) =>
+      onUpdate: (partial) => {
+        for (const id of partial.keys()) pending.delete(id)
         setFans((prev) => {
           const next = new Map(prev)
-          for (const [id, n] of partial) next.set(id, n)
+          for (const [id, info] of partial) next.set(id, info.n)
           return next
-        }),
+        })
+        setJoined((prev) => {
+          const next = new Map(prev)
+          for (const [id, info] of partial) next.set(id, info.j)
+          return next
+        })
+      },
     })
       .catch(() => {})
       .finally(() => {
         if (!controller.signal.aborted) setFansLoading(false)
       })
-    return () => controller.abort()
-  }, [data])
+    return () => {
+      controller.abort()
+      for (const id of pending) asked.delete(id)
+    }
+  }, [data, debut])
 
   /**
    * 새 순위가 그려진 뒤, 직전 순위와 비교해 이동 기록을 갱신한다.
@@ -271,9 +327,11 @@ export default function App() {
     [fans, appliedMinFans],
   )
 
+  // 데뷔 글은 이제 막 데뷔하는 사람들이라 즐찾 1000 조건을 걸 대상이 아니다.
   const cutItems = useMemo(
-    () => applyCut(activeSection?.items ?? []),
-    [applyCut, activeSection],
+    () =>
+      activeTab === DEBUT_TAB ? (activeSection?.items ?? []) : applyCut(activeSection?.items ?? []),
+    [applyCut, activeSection, activeTab],
   )
 
   /**
@@ -282,14 +340,17 @@ export default function App() {
    */
   const visibleItems = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return cutItems
-    return cutItems.filter(
+    const tagged = tagFilter
+      ? cutItems.filter((c) => tagsOf(c).some((t) => t.id === tagFilter))
+      : cutItems
+    if (!q) return tagged
+    return tagged.filter(
       (c) =>
         c.nick.toLowerCase().includes(q) ||
         c.userId.toLowerCase().includes(q) ||
         c.text.toLowerCase().includes(q),
     )
-  }, [cutItems, query])
+  }, [cutItems, query, tagFilter])
 
   /**
    * 손잡이가 설 자리. 눈금 위에만 선다. 숫자 칸에 눈금 사이 값을 적으면 손잡이는
@@ -379,8 +440,8 @@ export default function App() {
         ...result,
         title: post.title,
         postError: post.error,
-        categories: detectCategories(post.html),
       })
+      loadDebut(signal)
       setActiveTab(ALL_TAB)
     } catch (err) {
       if (err.name !== 'AbortError') setError(err.message || '댓글을 불러오지 못했습니다.')
@@ -388,6 +449,14 @@ export default function App() {
       setLoading(false)
       setProgress(null)
     }
+  }
+
+  /** 데뷔 글은 곁가지라, 실패해도 오류를 띄우지 않고 탭만 안 그린다. */
+  function loadDebut(signal) {
+    if (!DEBUT_POST) return
+    fetchAllComments(DEBUT_POST.bjId, DEBUT_POST.postNo, { signal })
+      .then(setDebut)
+      .catch(() => {})
   }
 
   /** 지금 화면에 그려진 순위를 분류별로 찍어 둔다. 갱신 후 변동을 계산하는 기준. */
@@ -411,6 +480,7 @@ export default function App() {
       const fresh = await fetchAllComments(data.bjId, data.postNo, {
         postConfirmed: !data.postError,
       })
+      loadDebut()
       animateNextRef.current = true
       setData((prev) => (prev ? { ...prev, ...fresh } : prev))
       setRefreshedAt(new Date())
@@ -437,10 +507,12 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <img className="brand-logo" src="./logo.png" alt="" width="48" height="48" />
           <div>
-            <h1>아르마3 랜덤고지전3 좋아요 랭킹</h1>
-            <p>게시글 댓글을 좋아요 순으로 세우고, 개인별 증가량을 기록합니다.</p>
+            <h1>와우 포에버 · 우왁굳 길드 사전 신청</h1>
+            <p>
+              신청 댓글을 해보려는 직업별로 나눠 좋아요 순으로 세웁니다. 신청 조건이 SOOP 버튜버 ·
+              즐찾 {MIN_FANS_RULE.toLocaleString()}명 이상이라 처음엔 그 기준으로 걸러 둡니다.
+            </p>
           </div>
         </div>
 
@@ -540,8 +612,6 @@ export default function App() {
 
           {exportOpen && exportSections.length > 0 && <NicknameExport sections={exportSections} />}
 
-          {grouped && <GroupPanel groups={groups} counts={counts} />}
-
           <nav className="tabs">
             {grouped && (
               <>
@@ -553,6 +623,17 @@ export default function App() {
                 >
                   전체 <em>{data.comments.length}</em>
                 </button>
+                {debutSection && (
+                  <button
+                    type="button"
+                    className={activeTab === DEBUT_TAB ? 'active' : ''}
+                    onClick={() => setActiveTab(DEBUT_TAB)}
+                    style={{ '--group': DEBUT_COLOR }}
+                    title="「리얼 뉴 와튜버 데뷔 하기」 글의 댓글"
+                  >
+                    뉴 와튜버 데뷔 <em>{debutSection.items.length}</em>
+                  </button>
+                )}
                 {sections.map((s) => (
                   <button
                     type="button"
@@ -608,6 +689,28 @@ export default function App() {
             />
           </nav>
 
+          {tagCounts.length > 0 && (
+            <div className="tagbar">
+              <span
+                className="tagbar-label"
+                title="댓글에 본인이 적은 말에서 뽑았습니다. 확인된 사실이 아닙니다."
+              >
+                자기소개
+              </span>
+              {tagCounts.map((t) => (
+                <button
+                  type="button"
+                  key={t.id}
+                  className={`tag tag-${t.kind}${tagFilter === t.id ? ' active' : ''}`}
+                  title={t.hint}
+                  onClick={() => setTagFilter((v) => (v === t.id ? null : t.id))}
+                >
+                  {t.name} <em>{t.count}</em>
+                </button>
+              ))}
+            </div>
+          )}
+
           <main className="list" ref={listRef}>
             {visibleItems.length === 0 && <p className="empty">표시할 댓글이 없습니다.</p>}
 
@@ -637,17 +740,20 @@ export default function App() {
                   <CommentCard
                     comment={comment}
                     bjId={data.bjId}
-                    postNo={data.postNo}
+                    postNo={comment.postNo ?? data.postNo}
+                    fanCount={fans.get(comment.userId)}
+                    joinedAt={joined.get(comment.userId)}
+                    alsoDebut={activeTab !== DEBUT_TAB && debutUserIds.has(comment.userId)}
                     move={moves.get(activeSection.id)?.get(comment.id)}
                     hasSnapshot={!!prevRanksRef.current}
                     color={
-                      activeTab === ALL_TAB
+                      activeTab === ALL_TAB || activeTab === DEBUT_TAB
                         ? (groupColorById[comment.groupId] ?? NEUTRAL_COLOR)
                         : activeSection.color
                     }
-                    showGroupName={grouped && activeTab === ALL_TAB}
+                    showGroupName={grouped && (activeTab === ALL_TAB || activeTab === DEBUT_TAB)}
                     groupName={groupNameById[comment.groupId]}
-                    groups={groups}
+                    groups={activeTab === DEBUT_TAB ? [] : groups}
                     onAssign={assign}
                   />
                 </div>

@@ -1,4 +1,4 @@
-import { fetchFanCount } from './soop'
+import { fetchStation } from './soop'
 
 /**
  * 방송국 애청자(즐겨찾기) 수를 사람마다 받아 온다.
@@ -10,7 +10,8 @@ import { fetchFanCount } from './soop'
  * 실측(203명, 동시 4): 캐시가 비었을 때 1~2초. 캐시가 차 있으면 요청이 0이다.
  */
 
-const CACHE_KEY = 'soopcomment.fans'
+// 가입일을 같이 담으면서 모양이 바뀌었다. 예전 캐시를 읽지 않도록 이름을 바꿨다.
+const CACHE_KEY = 'soopcomment.station'
 const TTL_MS = 6 * 60 * 60 * 1000
 /** 남의 서버에 한꺼번에 몰지 않을 만큼만. */
 const CONCURRENCY = 4
@@ -42,7 +43,8 @@ function writeCache(cache) {
 /**
  * @param {string[]} userIds
  * @param {{signal?: AbortSignal, onUpdate?: (partial: Map<string, number|null>) => void}} opts
- * @returns {Promise<Map<string, number|null>>} null 은 '알 수 없음'(탈퇴·방송국 없음 등)
+ * @returns {Promise<Map<string, {n: number|null, j: string|null}>>}
+ *   n 은 애청자 수, j 는 방송국 가입일. null 은 '알 수 없음'(탈퇴·방송국 없음 등)
  */
 export async function loadFanCounts(userIds, { signal, onUpdate } = {}) {
   const cache = readCache()
@@ -52,7 +54,7 @@ export async function loadFanCounts(userIds, { signal, onUpdate } = {}) {
 
   for (const id of new Set(userIds.filter(Boolean))) {
     const hit = cache[id]
-    if (hit && now - hit.t < TTL_MS) result.set(id, hit.n)
+    if (hit && now - hit.t < TTL_MS) result.set(id, { n: hit.n, j: hit.j ?? null })
     else todo.push(id)
   }
   onUpdate?.(new Map(result))
@@ -65,15 +67,15 @@ export async function loadFanCounts(userIds, { signal, onUpdate } = {}) {
     while (queue.length > 0) {
       if (signal?.aborted) return
       const id = queue.shift()
-      let count = null
+      let info = { fans: null, joined: null }
       try {
-        count = await fetchFanCount(id, { signal })
+        info = await fetchStation(id, { signal })
       } catch (err) {
         if (err.name === 'AbortError') return
         // 한 사람을 못 읽었다고 전체를 세울 이유는 없다. 그 사람만 '모름'이 된다.
       }
-      result.set(id, count)
-      cache[id] = { n: count, t: Date.now() }
+      result.set(id, { n: info.fans, j: info.joined })
+      cache[id] = { n: info.fans, j: info.joined, t: Date.now() }
       sinceReport += 1
       // 다 끝날 때까지 기다렸다 한 번에 바꾸면 목록이 통째로 덜컹인다.
       if (sinceReport >= 20) {

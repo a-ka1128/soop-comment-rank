@@ -2,6 +2,7 @@ import { memo, useState } from 'react'
 import { channelUrl, commentUrl } from '../lib/soop'
 import { UNGROUPED_ID } from '../lib/groups'
 import { seasonMatch } from '../lib/season'
+import { tagsOf } from '../lib/wow'
 
 /**
  * 마지막으로 움직였을 때의 순위 변동. 갱신마다 지워지지 않고, 다시 움직이거나
@@ -41,9 +42,13 @@ function CommentCard({
   onAssign,
   move,
   hasSnapshot,
+  fanCount,
+  joinedAt,
+  alsoDebut,
 }) {
   const [open, setOpen] = useState(false)
   const seasons = seasonMatch(comment)
+  const tags = tagsOf(comment)
 
   return (
     <article
@@ -80,6 +85,21 @@ function CommentCard({
           </span>
         )}
         {showGroupName && groupName && <span className="badge group-badge">{groupName}</span>}
+        {comment.alsoConsidering?.length > 0 && (
+          <span className="badge considering" title="같이 고민 중이라고 적은 직업">
+            +{comment.alsoConsidering.join('·')}
+          </span>
+        )}
+        {alsoDebut && (
+          <span className="badge debut" title="「리얼 뉴 와튜버 데뷔 하기」 글에도 댓글을 달았습니다">
+            뉴 데뷔
+          </span>
+        )}
+        {tags.map((t) => (
+          <span key={t.id} className={`badge tag-${t.kind}`} title={t.hint}>
+            {t.name}
+          </span>
+        ))}
         {comment.manual && (
           <span className="badge manual" title="수동으로 지정한 분류입니다">
             수동
@@ -95,6 +115,16 @@ function CommentCard({
         )}
 
         <span className="spacer" />
+        {fanCount != null && (
+          <span className="station-info" title="방송국 애청자(즐겨찾기) 수">
+            즐찾 {fanCount.toLocaleString()}
+          </span>
+        )}
+        {joinedAt && (
+          <span className="station-info" title="SOOP 방송국 가입일 — 데뷔일과 다를 수 있습니다">
+            {joinedAt.slice(0, 7).replace('-', '.')} 가입
+          </span>
+        )}
         <span className="likes">♥ {comment.likes.toLocaleString()}</span>
         {/* 순위 변동이 ▲▼라서, 펼침 표시는 헷갈리지 않게 다른 모양을 쓴다. */}
         <span className="chevron" aria-hidden="true">
