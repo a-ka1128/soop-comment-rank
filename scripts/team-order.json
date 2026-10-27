@@ -1,0 +1,20 @@
+[
+  {
+    "id": "a",
+    "name": "A팀",
+    "faction": null,
+    "color": "#7f8b9e",
+    "leader": null,
+    "commander": null,
+    "order": []
+  },
+  {
+    "id": "b",
+    "name": "B팀",
+    "faction": null,
+    "color": "#9aa2b1",
+    "leader": null,
+    "commander": null,
+    "order": []
+  }
+]
