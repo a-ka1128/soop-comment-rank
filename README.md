@@ -15,7 +15,7 @@ GitHub Pages에 그대로 올라갑니다.
 |---|---|
 | 분류를 본문 번호 목록 대신 **와우 직업 9개**로 고정. 댓글의 '직업' 뒤에 처음 나온 직업으로 나눈다 | `src/lib/wow.js` `pickClass` |
 | 자동 분류가 틀린 사람 고정 (모든 방문자에게 적용) | `src/lib/wow.js` `CLASS_FIXES` |
-| 본인이 적은 경력 꼬리표 — 와튜버 데뷔 · 와점기 70렙 · 하코 출신 · 공대장 · 와우 처음 … | `src/lib/wow.js` `SELF_TAGS` |
+| 본인이 적은 경력 꼬리표 — 와튜버 데뷔 · 와점기 70렙 · 하코 출신 · 와우포에버즈 · 와우 처음. 틀린 건 `TAG_FIXES` 로 뗀다 | `src/lib/wow.js` `SELF_TAGS` |
 | 확인된 크루 (userId → 크루 이름). **비어 있음** — 공개된 명단이 없어 직접 채운다 | `src/lib/crews.js` |
 | 두 번째 글 「리얼 뉴 와튜버 데뷔 하기」를 따로 탭으로 | `src/lib/target.js` `DEBUT_POST` |
 | 즐찾 수 옆에 SOOP 방송국 가입일 (데뷔일과 다를 수 있음) | `src/lib/soop.js` `fetchStation` |

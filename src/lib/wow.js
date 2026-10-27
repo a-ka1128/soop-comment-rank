@@ -13,7 +13,12 @@ import { CREWS } from './crews.js'
  * ("냥,드" ○ / "망냥냥" ×).
  */
 export const WOW_CLASSES = [
-  { id: 'warrior', name: '전사', color: '#c69b6d', words: ['전사', '전탱', '딜전', '무전', '분전'] },
+  {
+    id: 'warrior',
+    name: '전사',
+    color: '#c69b6d',
+    words: ['전사', '전탱', '딜전', '무전', '분전'],
+  },
   { id: 'paladin', name: '성기사', color: '#f48cba', words: ['성기사', '성기'] },
   {
     id: 'hunter',
@@ -49,9 +54,7 @@ function squash(text) {
 
 /** 직업마다 "가장 먼저 나온 위치"를 찾는 함수 하나씩. */
 const LOCATORS = WOW_CLASSES.map((cls) => {
-  const alone = (cls.alone ?? []).map(
-    (w) => new RegExp(`(?<!${HANGUL})${w}(?!${HANGUL})`, 'u'),
-  )
+  const alone = (cls.alone ?? []).map((w) => new RegExp(`(?<!${HANGUL})${w}(?!${HANGUL})`, 'u'))
   return (squashed, raw) => {
     let best = Infinity
     for (const w of cls.words) {
@@ -150,7 +153,8 @@ export const SELF_TAGS = [
     id: 'watuber',
     name: '와튜버 데뷔',
     hint: '와우(불타는 성전)로 방송을 시작했다고 적은 사람',
-    test: /와튜버\s*(로|로서)?\s*(방송\s*)?데뷔|와우로\s*(뒤늦게\s*)?(방송\s*)?데뷔|순혈\s*와튜버|와튜버\s*1기|와튜버\s*2기|와튜버로\s*데뷔|와트너/,
+    // '와트너'(와우 파트너 스트리머)는 와튜버 데뷔가 아니다 — 단즈가 그렇게 잘못 붙었다.
+    test: /와튜버\s*(로|로서)?\s*(방송\s*)?데뷔|와우로\s*(뒤늦게\s*)?(방송\s*)?데뷔|순혈\s*와튜버|와튜버\s*1기|와튜버\s*2기|와튜버로\s*데뷔/,
   },
   {
     id: 'legacy70',
@@ -165,22 +169,10 @@ export const SELF_TAGS = [
     test: /하코|하드코어|하트코어/,
   },
   {
-    id: 'raidlead',
-    name: '공대장',
-    hint: '레이드 공대장을 해 봤다고 적은 사람 (와우 밖 게임 포함)',
-    test: /공대장(?!의)/,
-  },
-  {
     id: 'forevers',
     name: '와우포에버즈',
     hint: '와우포에버즈 소속이라고 적은 사람',
     test: /와우\s*포에버즈/,
-  },
-  {
-    id: 'wakchi2',
-    name: '왁치동2',
-    hint: '왁치동2 소속이라고 적은 사람',
-    test: /왁치동\s*2/,
   },
   {
     id: 'newbie',
@@ -191,11 +183,20 @@ export const SELF_TAGS = [
 ]
 
 /**
+ * 글자로는 걸리지만 사실이 아닌 꼬리표. userId -> 뗄 꼬리표 id 들. 사람이 확인한 것만 적는다.
+ */
+export const TAG_FIXES = {
+  kwonmingomem: ['forevers'], // 권민 — "심상치 않은 와우 포에버즈"는 게임 얘기다
+  kawa11az: ['forevers'], // 아즈 — "와우포에버즈 히누히누 동생"이라 본인은 소속이 아니다
+}
+
+/**
  * @returns {Array<{id: string, name: string, hint: string, kind: 'self'|'crew'}>}
  */
 export function tagsOf(comment) {
   const text = comment.text || ''
-  const self = SELF_TAGS.filter((t) => t.test.test(text)).map((t) => ({
+  const removed = TAG_FIXES[comment.userId] ?? []
+  const self = SELF_TAGS.filter((t) => !removed.includes(t.id) && t.test.test(text)).map((t) => ({
     id: t.id,
     name: t.name,
     hint: t.hint,
