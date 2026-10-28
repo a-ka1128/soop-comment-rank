@@ -232,6 +232,12 @@ export const SELF_TAGS = [
 ]
 
 /**
+ * 경력 꼬리표의 높은 순서. 한 사람에게는 이 중 가장 높은 하나만 붙는다(70렙을 찍었으면 60렙도
+ * 거쳤고, 하코 출신보다 앞선다).
+ */
+const CAREER_RANK = ['legacy70', 'legacy60', 'hardcore']
+
+/**
  * 글자로는 걸리지만 사실이 아닌 꼬리표. userId -> 뗄 꼬리표 id 들. 사람이 확인한 것만 적는다.
  */
 export const TAG_FIXES = {
@@ -282,11 +288,14 @@ export function tagsOf(comment, label) {
   // 그래야 꼬리표 줄에 같은 이름이 두 번 뜨지 않는다.
   const allCrews = crewsOf(comment.userId, label).map((c) => c.name)
   const asTag = new Set(allCrews)
-  const self = SELF_TAGS.filter((t) =>
+  const hit = SELF_TAGS.filter((t) =>
     t.id in forced
       ? forced[t.id]
       : asTag.has(t.name) || (!removed.includes(t.id) && t.test.test(text)),
-  ).map((t) => ({
+  )
+  // 경력 꼬리표는 셋 중 가장 높은 하나만 남긴다.
+  const top = CAREER_RANK.find((id) => hit.some((t) => t.id === id))
+  const self = hit.filter((t) => !CAREER_RANK.includes(t.id) || t.id === top).map((t) => ({
     id: t.id,
     name: t.name,
     hint: t.id in forced ? `${t.hint} — 어드민 확인` : t.hint,
