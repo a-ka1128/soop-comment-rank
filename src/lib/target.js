@@ -23,11 +23,15 @@ export const HAS_TARGET = Boolean(TARGET_POST.bjId && TARGET_POST.postNo)
  * 같이 보는 두 번째 글 — 「리얼 뉴 와튜버 데뷔 하기」. 와우 포에버를 하려고 새로 데뷔하는
  * 사람들이 여기 댓글을 단다. 길드 신청 명단과 섞지 않고 따로 탭을 만든다.
  * null 이면 탭을 그리지 않는다.
+ *
+ * exclude 는 이 글에 댓글을 달았어도 데뷔로 치지 않을 userId. 이미 방송하던 사람이
+ * 응원 댓글을 남긴 경우 등.
  */
 export const DEBUT_POST = {
   bjId: 'ecvhao',
   postNo: '210998813',
   url: 'https://www.sooplive.com/station/ecvhao/post/210998813',
+  exclude: ['nboxox182'], // 뱀부안범부
 }
 
 /**

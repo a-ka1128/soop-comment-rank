@@ -468,8 +468,9 @@ export default function App() {
       .then(setLabels)
       .catch(() => {})
     if (!DEBUT_POST) return
+    const exclude = new Set(DEBUT_POST.exclude ?? [])
     fetchAllComments(DEBUT_POST.bjId, DEBUT_POST.postNo, { signal })
-      .then(setDebut)
+      .then((d) => setDebut({ ...d, comments: d.comments.filter((c) => !exclude.has(c.userId)) }))
       .catch(() => {})
   }
 
