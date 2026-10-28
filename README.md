@@ -56,7 +56,7 @@ GitHub Pages에 그대로 올라갑니다.
 | 어디에 있나 | `live-ranking` 태그 | `main` |
 | 순위 | 좋아요 따라 실시간으로 움직임 | 굳어 있음 |
 | 화면 | 한 줄 목록, 펼치면 댓글 | 팀별 열 · 고른 사람 댓글 |
-| 있는 기능 | 10초 자동 갱신, 순위 변동 화살표, 검색, 애청자 수 필터, 닉네임 추출(CSV), 개인 증가량 그래프, 컷 라인 | 없음 |
+| 있는 기능 | 10초 자동 갱신, 순위 변동 화살표, 검색, 애청자 수 필터, 닉네임 추출(CSV), 컷 라인 | 없음 |
 
 **`main`에는 선발용 기능이 없습니다.** 끝난 뒤에 다 걷어냈습니다. 다음 시즌을 시작할 땐
 지우고 다시 만드는 게 아니라 태그에서 꺼내 옵니다.
@@ -128,11 +128,9 @@ export const EVENT = {
 |---|---|---|
 | 브라우저 탭 제목 | `index.html`의 `<title>` | 빌드 전 정적 파일이라 `event.js` 값을 못 가져갑니다 |
 | 파비콘 | `public/favicon.svg` 교체 | 지금 건 자리 지킴이입니다 |
-| 색 | `src/index.css`의 `:root` | 지금은 중립 다크. 열 줄만 바꾸면 화면 전체가 따라옵니다 |
+| 색 | `src/index.css`의 `:root` | 지금은 밝은 대시보드. 열 줄만 바꾸면 화면 전체가 따라옵니다 |
 | 배경 이미지 | `src/index.css`의 `body` | 주석에 되살리는 법을 적어 뒀습니다 |
 
-기록 서버(개인 증가량 그래프)까지 쓸 거면 [`collector/tracked.json`](collector/tracked.json)도
-같은 글을 가리키게 하세요. 안 쓰면 그래프 버튼만 "기록 없음"으로 뜹니다.
 
 ### 2. 선발 끝 — 명단 굳히기
 
@@ -296,8 +294,10 @@ API 주소 자체가 바뀌었을 땐 [`src/lib/soop.js`](src/lib/soop.js)의 `A
 
 ## 기록 서버 (지금 꺼져 있음)
 
-개인 증가량 그래프는 1분마다 좋아요를 찍어 둔 기록이 있어야 그려집니다. GCP VM의 수집기가
-Firebase Realtime Database에 쌓는 구조였고, **선발이 끝나 2026-08-22에 껐습니다.**
+1분마다 좋아요를 찍어 두는 수집기입니다. GCP VM에서 Firebase Realtime Database에 쌓는
+구조였고, **선발이 끝나 2026-08-22에 껐습니다.** 이 기록을 그리던 개인 증가량 그래프는
+화면에서 뺐습니다(2026-10-28). 다시 쓰려면 git 기록에서 `src/components/PersonChart.jsx`와
+`src/lib/history.js`를 되살리세요.
 
 다시 켤 일이 있으면 [`collector/`](collector/)와 [`deploy/`](deploy/)가 그대로 있습니다.
 VM에서:
@@ -309,7 +309,7 @@ cd ~/soop-comment-rank && git pull && setsid nohup deploy/loop-collector.sh >/de
 - `collector/tracked.json`의 `posts`가 비어 있으면 수집할 게 없습니다. 먼저 채우세요.
 - `collector.env`에 `SOOP_RTDB_URL`, `SOOP_SERVICE_ACCOUNT`(서비스 계정 JSON 경로)가 필요합니다.
   **둘 다 gitignore 대상입니다. 커밋하지 마세요.**
-- 프런트는 `.env`의 `VITE_RTDB_URL`을 봅니다. 비어 있으면 그래프 기능만 조용히 꺼집니다.
+- 프런트는 `.env`의 `VITE_RTDB_URL`로 어드민 라벨만 읽습니다. 비어 있으면 라벨 없이 자동 판정만 보입니다.
 - RTDB 규칙은 [`database.rules.json`](database.rules.json) — `posts/*`만 읽기 공개, 쓰기는
   서비스 계정만. **규칙 파일에는 주석을 쓸 수 없습니다.** `"//"` 같은 키를 넣으면 하위 경로로
   해석돼 배포가 거부됩니다.

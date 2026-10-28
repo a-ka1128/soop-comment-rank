@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import NicknameExport from './components/NicknameExport'
 import CommentCard from './components/CommentCard'
 import CommentDetail from './components/CommentDetail'
-import PersonChart from './components/PersonChart'
 import { fetchAllComments, fetchPost, postUrl } from './lib/soop'
 import { FAN_MAX, FAN_STEP, loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, rank } from './lib/groups'
@@ -11,6 +10,7 @@ import { WOW_CLASSES, classifyByClass, tagsOf } from './lib/wow'
 import { fetchLabels, saveLabel } from './lib/labels'
 import { useAdmin } from './lib/admin'
 import { useFlipReorder } from './hooks/useFlipReorder'
+import { useMediaQuery } from './hooks/useMediaQuery'
 import './App.css'
 
 const ALL_TAB = '__all__'
@@ -18,9 +18,10 @@ const DEBUT_TAB = '__debut__'
 /** 신청 조건이 "즐찾 컷 1000명"이라 열자마자 그 기준으로 걸러 둔다. */
 const MIN_FANS_RULE = 1000
 const DEBUT_COLOR = '#e6c46a'
-// 특정 분류에 속하지 않는 줄(전체·미분류)의 색. 순위 숫자에 그대로 쓰이므로
-// 어두운 바탕에서 충분히 읽혀야 한다.
+// 특정 분류에 속하지 않는 줄(전체·미분류)의 색. 점과 왼쪽 막대에만 쓰인다.
 const NEUTRAL_COLOR = '#a7a089'
+// 목록 옆에 상세 패널을 둘 자리가 있는 폭. App.css 의 860px 경계와 맞춘다.
+const WIDE_QUERY = '(min-width: 861px)'
 // 실측: 이런 신청 글은 45초 사이 상위 30개 중 32개의 좋아요가 움직인다.
 // 10초면 순위 변동이 눈에 보이면서 요청도 과하지 않다.
 const REFRESH_SEC = 10
@@ -48,9 +49,9 @@ export default function App() {
   // 목록에서 고른 댓글. 옆 패널(좁은 화면에선 시트)에 자세히 뜬다.
   const [selectedId, setSelectedId] = useState(null)
   const closeDetail = useCallback(() => setSelectedId(null), [])
+  const wide = useMediaQuery(WIDE_QUERY)
   const [exportOpen, setExportOpen] = useState(false)
 
-  const [personOpen, setPersonOpen] = useState(false)
 
   /** userId -> 애청자 수. null 은 '알 수 없음'이고, 그 사람은 걸러 내지 않는다. */
   const [fans, setFans] = useState(() => new Map())
@@ -61,8 +62,6 @@ export default function App() {
   /** 실제로 목록에 적용된 하한. 손잡이를 놓거나 잠깐 멈췄을 때 따라온다. */
   const [appliedMinFans, setAppliedMinFans] = useState(MIN_FANS_RULE)
 
-  const [autoRefresh, setAutoRefresh] = useState(true)
-  const [refreshedAt, setRefreshedAt] = useState(null)
   /**
    * 분류별 { 댓글id -> { delta, at } }. delta 는 마지막으로 움직인 폭이고
    * at 은 그때 시각이다. 갱신마다 갈아엎지 않고, 다시 움직일 때까지 들고 있는다.
@@ -195,14 +194,16 @@ export default function App() {
     }
   })
 
-  // 자동 갱신. 탭이 뒤에 있을 때는 쉬게 해서 헛된 요청을 보내지 않는다.
+  // 자동 갱신. 늘 켜져 있고 화면에는 따로 드러내지 않는다.
+  // 탭이 뒤에 있을 때는 쉬게 해서 헛된 요청을 보내지 않는다.
+  const hasData = !!data
   useEffect(() => {
-    if (!autoRefresh || !data) return
+    if (!hasData) return
     const timer = setInterval(() => {
       if (!document.hidden) refreshRef.current?.()
     }, REFRESH_SEC * 1000)
     return () => clearInterval(timer)
-  }, [autoRefresh, data])
+  }, [hasData])
 
   /**
    * 손잡이를 끄는 동안 목록을 매번 다시 세우면, 줄이 사라질 때마다 아래 줄이
@@ -408,7 +409,6 @@ export default function App() {
     setProgress({ done: 0, total: 1 })
     setMoves(new Map())
     prevRanksRef.current = null
-    setRefreshedAt(null)
 
     try {
       // 본문은 분류를 찾는 데만 쓴다. 애청자 공개 게시판처럼 본문만 막힌 글도 있는데
@@ -484,7 +484,6 @@ export default function App() {
       loadDebut()
       animateNextRef.current = true
       setData((prev) => (prev ? { ...prev, ...fresh } : prev))
-      setRefreshedAt(new Date())
       setError('')
     } catch (err) {
       if (err.name !== 'AbortError') setError(err.message || '갱신하지 못했습니다.')
@@ -516,7 +515,10 @@ export default function App() {
   const mixedTab = activeTab === ALL_TAB || activeTab === DEBUT_TAB
   const colorOf = (comment) =>
     mixedTab ? (groupColorById[comment.groupId] ?? NEUTRAL_COLOR) : activeSection.color
-  const selected = selectedId ? visibleItems.find((c) => c.id === selectedId) : null
+  // 옆자리가 있는 넓은 화면에서는 아무도 안 골랐을 때 맨 위 사람을 보여 준다. 빈 패널은 자리만 차지한다.
+  const selected =
+    (selectedId && visibleItems.find((c) => c.id === selectedId)) ||
+    (wide ? (visibleItems[0] ?? null) : null)
 
   return (
     <div className="app">
@@ -613,33 +615,6 @@ export default function App() {
             </a>
             <button
               type="button"
-              className="ghost"
-              onClick={() => refreshComments()}
-              disabled={loading}
-            >
-              새로고침
-            </button>
-            <label className="live">
-              <input
-                type="checkbox"
-                checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
-              />
-              실시간 {REFRESH_SEC}초
-            </label>
-            {refreshedAt && (
-              <span className="muted">{refreshedAt.toTimeString().slice(0, 8)} 갱신</span>
-            )}
-            <button
-              type="button"
-              className={personOpen ? 'primary' : 'ghost'}
-              onClick={() => setPersonOpen((v) => !v)}
-              aria-expanded={personOpen}
-            >
-              개인 증가량 그래프 {personOpen ? '닫기' : ''}
-            </button>
-            <button
-              type="button"
               className={exportOpen ? 'primary' : 'ghost'}
               onClick={() => setExportOpen((v) => !v)}
               aria-expanded={exportOpen}
@@ -647,14 +622,6 @@ export default function App() {
               닉네임 추출 {exportOpen ? '닫기' : ''}
             </button>
           </section>
-
-          {personOpen && (
-            <PersonChart
-              bjId={data.bjId}
-              postNo={data.postNo}
-              candidates={activeSection?.items ?? []}
-            />
-          )}
 
           {exportOpen && exportSections.length > 0 && <NicknameExport sections={exportSections} />}
 
@@ -693,7 +660,18 @@ export default function App() {
                 ))}
               </>
             )}
-            <span className="spacer" />
+          </nav>
+
+          {/* 거르는 도구는 한 판에 모은다. 탭(무엇을 볼지)과 섞이면 둘 다 읽기 어렵다. */}
+          <section className="filters">
+            <div className="filter-row">
+              <input
+                className="search"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="닉네임 · 내용 검색"
+              />
             <label className="fanfilter">
               <span className="fanfilter-label">애청자</span>
               <input
@@ -727,13 +705,7 @@ export default function App() {
                       : '')}
               </span>
             </label>
-            <input
-              className="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="닉네임 · 내용 검색"
-            />
-          </nav>
+            </div>
 
           {tagCounts.length > 0 && (
             <div className="tagbar">
@@ -756,6 +728,7 @@ export default function App() {
               ))}
             </div>
           )}
+          </section>
 
           <div className={`board${selected ? ' has-selection' : ''}`}>
             <main className="list" ref={listRef}>
@@ -791,7 +764,7 @@ export default function App() {
                       color={colorOf(comment)}
                       showGroupName={grouped && mixedTab}
                       groupName={groupNameById[comment.groupId]}
-                      selected={comment.id === selectedId}
+                      selected={comment.id === selected?.id}
                       onSelect={setSelectedId}
                     />
                   </div>

@@ -392,15 +392,35 @@ button:disabled {
   border-color: color-mix(in srgb, var(--group) 70%, var(--text));
   background: color-mix(in srgb, var(--group) 16%, var(--panel));
   color: var(--ink);
-  font-weight: 700;
+  /* 굵기는 바꾸지 않는다. 굵어지면 탭 폭이 늘어 옆 탭들이 밀린다. */
 }
 
 .tabs button.active em {
   color: var(--ink);
 }
 
+/* 검색 · 애청자 하한 · 자기소개 꼬리표를 한 판에. */
+.filters {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .search {
-  width: 220px;
+  flex: 1;
+  min-width: 200px;
   padding: 7px 12px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
@@ -428,11 +448,18 @@ button:disabled {
   align-items: start;
 }
 
+/*
+ * 높이를 화면에 맞춰 고정한다. 내용 길이에 따라 패널이 늘었다 줄었다 하고, 길어지면
+ * 스크롤바가 생기며 안쪽 폭까지 바뀌어서 사람을 고를 때마다 화면이 출렁였다.
+ * 스크롤바 자리도 늘 비워 둔다.
+ */
 .detail {
   position: sticky;
   top: 16px;
-  max-height: calc(100vh - 32px);
+  height: calc(100vh - 32px);
   overflow: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
   padding: 22px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -568,7 +595,7 @@ button:disabled {
     position: fixed;
     inset: 0;
     z-index: 10;
-    max-height: none;
+    height: auto;
     border: 0;
     border-top: 4px solid var(--group);
     border-radius: 0;
@@ -576,9 +603,9 @@ button:disabled {
 }
 
 @media (min-width: 861px) {
-  /* 옆에 붙어 있을 땐 닫기보다 다른 사람을 누르는 게 자연스러워 닫기를 물린다. */
+  /* 넓은 화면에선 패널이 늘 떠 있고, 닫아도 맨 위 사람으로 돌아갈 뿐이라 닫기가 뜻이 없다. */
   .detail-close {
-    opacity: 0.6;
+    display: none;
   }
 }
 
@@ -611,9 +638,6 @@ button:disabled {
   background: var(--group);
 }
 
-.card.is-open::before {
-  width: 4px;
-}
 
 .card.is-open {
   background: var(--panel-2);
@@ -749,8 +773,10 @@ button:disabled {
   white-space: nowrap;
 }
 
+/* 사제처럼 흰색에 가까운 직업은 칠한 바탕이 안 보여 옅은 테를 같이 두른다. */
 .badge.group-badge {
   background: color-mix(in srgb, var(--group) 20%, var(--panel));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--group) 30%, var(--line));
   color: var(--ink);
 }
 
@@ -951,7 +977,7 @@ button:disabled {
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
-  margin: 0 0 16px;
+  margin: 0;
 }
 
 .tagbar-label {
@@ -1002,30 +1028,6 @@ button:disabled {
   line-height: 1.7;
   white-space: pre-wrap;
   word-break: break-word;
-}
-
-.live {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
-  font-size: 13px;
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.live:has(input:checked) {
-  border-color: color-mix(in srgb, var(--up) 45%, transparent);
-  background: color-mix(in srgb, var(--up) 7%, var(--panel));
-  color: var(--up);
-  font-weight: 600;
-}
-
-.live input {
-  accent-color: var(--up);
 }
 
 /* 미끄러지는 줄이 이웃 줄에 가리지 않도록 위로 띄운다. */
@@ -1103,204 +1105,6 @@ button:disabled {
   .card-detail {
     padding-left: 18px;
   }
-}
-
-/* ---------- 그래프 공용 ---------- */
-
-.chart-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 12px 0 14px;
-}
-
-.seg {
-  display: flex;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.seg button {
-  padding: 6px 12px;
-  border: 0;
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.seg button.on {
-  background: var(--text);
-  color: #fff;
-  font-weight: 600;
-}
-
-.gain-total {
-  color: var(--accent);
-  font-weight: 700;
-}
-
-.chart-empty {
-  margin: 0;
-  padding: 22px 16px;
-  border: 1px dashed var(--line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--panel-2);
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.chart-plot {
-  position: relative;
-}
-
-.chart-plot svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
-}
-
-.grid-line {
-  stroke: var(--line);
-  stroke-width: 1;
-}
-
-.axis-line {
-  stroke: var(--line-strong);
-  stroke-width: 1;
-}
-
-.tick {
-  fill: var(--muted);
-  font-size: 10px;
-  font-variant-numeric: tabular-nums;
-}
-
-.peak {
-  fill: var(--text);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.bar {
-  fill: var(--accent);
-}
-
-.bar.is-down {
-  fill: var(--down);
-}
-
-.bar.is-hover {
-  fill: var(--text);
-}
-
-.chart-tip {
-  position: absolute;
-  top: 0;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-  padding: 5px 9px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
-  box-shadow: var(--shadow);
-  font-size: 12px;
-  white-space: nowrap;
-  pointer-events: none;
-}
-
-.cell-gain {
-  color: var(--accent);
-  font-weight: 600;
-}
-
-.chart-table-wrap {
-  max-height: 320px;
-  overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-}
-
-.chart-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.chart-table th,
-.chart-table td {
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--line);
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.chart-table th {
-  position: sticky;
-  top: 0;
-  background: var(--panel-2);
-  color: var(--muted);
-  font-weight: 600;
-  font-size: 12px;
-}
-
-.chart-table .cell-nick {
-  text-align: left;
-}
-
-/* ---------- 개인 증가량 그래프 ---------- */
-
-.picker {
-  margin-bottom: 12px;
-}
-
-.picker .search {
-  width: 100%;
-  margin-bottom: 8px;
-}
-
-.chips {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.chip {
-  padding: 4px 11px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.chip:hover {
-  color: var(--text);
-  background: var(--hover);
-}
-
-.chip.on {
-  border-color: var(--chip);
-  background: color-mix(in srgb, var(--chip) 16%, var(--panel));
-  color: var(--text);
-  font-weight: 600;
-}
-
-.line {
-  fill: none;
-  stroke-width: 2;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-
-.line-label {
-  font-size: 11px;
-  font-weight: 700;
 }
 
 .topbar .brand {

@@ -1,4 +1,4 @@
-import { RTDB_URL } from './history.js'
+const RTDB_URL = import.meta.env.VITE_RTDB_URL ?? ''
 
 /**
  * 어드민이 손으로 고친 라벨. Firebase Realtime Database 의 labels/{userId} 에 있다.

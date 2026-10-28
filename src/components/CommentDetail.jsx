@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { channelUrl, commentUrl } from '../lib/soop'
 import { seasonMatch } from '../lib/season'
 import { tagsOf } from '../lib/wow'
@@ -35,6 +35,13 @@ export default function CommentDetail({
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
+  // 패널은 높이가 고정이고 안에서 스크롤된다. 다른 사람을 고르면 맨 위부터 보여 준다.
+  const paneRef = useRef(null)
+  const shownId = comment?.id
+  useEffect(() => {
+    if (paneRef.current) paneRef.current.scrollTop = 0
+  }, [shownId])
+
   if (!comment) {
     return (
       <aside className="detail detail-empty">
@@ -48,6 +55,7 @@ export default function CommentDetail({
 
   return (
     <aside
+      ref={paneRef}
       className="detail is-open"
       style={{ '--group': color }}
       aria-label={`${comment.nick} 자세히`}
