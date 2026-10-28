@@ -21,6 +21,26 @@ GitHub Pages에 그대로 올라갑니다.
 | 즐찾 수 옆에 SOOP 방송국 가입일 (데뷔일과 다를 수 있음) | `src/lib/soop.js` `fetchStation` |
 | 신청 조건(즐찾 1000)으로 처음부터 걸러 둠. 데뷔 탭엔 안 건다 | `src/App.jsx` `MIN_FANS_RULE` |
 
+### 어드민 — 라벨 고치기
+
+주소 끝에 `#admin`을 붙여 들어가 Google로 로그인하면, 카드를 펼쳤을 때 **직업 · 꼬리표(자동/붙임/뗌) ·
+크루**를 고치는 칸이 나옵니다. 저장하면 Firebase Realtime Database `labels/{userId}`에 들어가고
+모든 방문자 화면에 10초 안에 따라옵니다. 라벨은 글이 아니라 사람에 붙습니다.
+
+쓰기를 막는 건 화면이 아니라 [`database.rules.json`](database.rules.json)입니다 — `auth.uid`가
+어드민 uid일 때만 씁니다. Firebase SDK는 `#admin`으로 들어올 때만 불러와서 일반 방문자 번들에는
+들어가지 않습니다(`src/lib/admin.js`).
+
+처음 한 번 해야 하는 설정 (프로젝트 `soop-comment-rank-aka`):
+
+1. 콘솔 → Realtime Database → 데이터베이스 만들기 → 위치 **싱가포르(asia-southeast1)**, 잠금 모드
+2. 콘솔 → Authentication → 시작하기 → 로그인 방법에서 **Google** 사용 설정
+3. Authentication → 설정 → 승인된 도메인에 `a-ka1128.github.io` 추가
+4. GitHub 저장소 Settings → Secrets and variables → Actions → **Variables**에
+   `RTDB_URL` · `FIREBASE_API_KEY` · `FIREBASE_AUTH_DOMAIN` (값은 로컬 `.env`와 같다)
+5. `#admin`으로 로그인하면 화면에 uid가 뜬다. `database.rules.json`의 `ADMIN_UID`를 그 값으로 바꾸고
+   `firebase deploy --only database`
+
 아래 "새 이벤트로 갈아끼우기"는 이 화면이 끝난 뒤의 이야기입니다. 지난 이벤트(아르마3
 랜덤고지전3)의 명단과 편성은 커밋 히스토리에 남아 있고 `git log -- src/lib/roster.js` 로
 꺼낼 수 있습니다.

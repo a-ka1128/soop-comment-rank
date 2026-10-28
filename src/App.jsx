@@ -7,10 +7,10 @@ import { FAN_MAX, FAN_STEP, loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, rank } from './lib/groups'
 import { CUT_RANK, DEBUT_POST, TARGET_POST } from './lib/target'
 import { WOW_CLASSES, classifyByClass, tagsOf } from './lib/wow'
+import { fetchLabels, saveLabel } from './lib/labels'
+import { useAdmin } from './lib/admin'
 import { useFlipReorder } from './hooks/useFlipReorder'
 import './App.css'
-
-const overrideKey = (bjId, postNo) => `soopcomment.overrides.${bjId}.${postNo}`
 
 const ALL_TAB = '__all__'
 const DEBUT_TAB = '__debut__'
@@ -19,7 +19,7 @@ const MIN_FANS_RULE = 1000
 const DEBUT_COLOR = '#e6c46a'
 // 특정 분류에 속하지 않는 줄(전체·미분류)의 색. 순위 숫자에 그대로 쓰이므로
 // 어두운 바탕에서 충분히 읽혀야 한다.
-const NEUTRAL_COLOR = '#a39a7a'
+const NEUTRAL_COLOR = '#a7a089'
 // 실측: 이런 신청 글은 45초 사이 상위 30개 중 32개의 좋아요가 움직인다.
 // 10초면 순위 변동이 눈에 보이면서 요청도 과하지 않다.
 const REFRESH_SEC = 10
@@ -27,21 +27,17 @@ const REFRESH_SEC = 10
 // 무엇이 움직였는지 볼 틈이 없다. 다시 움직이지 않으면 이 시간까지 남긴다.
 const MOVE_TTL_MS = 5 * 60 * 1000
 
-function loadStored(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : fallback
-  } catch {
-    return fallback
-  }
-}
-
 export default function App() {
   const [data, setData] = useState(null)
   /** 「리얼 뉴 와튜버 데뷔 하기」 글의 댓글. 못 불러와도 본 화면은 그대로 뜬다. */
   const [debut, setDebut] = useState(null)
   const [tagFilter, setTagFilter] = useState(null)
-  const [overrides, setOverrides] = useState({})
+  /**
+   * 어드민이 고친 라벨(userId -> 라벨). 모든 방문자가 같은 값을 본다.
+   * 예전의 '수동 지정'은 그 브라우저에만 남아 남에게 안 보였다 — 그래서 없앴다.
+   */
+  const [labels, setLabels] = useState({})
+  const admin = useAdmin()
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(null)
   const [error, setError] = useState('')
@@ -79,11 +75,6 @@ export default function App() {
   /** 이미 물어본 userId. 10초마다 갱신될 때 같은 사람을 다시 묻지 않기 위한 것. */
   const fansAskedRef = useRef(new Set())
 
-  useEffect(() => {
-    if (!data) return
-    localStorage.setItem(overrideKey(data.bjId, data.postNo), JSON.stringify(overrides))
-  }, [overrides, data])
-
   // 다룰 글이 하나로 정해져 있으므로 열자마자 불러온다.
   useEffect(() => {
     loadRef.current?.()
@@ -98,14 +89,14 @@ export default function App() {
   const grouped = true
 
   const buckets = useMemo(
-    () => (data ? classifyByClass(data.comments, overrides) : null),
-    [data, overrides],
+    () => (data ? classifyByClass(data.comments, labels) : null),
+    [data, labels],
   )
 
   /** 데뷔 글 댓글. 직업 색을 칠하려고 같은 규칙으로 나눈 뒤 한 줄로 편다. */
   const debutSection = useMemo(() => {
     if (!debut) return null
-    const items = [...classifyByClass(debut.comments).values()]
+    const items = [...classifyByClass(debut.comments, labels).values()]
       .flat()
       .map((c) => ({ ...c, postNo: debut.postNo }))
     return {
@@ -115,7 +106,7 @@ export default function App() {
       topN: null,
       items: rank(items),
     }
-  }, [debut])
+  }, [debut, labels])
 
   /** 데뷔 글에도 댓글을 단 길드 신청자. 카드에 표시한다. */
   const debutUserIds = useMemo(() => new Set(debut?.comments.map((c) => c.userId) ?? []), [debut])
@@ -183,14 +174,14 @@ export default function App() {
   const tagCounts = useMemo(() => {
     const map = new Map()
     for (const c of activeSection?.items ?? []) {
-      for (const t of tagsOf(c)) {
+      for (const t of tagsOf(c, labels[c.userId])) {
         const entry = map.get(t.id) ?? { ...t, count: 0 }
         entry.count += 1
         map.set(t.id, entry)
       }
     }
     return [...map.values()]
-  }, [activeSection])
+  }, [activeSection, labels])
 
   // 갱신 직전 순위를 찍어 두기 위해, 화면에 그려진 최신 결과를 항상 들고 있는다.
   useEffect(() => {
@@ -341,7 +332,7 @@ export default function App() {
   const visibleItems = useMemo(() => {
     const q = query.trim().toLowerCase()
     const tagged = tagFilter
-      ? cutItems.filter((c) => tagsOf(c).some((t) => t.id === tagFilter))
+      ? cutItems.filter((c) => tagsOf(c, labels[c.userId]).some((t) => t.id === tagFilter))
       : cutItems
     if (!q) return tagged
     return tagged.filter(
@@ -350,7 +341,7 @@ export default function App() {
         c.userId.toLowerCase().includes(q) ||
         c.text.toLowerCase().includes(q),
     )
-  }, [cutItems, query, tagFilter])
+  }, [cutItems, query, tagFilter, labels])
 
   /**
    * 손잡이가 설 자리. 눈금 위에만 선다. 숫자 칸에 눈금 사이 값을 적으면 손잡이는
@@ -435,7 +426,6 @@ export default function App() {
         onProgress: (done, total) => setProgress({ done, total }),
       })
 
-      setOverrides(loadStored(overrideKey(parsed.bjId, parsed.postNo), {}) ?? {})
       setData({
         ...result,
         title: post.title,
@@ -451,8 +441,15 @@ export default function App() {
     }
   }
 
-  /** 데뷔 글은 곁가지라, 실패해도 오류를 띄우지 않고 탭만 안 그린다. */
+  /**
+   * 데뷔 글과 어드민 라벨은 곁가지라, 실패해도 오류를 띄우지 않는다.
+   * 데뷔 글이 안 오면 탭만 안 그리고, 라벨이 안 오면 자동 판정 그대로 보인다.
+   * 라벨도 10초마다 같이 읽는다 — 어드민이 고친 게 열어 둔 화면에도 따라오게.
+   */
   function loadDebut(signal) {
+    fetchLabels({ signal })
+      .then(setLabels)
+      .catch(() => {})
     if (!DEBUT_POST) return
     fetchAllComments(DEBUT_POST.bjId, DEBUT_POST.postNo, { signal })
       .then(setDebut)
@@ -494,20 +491,29 @@ export default function App() {
   loadRef.current = load
 
   // 매 렌더마다 새 함수를 만들면 아래 CommentCard 의 memo 가 아무 일도 못 한다.
-  const assign = useCallback((commentId, groupId) => {
-    setOverrides((prev) => {
-      const next = { ...prev }
-      if (groupId) next[commentId] = groupId
-      else delete next[commentId]
-      return next
-    })
-  }, [])
+  const { getToken } = admin
+  const saveLabelFor = useCallback(
+    async (userId, label) => {
+      await saveLabel(userId, label, await getToken())
+      setLabels((prev) => {
+        const next = { ...prev }
+        if (label) next[userId] = label
+        else delete next[userId]
+        return next
+      })
+    },
+    // getToken 은 렌더마다 새로 만들어지지만 하는 일은 같다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+  const isEditing = admin.route && !!admin.user
 
   return (
     <div className="app">
       <header className="topbar">
         <div className="brand">
           <div>
+            <span className="kicker">WORLD OF WARCRAFT · FOREVER</span>
             <h1>와우 포에버 · 우왁굳 길드 사전 신청</h1>
             <p>
               신청 댓글을 해보려는 직업별로 나눠 좋아요 순으로 세웁니다. 신청 조건이 SOOP 버튜버 ·
@@ -515,6 +521,41 @@ export default function App() {
             </p>
           </div>
         </div>
+
+        {admin.route && (
+          <div className="adminbar">
+            <strong>어드민</strong>
+            {!admin.configured ? (
+              <span className="muted">
+                Firebase 설정(VITE_FIREBASE_API_KEY · VITE_FIREBASE_AUTH_DOMAIN · VITE_RTDB_URL)이
+                없어 로그인할 수 없습니다.
+              </span>
+            ) : admin.user ? (
+              <>
+                <span className="muted">
+                  {admin.user.email} · uid <code>{admin.user.uid}</code>
+                </span>
+                <span className="muted">카드를 펼치면 라벨을 고칠 수 있습니다.</span>
+                <span className="spacer" />
+                <button type="button" className="ghost" onClick={() => admin.signOut()}>
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="muted">라벨을 고치려면 로그인하세요.</span>
+                <span className="spacer" />
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() => admin.signIn().catch((e) => setError(e.message))}
+                >
+                  Google 로그인
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {progress && (
           <div className="progress">
@@ -578,11 +619,6 @@ export default function App() {
             </label>
             {refreshedAt && (
               <span className="muted">{refreshedAt.toTimeString().slice(0, 8)} 갱신</span>
-            )}
-            {Object.keys(overrides).length > 0 && (
-              <button type="button" className="ghost" onClick={() => setOverrides({})}>
-                수동 지정 {Object.keys(overrides).length}건 초기화
-              </button>
             )}
             <button
               type="button"
@@ -753,8 +789,9 @@ export default function App() {
                     }
                     showGroupName={grouped && (activeTab === ALL_TAB || activeTab === DEBUT_TAB)}
                     groupName={groupNameById[comment.groupId]}
-                    groups={activeTab === DEBUT_TAB ? [] : groups}
-                    onAssign={assign}
+                    label={labels[comment.userId]}
+                    admin={isEditing}
+                    onSaveLabel={saveLabelFor}
                   />
                 </div>
               )

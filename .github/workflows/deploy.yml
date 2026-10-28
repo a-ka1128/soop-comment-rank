@@ -31,9 +31,13 @@ jobs:
 
       # 기록 서버 주소. 비밀값이 아니라 공개 URL이고, 접근은 database.rules.json 이 막는다.
       # 저장소 Variables 에 RTDB_URL 을 넣지 않으면 개인 추이 기능만 조용히 꺼진 채 빌드된다.
+      # 어드민 로그인용 Firebase 웹 설정. 이것도 비밀값이 아니다(원래 페이지에 실리는 값).
+      # 비어 있으면 #admin 화면이 "설정 없음"만 띄우고, 일반 화면은 그대로다.
       - run: npm run build
         env:
           VITE_RTDB_URL: ${{ vars.RTDB_URL }}
+          VITE_FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.FIREBASE_AUTH_DOMAIN }}
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

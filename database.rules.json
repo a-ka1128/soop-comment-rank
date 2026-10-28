@@ -6,6 +6,12 @@
       "$postKey": {
         ".read": true
       }
+    },
+    "labels": {
+      ".read": true,
+      "$userId": {
+        ".write": "auth != null && auth.uid === 'ADMIN_UID'"
+      }
     }
   }
 }

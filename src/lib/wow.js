@@ -102,19 +102,25 @@ export function pickClass(text) {
 }
 
 /**
- * 자동 판정이 틀리는 걸 사람이 확인한 경우. userId -> 직업 id, null 이면 미분류.
- * 모든 방문자에게 똑같이 적용된다(카드에서 고르는 수동 지정은 그 브라우저에만 남는다).
+ * 자동 판정이 틀리는 걸 코드로 고정해 둔 것. userId -> 직업 id, null 이면 미분류.
+ * 어드민 라벨(labels.js)이 있으면 그쪽이 이긴다. 새로 고칠 건 어드민 화면에서 고친다.
  */
 export const CLASS_FIXES = {
   baythebass: null, // "법사, 흑마 빼고 고민중" — 뺀다고 적은 직업에 걸린다
 }
 
+/** 어드민 라벨의 cls 값 중 '미분류로 둔다'는 뜻. 비어 있음(자동)과 구분한다. */
+export const CLS_NONE = 'none'
+
 /**
  * 직업으로 나눈 결과를 groups.classify 와 같은 모양(Map<groupId, comments[]>)으로 낸다.
- * 수동 지정(overrides)이 자동 판정을 이긴다.
+ * 어드민 라벨 > CLASS_FIXES > 자동 판정 순으로 이긴다.
+ *
+ * @param {Array} comments
+ * @param {Record<string, {cls?: string}>} labels userId -> 어드민 라벨
  */
-export function classifyByClass(comments, overrides = {}) {
-  const valid = new Set([...WOW_CLASSES.map((c) => c.id), UNGROUPED_ID])
+export function classifyByClass(comments, labels = {}) {
+  const valid = new Set(WOW_CLASSES.map((c) => c.id))
   const buckets = new Map(WOW_CLASSES.map((c) => [c.id, []]))
   buckets.set(UNGROUPED_ID, [])
 
@@ -124,9 +130,13 @@ export function classifyByClass(comments, overrides = {}) {
       picked.id = CLASS_FIXES[comment.userId]
       picked.others = []
     }
-    const override = overrides[comment.id]
-    const manual = !!override && valid.has(override)
-    const target = manual ? override : (picked.id ?? UNGROUPED_ID)
+    const cls = labels[comment.userId]?.cls
+    const manual = cls === CLS_NONE || valid.has(cls)
+    const target = manual
+      ? cls === CLS_NONE
+        ? UNGROUPED_ID
+        : cls
+      : (picked.id ?? UNGROUPED_ID)
     buckets.get(target).push({
       ...comment,
       groupId: target,
@@ -191,24 +201,30 @@ export const TAG_FIXES = {
 }
 
 /**
+ * @param {object} comment
+ * @param {{tags?: Record<string, boolean>, crews?: string[]}} [label] 어드민 라벨.
+ *   tags 의 true 는 글과 상관없이 붙이고 false 는 뗀다. 없는 꼬리표는 자동.
  * @returns {Array<{id: string, name: string, hint: string, kind: 'self'|'crew'}>}
  */
-export function tagsOf(comment) {
+export function tagsOf(comment, label) {
   const text = comment.text || ''
   const removed = TAG_FIXES[comment.userId] ?? []
-  const self = SELF_TAGS.filter((t) => !removed.includes(t.id) && t.test.test(text)).map((t) => ({
+  const forced = label?.tags ?? {}
+  const self = SELF_TAGS.filter((t) =>
+    t.id in forced ? forced[t.id] : !removed.includes(t.id) && t.test.test(text),
+  ).map((t) => ({
     id: t.id,
     name: t.name,
-    hint: t.hint,
+    hint: t.id in forced ? `${t.hint} — 어드민 확인` : t.hint,
     kind: 'self',
   }))
-  const crews = (CREWS[comment.userId] ?? []).map((name) => ({
+  const crewNames = [...new Set([...(CREWS[comment.userId] ?? []), ...(label?.crews ?? [])])]
+  const crews = crewNames.map((name) => ({
     id: `crew:${name}`,
     name,
-    hint: '확인된 소속 (crews.js)',
+    hint: '어드민이 확인한 소속',
     kind: 'crew',
   }))
   // 확인된 크루가 자기소개 꼬리표와 같은 이름이면 확인된 쪽만 남긴다.
-  const crewNames = new Set(crews.map((c) => c.name))
-  return [...crews, ...self.filter((t) => !crewNames.has(t.name))]
+  return [...crews, ...self.filter((t) => !crewNames.includes(t.name))]
 }

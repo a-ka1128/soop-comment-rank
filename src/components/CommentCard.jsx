@@ -1,8 +1,8 @@
 import { memo, useState } from 'react'
 import { channelUrl, commentUrl } from '../lib/soop'
-import { UNGROUPED_ID } from '../lib/groups'
 import { seasonMatch } from '../lib/season'
 import { tagsOf } from '../lib/wow'
+import LabelEditor from './LabelEditor'
 
 /**
  * 마지막으로 움직였을 때의 순위 변동. 갱신마다 지워지지 않고, 다시 움직이거나
@@ -38,8 +38,9 @@ function CommentCard({
   color,
   showGroupName,
   groupName,
-  groups,
-  onAssign,
+  label,
+  admin,
+  onSaveLabel,
   move,
   hasSnapshot,
   fanCount,
@@ -48,7 +49,7 @@ function CommentCard({
 }) {
   const [open, setOpen] = useState(false)
   const seasons = seasonMatch(comment)
-  const tags = tagsOf(comment)
+  const tags = tagsOf(comment, label)
 
   return (
     <article
@@ -101,8 +102,8 @@ function CommentCard({
           </span>
         ))}
         {comment.manual && (
-          <span className="badge manual" title="수동으로 지정한 분류입니다">
-            수동
+          <span className="badge manual" title="어드민이 직업을 확인했습니다">
+            확인
           </span>
         )}
         {comment.conflicts?.length > 0 && (
@@ -161,25 +162,9 @@ function CommentCard({
             </a>
             <span>{comment.date}</span>
             {comment.replyCount > 0 && <span>답글 {comment.replyCount}</span>}
-            <span className="spacer" />
-            {groups.length > 0 && (
-              <label className="assign">
-                <span className="sr-only">분류 지정</span>
-                <select
-                  value={comment.manual ? comment.groupId : ''}
-                  onChange={(e) => onAssign(comment.id, e.target.value)}
-                >
-                  <option value="">자동 분류</option>
-                  {groups.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name}(으)로 지정
-                    </option>
-                  ))}
-                  <option value={UNGROUPED_ID}>미분류로 지정</option>
-                </select>
-              </label>
-            )}
           </footer>
+
+          {admin && <LabelEditor userId={comment.userId} label={label} onSave={onSaveLabel} />}
         </div>
       )}
     </article>
