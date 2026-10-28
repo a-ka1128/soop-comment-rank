@@ -333,51 +333,25 @@ export default function App() {
   })
 
   /**
-   * 애청자 수로 자르고 남은 사람들. 자른 뒤에는 순위를 다시 매긴다 —
-   * 이 조건에서 뽑는다면 남은 사람들이 곧 1등부터이기 때문이다.
-   * 목록과 닉네임 추출이 같은 함수를 쓴다. 화면에서 자른 사람이 추출에는 남아
-   * 있으면, 어느 쪽이 맞는지 알 수 없는 명단이 나온다.
-   */
-  const applyCut = useCallback(
-    (items) => {
-      return items
-        .filter((c) => {
-          const count = fans.get(c.userId)
-          // 아직 못 받았거나 방송국이 없는 사람은 숨기지 않는다. 자료가 없다는 이유로
-          // 사람을 지우면, 방금 댓글을 단 사람이 조용히 사라진다.
-          return count == null || count >= MIN_FANS_RULE
-        })
-        .map((c, i) => ({ ...c, rank: i + 1 }))
-    },
-    [fans],
-  )
-
-  /**
    * 직업별 인원. 대표 직업(처음 고른 직업)으로만 센다 — 직업을 여러 개 고른 사람을 칸마다
-   * 세면 합이 신청자보다 커진다. kept 는 애청자 하한을 넘긴 사람, total 은 신청한 전체,
-   * also 는 대표는 아니지만 이 직업도 같이 고른 사람(애청자 하한을 넘긴 사람만).
+   * 세면 합이 신청자보다 커진다. also 는 대표는 아니지만 이 직업도 같이 고른 사람.
    */
   const classCounts = useMemo(
     () =>
-      sections.map((s) => {
-        const primary = s.items.filter((c) => c.groupId === s.id)
-        return {
-          id: s.id,
-          name: s.name,
-          color: s.color,
-          total: primary.length,
-          kept: applyCut(primary).length,
-          also: applyCut(s.items.filter((c) => c.groupId !== s.id)).length,
-        }
-      }),
-    [sections, applyCut],
+      sections.map((s) => ({
+        id: s.id,
+        name: s.name,
+        color: s.color,
+        total: s.items.filter((c) => c.groupId === s.id).length,
+        also: s.items.filter((c) => c.groupId !== s.id).length,
+      })),
+    [sections],
   )
-  const maxClassCount = Math.max(1, ...classCounts.map((s) => s.kept))
+  const maxClassCount = Math.max(1, ...classCounts.map((s) => s.total))
 
   /**
    * 목록에는 애청자가 모자란 사람도 그대로 둔다. 숨기는 대신 줄에 lowFans(그 사람의 애청자 수)를
-   * 달아 노란 배지를 붙인다. 순위도 그대로다. 직업별 인원과 닉네임 추출은
-   * 여전히 기준을 넘긴 사람만 센다(applyCut).
+   * 달아 노란 배지를 붙인다. 순위도 그대로다. 직업별 인원과 닉네임 추출도 전부 센다.
    * 데뷔 글은 이제 막 데뷔하는 사람들이라 즐찾 1000 조건을 걸 대상이 아니다.
    */
   const cutItems = useMemo(() => {
@@ -442,8 +416,8 @@ export default function App() {
       : allSection
         ? [allSection]
         : []
-    return base.map((s) => ({ ...s, items: applyCut(s.items) }))
-  }, [grouped, sections, allSection, applyCut])
+    return base.map((s) => ({ ...s, items: s.items }))
+  }, [grouped, sections, allSection])
 
   async function load() {
     const parsed = TARGET_POST
@@ -736,8 +710,7 @@ export default function App() {
               <h2>
                 직업별 인원
                 <span className="cc-legend">
-                  {`즐찾 ${MIN_FANS_RULE.toLocaleString()}명 이상 / 전체 신청`}
-                  {' · 대표 직업 기준'}
+                  전체 신청 · 대표 직업 기준
                 </span>
               </h2>
               <ul>
@@ -754,11 +727,10 @@ export default function App() {
                         {s.name}
                       </span>
                       <span className="cc-num">
-                        <strong>{s.kept}</strong>
-                        {s.kept !== s.total && <span>/ {s.total}</span>}
+                        <strong>{s.total}</strong>
                       </span>
                       <span className="cc-bar" aria-hidden="true">
-                        <span style={{ width: `${(s.kept / maxClassCount) * 100}%` }} />
+                        <span style={{ width: `${(s.total / maxClassCount) * 100}%` }} />
                       </span>
                       {s.also > 0 && (
                         <span
