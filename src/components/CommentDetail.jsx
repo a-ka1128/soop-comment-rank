@@ -87,7 +87,19 @@ export default function CommentDetail({
       </dl>
 
       <div className="detail-badges">
-        {groupName && <span className="badge group-badge">{groupName}</span>}
+        {groupName && (
+          <span
+            className="badge group-badge"
+            style={comment.classColor ? { '--group': comment.classColor } : undefined}
+          >
+            {groupName}
+          </span>
+        )}
+        {comment.extraClasses?.map((c) => (
+          <span key={c.id} className="badge group-badge" style={{ '--group': c.color }}>
+            {c.name}
+          </span>
+        ))}
         {comment.alsoConsidering?.length > 0 && (
           <span className="badge considering" title="같이 고민 중이라고 적은 직업">
             +{comment.alsoConsidering.join('·')}

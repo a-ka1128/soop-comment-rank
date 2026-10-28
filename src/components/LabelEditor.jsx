@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CLS_NONE, SELF_TAGS, WOW_CLASSES } from '../lib/wow'
+import { CLS_NONE, SELF_TAGS, WOW_CLASSES, labelClasses } from '../lib/wow'
 import { cleanLabel } from '../lib/labels'
 
 /** 꼬리표 하나의 세 갈래. 저장할 때 true / false / (키 없음) 이 된다. */
@@ -19,7 +19,15 @@ function tagState(label, id) {
  * 저장하면 그 사람의 모든 댓글(두 글 모두)에 똑같이 적용된다 — 라벨은 사람에 붙는다.
  */
 export default function LabelEditor({ userId, label, onSave }) {
-  const [cls, setCls] = useState(label?.cls ?? '')
+  // 직업은 여러 개 고를 수 있다. 고른 순서를 지키고, 처음 고른 게 대표 직업이 된다.
+  // 아무것도 안 고르면 자동, '미분류'를 고르면 직업 없이 고정.
+  const [cls, setCls] = useState(() => labelClasses(label) ?? [])
+  const toggleClass = (id) =>
+    setCls((prev) => {
+      if (id === CLS_NONE) return prev === CLS_NONE ? [] : CLS_NONE
+      const list = prev === CLS_NONE ? [] : prev
+      return list.includes(id) ? list.filter((x) => x !== id) : [...list, id]
+    })
   const [tags, setTags] = useState(() =>
     Object.fromEntries(SELF_TAGS.map((t) => [t.id, tagState(label, t.id)])),
   )
@@ -47,7 +55,7 @@ export default function LabelEditor({ userId, label, onSave }) {
   }
 
   function reset() {
-    setCls('')
+    setCls([])
     setTags(Object.fromEntries(SELF_TAGS.map((t) => [t.id, 'auto'])))
     setCrews('')
     save(null)
@@ -60,18 +68,45 @@ export default function LabelEditor({ userId, label, onSave }) {
         <span className="muted">{userId} — 이 사람의 모든 댓글에 적용</span>
       </div>
 
-      <label className="label-field">
+      <div className="label-field">
         <span>직업</span>
-        <select value={cls} onChange={(e) => setCls(e.target.value)}>
-          <option value="">자동 (댓글에서 판정)</option>
-          {WOW_CLASSES.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-          <option value={CLS_NONE}>미분류</option>
-        </select>
-      </label>
+        <div>
+          <div className="class-picks" role="group" aria-label="직업 여러 개 고르기">
+            {WOW_CLASSES.map((c) => {
+              const at = cls === CLS_NONE ? -1 : cls.indexOf(c.id)
+              return (
+                <button
+                  type="button"
+                  key={c.id}
+                  className={at >= 0 ? 'on' : ''}
+                  style={{ '--group': c.color }}
+                  aria-pressed={at >= 0}
+                  onClick={() => toggleClass(c.id)}
+                >
+                  <span className="dot" aria-hidden="true" />
+                  {c.name}
+                  {at === 0 && cls.length > 1 && <em>대표</em>}
+                </button>
+              )
+            })}
+            <button
+              type="button"
+              className={cls === CLS_NONE ? 'on' : ''}
+              aria-pressed={cls === CLS_NONE}
+              onClick={() => toggleClass(CLS_NONE)}
+            >
+              미분류
+            </button>
+          </div>
+          <p className="muted class-picks-note">
+            {cls === CLS_NONE
+              ? '어느 직업에도 넣지 않습니다.'
+              : cls.length === 0
+                ? '아무것도 안 고르면 댓글에서 자동으로 판정합니다.'
+                : '고른 직업 칸마다 들어갑니다. 처음 고른 직업이 대표(색)입니다.'}
+          </p>
+        </div>
+      </div>
 
       <div className="label-field">
         <span>꼬리표</span>

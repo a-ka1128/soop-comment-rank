@@ -55,7 +55,20 @@ function CommentCard({
         )}
 
         <span className="nick">{comment.nick}</span>
-        {showGroupName && groupName && <span className="badge group-badge">{groupName}</span>}
+        {/* 직업을 여러 개 고른 사람은 어느 탭에서든 고른 직업을 다 보여 준다. */}
+        {(showGroupName || comment.extraClasses?.length > 0) && groupName && (
+          <span
+            className="badge group-badge"
+            style={comment.classColor ? { '--group': comment.classColor } : undefined}
+          >
+            {groupName}
+          </span>
+        )}
+        {comment.extraClasses?.map((c) => (
+          <span key={c.id} className="badge group-badge" style={{ '--group': c.color }}>
+            {c.name}
+          </span>
+        ))}
 
         <span className="likes">♥ {comment.likes.toLocaleString()}</span>
       </button>

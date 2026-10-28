@@ -958,6 +958,50 @@ button:disabled {
 }
 
 /* 꼬리표 하나 = 자동/붙임/뗌 세 칸짜리 토글. 라디오는 숨기고 칸 전체를 누른다. */
+/* 직업 고르기. 여러 개를 켤 수 있는 칩이고, 켜진 칩은 그 직업 색으로 칠한다. */
+.class-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.class-picks button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 12px;
+  --ink: color-mix(in srgb, var(--group, var(--muted)) 40%, var(--text));
+}
+
+.class-picks button:hover {
+  background: var(--hover);
+}
+
+.class-picks button.on {
+  border-color: color-mix(in srgb, var(--group, var(--text)) 70%, var(--text));
+  background: color-mix(in srgb, var(--group, var(--muted)) 18%, var(--panel));
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--group, var(--text)) 50%, transparent);
+}
+
+.class-picks em {
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--text);
+  color: #fff;
+  font-size: 10px;
+  font-style: normal;
+}
+
+.class-picks-note {
+  margin: 6px 0 0;
+}
+
 .tri {
   display: flex;
   margin: 0;

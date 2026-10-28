@@ -6,7 +6,7 @@ import { fetchAllComments, fetchPost, postUrl } from './lib/soop'
 import { FAN_MAX, FAN_STEP, loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, rank } from './lib/groups'
 import { CUT_RANK, DEBUT_POST, TARGET_POST } from './lib/target'
-import { WOW_CLASSES, classifyByClass, tagsOf } from './lib/wow'
+import { WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
 import { fetchLabels, saveLabel } from './lib/labels'
 import { useAdmin } from './lib/admin'
 import { useFlipReorder } from './hooks/useFlipReorder'
@@ -97,9 +97,9 @@ export default function App() {
   /** 데뷔 글 댓글. 직업 색을 칠하려고 같은 규칙으로 나눈 뒤 한 줄로 편다. */
   const debutSection = useMemo(() => {
     if (!debut) return null
-    const items = [...classifyByClass(debut.comments, labels).values()]
-      .flat()
-      .map((c) => ({ ...c, postNo: debut.postNo }))
+    const items = uniqueComments([...classifyByClass(debut.comments, labels).values()].flat()).map(
+      (c) => ({ ...c, postNo: debut.postNo }),
+    )
     return {
       id: DEBUT_TAB,
       name: '뉴 와튜버 데뷔',
@@ -142,7 +142,7 @@ export default function App() {
       name: '전체',
       color: NEUTRAL_COLOR,
       topN: null,
-      items: rank([...buckets.values()].flat()),
+      items: rank(uniqueComments([...buckets.values()].flat())),
     }
   }, [buckets])
 

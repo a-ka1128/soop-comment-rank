@@ -9,7 +9,8 @@ const RTDB_URL = import.meta.env.VITE_RTDB_URL ?? ''
  *
  * 한 사람의 라벨 모양:
  *   {
- *     cls: 'mage',                         직업 id. 'none' 이면 미분류. 없으면 자동
+ *     cls: ['mage', 'priest'],             직업 id 목록(첫 번째가 대표). 'none' 이면 미분류.
+ *                                          없으면 자동. 예전 라벨은 'mage' 처럼 하나짜리 문자열
  *     tags: { watuber: true, forevers: false },   true 붙임 / false 뗌. 없으면 자동
  *     crews: ['와우포에버즈'],              확인된 크루
  *   }
@@ -33,7 +34,12 @@ export async function fetchLabels({ signal } = {}) {
 /** 아무것도 안 고친 라벨은 지운다. 빈 객체를 남겨 두면 "자동"과 구분이 안 된다. */
 export function cleanLabel(label) {
   const out = {}
-  if (label?.cls) out.cls = label.cls
+  const cls = label?.cls
+  if (cls === 'none') out.cls = cls
+  else if (Array.isArray(cls)) {
+    const ids = [...new Set(cls.filter(Boolean))]
+    if (ids.length > 0) out.cls = ids
+  } else if (cls) out.cls = [cls]
   const tags = Object.fromEntries(
     Object.entries(label?.tags ?? {}).filter(([, v]) => typeof v === 'boolean'),
   )

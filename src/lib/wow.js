@@ -112,15 +112,32 @@ export const CLASS_FIXES = {
 /** 어드민 라벨의 cls 값 중 '미분류로 둔다'는 뜻. 비어 있음(자동)과 구분한다. */
 export const CLS_NONE = 'none'
 
+const CLASS_BY_ID = new Map(WOW_CLASSES.map((c) => [c.id, c]))
+
+/**
+ * 어드민 라벨의 cls 를 읽는다. 예전 라벨은 직업 하나(문자열)이고, 지금은 여러 개(배열)를
+ * 고를 수 있다. 배열의 첫 직업이 대표(색·전체 탭의 자리)다.
+ *
+ * @returns {string[] | 'none' | null} 직업 id 목록, 미분류로 고정, 또는 자동(null)
+ */
+export function labelClasses(label) {
+  const cls = label?.cls
+  if (cls === CLS_NONE) return CLS_NONE
+  const ids = (Array.isArray(cls) ? cls : [cls]).filter((id) => CLASS_BY_ID.has(id))
+  return ids.length > 0 ? [...new Set(ids)] : null
+}
+
 /**
  * 직업으로 나눈 결과를 groups.classify 와 같은 모양(Map<groupId, comments[]>)으로 낸다.
  * 어드민 라벨 > CLASS_FIXES > 자동 판정 순으로 이긴다.
  *
+ * 어드민이 직업을 여러 개 고른 사람은 고른 직업 칸마다 들어간다. 그래서 칸을 모두
+ * 이어 붙이면 같은 댓글이 여러 번 나온다 — 전체 목록을 만들 땐 uniqueComments 를 거친다.
+ *
  * @param {Array} comments
- * @param {Record<string, {cls?: string}>} labels userId -> 어드민 라벨
+ * @param {Record<string, {cls?: string|string[]}>} labels userId -> 어드민 라벨
  */
 export function classifyByClass(comments, labels = {}) {
-  const valid = new Set(WOW_CLASSES.map((c) => c.id))
   const buckets = new Map(WOW_CLASSES.map((c) => [c.id, []]))
   buckets.set(UNGROUPED_ID, [])
 
@@ -130,23 +147,34 @@ export function classifyByClass(comments, labels = {}) {
       picked.id = CLASS_FIXES[comment.userId]
       picked.others = []
     }
-    const cls = labels[comment.userId]?.cls
-    const manual = cls === CLS_NONE || valid.has(cls)
-    const target = manual
-      ? cls === CLS_NONE
-        ? UNGROUPED_ID
-        : cls
-      : (picked.id ?? UNGROUPED_ID)
-    buckets.get(target).push({
+    const chosen = labelClasses(labels[comment.userId])
+    const manual = chosen !== null
+    const targets = !manual
+      ? [picked.id ?? UNGROUPED_ID]
+      : chosen === CLS_NONE
+        ? [UNGROUPED_ID]
+        : chosen
+    const item = {
       ...comment,
-      groupId: target,
+      groupId: targets[0],
+      // 대표 직업의 색. 직업 탭에서는 줄 색이 탭 색이라, 배지는 이걸로 따로 칠한다.
+      classColor: CLASS_BY_ID.get(targets[0])?.color,
       manual,
+      // 대표 직업 말고 어드민이 같이 고른 직업. 줄에 배지로 붙는다.
+      extraClasses: targets.slice(1).map((id) => CLASS_BY_ID.get(id)),
       // 화면에서 '중복' 경고로 쓰던 자리. 여기서는 같이 고민 중인 직업이다.
       alsoConsidering: manual ? [] : picked.others,
       conflicts: [],
-    })
+    }
+    for (const id of targets) buckets.get(id).push(item)
   }
   return buckets
+}
+
+/** 여러 직업 칸에 들어간 댓글을 한 번씩만 남긴다. 순서는 처음 나온 자리. */
+export function uniqueComments(list) {
+  const seen = new Set()
+  return list.filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)))
 }
 
 /**
