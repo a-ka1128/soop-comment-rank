@@ -1,24 +1,29 @@
 :root {
   /*
-   * 와우 UI 팔레트 — 밤하늘 남색 바탕에 금테, 양피지 글자.
-   * 직업 색(wow.js)이 줄마다 올라가므로 바탕은 채도를 낮춘 남색으로 물러나 있게 했다.
-   * 대비는 전부 패널 표면 기준으로 측정했다 — 아래 주석의 수치가 실측값이다.
+   * 밝은 대시보드. 바탕은 아주 옅은 회색, 패널은 흰색, 선은 얇게.
+   * 색은 직업 색(wow.js)이 지고 있으니 나머지는 무채색으로 물러나 있게 했다.
+   * 대비는 흰 패널 기준 실측값이다.
    */
-  --bg: #0b0f1a;
-  --panel: #121a2b;
-  --panel-2: #1a2439;
-  --line: #2c3a57; /* 경계선. 1.53:1, 의도적으로 물러나 있음 */
-  --text: #efe6d2; /* 양피지. 14.00:1 */
-  --muted: #a7a089; /* 6.65:1 */
-  --accent: #c9a14a; /* 금테. 7.18:1. 주버튼 배경으로 쓸 땐 어두운 글자 7.91:1 */
-  --brass: #f0c75e; /* 밝은 금 — 좋아요·수치. 10.79:1 */
-  --slate: #8f9bb3; /* 하락 표시. 상승(--brass)과 밝기로 갈리고 화살표가 뜻을 지고 있다 */
-  --danger: #e5806a; /* 오류. 6.31:1 */
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --panel-2: #f8f9fb; /* 펼친 카드 속, 표 머리 */
+  --hover: #f2f4f7;
+  --line: #e3e6eb; /* 경계선. 의도적으로 옅다 */
+  --line-strong: #cfd4dc; /* 입력칸 테두리 */
+  --text: #1b2230; /* 15.6:1 */
+  --muted: #5d6878; /* 5.6:1 */
+  --accent: #a15c07; /* 와우의 금빛을 흰 바탕에 맞게 짙게 내렸다. 5.4:1 */
+  --accent-soft: #fdf3e3;
+  --like: #d6335a; /* 하트. 4.8:1 */
+  --up: #15803d;
+  --down: #64748b;
+  --danger: #c2410c;
 
-  /* 각진 모서리가 이 화면의 성격을 정한다. 둥글리지 않는다. */
-  --radius: 3px;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
 
-  color-scheme: dark;
+  color-scheme: light;
   font-family: 'Pretendard', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     system-ui, sans-serif;
   --mono: ui-monospace, 'Consolas', 'D2Coding', 'Courier New', monospace;
@@ -39,20 +44,6 @@ body {
 body {
   min-height: 100vh;
   background: var(--bg);
-}
-
-/*
- * 위쪽에만 금빛이 은은히 번지고 아래로 갈수록 밤하늘로 가라앉는다. 글이 얹히는
- * 아래쪽은 거의 단색이라 대비가 배경색 수준 그대로다.
- */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 70% 40% at 50% -5%, rgba(201, 161, 74, 0.16), transparent 70%),
-    radial-gradient(ellipse 60% 50% at 100% 0%, rgba(63, 110, 200, 0.12), transparent 70%);
-  pointer-events: none;
 }
 
 button,

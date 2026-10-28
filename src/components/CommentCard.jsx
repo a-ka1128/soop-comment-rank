@@ -115,21 +115,23 @@ function CommentCard({
           </span>
         )}
 
-        <span className="spacer" />
-        {fanCount != null && (
-          <span className="station-info" title="방송국 애청자(즐겨찾기) 수">
-            즐찾 {fanCount.toLocaleString()}
+        {/* 줄이 좁아 감길 때 숫자들이 흩어지지 않도록 한 덩어리로 묶어 오른쪽에 붙인다. */}
+        <span className="card-meta">
+          {fanCount != null && (
+            <span className="station-info" title="방송국 애청자(즐겨찾기) 수">
+              즐찾 {fanCount.toLocaleString()}
+            </span>
+          )}
+          {joinedAt && (
+            <span className="station-info" title="SOOP 방송국 가입일 — 데뷔일과 다를 수 있습니다">
+              {joinedAt.slice(0, 7).replace('-', '.')} 가입
+            </span>
+          )}
+          <span className="likes">♥ {comment.likes.toLocaleString()}</span>
+          {/* 순위 변동이 ▲▼라서, 펼침 표시는 헷갈리지 않게 다른 모양을 쓴다. */}
+          <span className="chevron" aria-hidden="true">
+            {open ? '⌃' : '⌄'}
           </span>
-        )}
-        {joinedAt && (
-          <span className="station-info" title="SOOP 방송국 가입일 — 데뷔일과 다를 수 있습니다">
-            {joinedAt.slice(0, 7).replace('-', '.')} 가입
-          </span>
-        )}
-        <span className="likes">♥ {comment.likes.toLocaleString()}</span>
-        {/* 순위 변동이 ▲▼라서, 펼침 표시는 헷갈리지 않게 다른 모양을 쓴다. */}
-        <span className="chevron" aria-hidden="true">
-          {open ? '⌃' : '⌄'}
         </span>
       </button>
 

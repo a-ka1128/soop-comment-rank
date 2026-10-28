@@ -1,9 +1,7 @@
 .app {
-  position: relative;
-  z-index: 1;
-  max-width: 960px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 28px 20px 80px;
+  padding: 36px 24px 96px;
 }
 
 .spacer {
@@ -15,11 +13,26 @@
   color: var(--muted);
 }
 
-.swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: var(--radius);
+/*
+ * 직업 색은 흰 바탕에서 글자로 쓰기엔 너무 밝다(사제는 거의 흰색, 도적은 노랑).
+ * 그래서 점·막대에는 원래 색(--group)을, 글자에는 본문색을 섞어 짙게 만든 색(--ink)을 쓴다.
+ */
+.card,
+.tabs button,
+.export-group,
+.detected li,
+.badge.group-badge {
+  --ink: color-mix(in srgb, var(--group) 40%, var(--text));
+}
+
+.swatch,
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
   background: var(--group);
+  /* 사제처럼 흰색에 가까운 직업도 점이 보이도록 옅은 테를 두른다. */
+  box-shadow: inset 0 0 0 1px rgba(16, 24, 40, 0.18);
   flex: none;
 }
 
@@ -27,29 +40,27 @@
 
 .topbar .brand h1 {
   margin: 0;
-  padding-left: 10px;
-  border-left: 3px solid var(--accent);
-  font-size: 26px;
-  letter-spacing: -0.4px;
-  /* 와우 제목 글자처럼 위가 밝고 아래로 짙어지는 금빛. */
-  background: linear-gradient(180deg, #fff1c2 0%, var(--brass) 45%, var(--accent) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  line-height: 1.25;
 }
 
 .topbar .brand .kicker {
-  display: block;
-  margin: 0 0 4px 13px;
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 3px;
-  color: var(--accent);
+  letter-spacing: 0.14em;
 }
 
 .topbar .brand p {
-  margin: 6px 0 18px;
-  padding-left: 13px;
+  max-width: 640px;
+  margin: 8px 0 24px;
   color: var(--muted);
   font-size: 14px;
 }
@@ -62,46 +73,51 @@
 .loader input {
   flex: 1;
   min-width: 0;
-  padding: 11px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  padding: 10px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
   background: var(--panel);
 }
 
 input:focus-visible,
 select:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+button:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
 .loader button[type='submit'],
 button.primary {
-  padding: 11px 20px;
-  border: 0;
-  border-radius: var(--radius);
-  background: var(--accent);
-  color: var(--bg);
-  font-weight: 700;
+  padding: 10px 18px;
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
+  background: var(--text);
+  color: #fff;
+  font-weight: 600;
 }
 
 button.primary {
-  padding: 9px 14px;
+  padding: 7px 14px;
   font-size: 13px;
+}
+
+button.primary:hover {
+  background: #333c4d;
 }
 
 button.ghost {
-  padding: 9px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  padding: 7px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
   background: var(--panel);
-  color: var(--muted);
+  color: var(--text);
   font-size: 13px;
+  font-weight: 500;
 }
 
 button.ghost:hover {
-  color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: var(--hover);
 }
 
 button:disabled {
@@ -112,38 +128,38 @@ button:disabled {
 .progress {
   position: relative;
   margin-top: 12px;
-  height: 22px;
-  border-radius: var(--radius);
-  background: var(--panel);
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line);
   overflow: hidden;
 }
 
 .progress-bar {
   height: 100%;
-  background: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: var(--accent);
   transition: width 0.2s ease;
 }
 
 .progress span {
   position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 12px;
-  color: var(--muted);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 
 .error {
   margin: 12px 0 0;
   padding: 10px 14px;
-  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--danger) 7%, var(--panel));
+  color: var(--danger);
   font-size: 14px;
 }
 
 .placeholder {
-  margin-top: 48px;
+  margin-top: 64px;
   text-align: center;
   color: var(--muted);
 }
@@ -153,25 +169,37 @@ button:disabled {
 .summary {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin: 22px 0 16px;
-  padding: 14px 16px;
+  margin: 0 0 20px;
+  padding: 16px 20px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel);
+  box-shadow: var(--shadow);
 }
 
+/* 숫자를 위, 이름을 아래로 쌓아 대시보드의 지표 칸처럼 읽히게 한다. */
 .stat {
   display: flex;
-  align-items: baseline;
-  gap: 5px;
-  margin-right: 8px;
+  flex-direction: column-reverse;
+  gap: 0;
+  min-width: 84px;
+  padding-right: 20px;
+  margin-right: 12px;
+  border-right: 1px solid var(--line);
+}
+
+.stat:nth-last-of-type(1) {
+  border-right: 0;
 }
 
 .stat strong {
-  font-family: var(--mono);
-  font-size: 18px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat span {
@@ -180,6 +208,7 @@ button:disabled {
 }
 
 .post-link {
+  margin-right: 4px;
   font-size: 13px;
   color: var(--muted);
   text-decoration: none;
@@ -187,27 +216,26 @@ button:disabled {
 
 .post-link:hover {
   color: var(--text);
+  text-decoration: underline;
 }
 
 /* ---------- detected groups panel ---------- */
 
 .panel,
 .export {
-  margin-bottom: 16px;
-  padding: 16px;
+  margin-bottom: 20px;
+  padding: 20px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel);
+  box-shadow: var(--shadow);
 }
 
-/* 패널 제목은 작전 표지처럼 작게 자간을 벌린다. */
 .panel-head h2,
 .export-head h2 {
   margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  color: var(--muted);
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .panel-head p {
@@ -231,17 +259,11 @@ button:disabled {
   gap: 8px;
   padding: 8px 12px;
   border: 1px solid var(--line);
-  border-left: 3px solid var(--group);
-  border-radius: var(--radius);
-  background: var(--panel-2);
+  border-radius: var(--radius-sm);
   font-size: 14px;
 }
 
 /* ---------- nickname export ---------- */
-
-.export {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-}
 
 .export-opts {
   display: flex;
@@ -267,10 +289,10 @@ button:disabled {
 }
 
 .export-group {
-  padding: 12px;
+  padding: 14px;
   border: 1px solid var(--line);
   border-left: 3px solid var(--group);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   background: var(--panel-2);
 }
 
@@ -294,8 +316,8 @@ button:disabled {
 .take input {
   width: 68px;
   padding: 4px 8px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
   background: var(--panel);
   font-variant-numeric: tabular-nums;
 }
@@ -303,17 +325,17 @@ button:disabled {
 .tie {
   margin: 0 0 10px;
   padding: 8px 12px;
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--brass) 14%, transparent);
-  color: var(--brass);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
   font-size: 12px;
 }
 
 .export-group textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
   background: var(--panel);
   color: var(--text);
   font-family: inherit;
@@ -329,89 +351,144 @@ button:disabled {
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
+/* 직업 탭. 앞의 점이 직업 색을 지고, 고른 탭은 그 색으로 옅게 칠한다. */
 .tabs button {
-  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 999px;
   background: var(--panel);
-  color: var(--muted);
+  color: var(--text);
   font-size: 13px;
+  font-weight: 500;
+}
+
+.tabs button::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--group);
+  box-shadow: inset 0 0 0 1px rgba(16, 24, 40, 0.18);
+}
+
+.tabs button:hover {
+  background: var(--hover);
 }
 
 .tabs button em {
-  font-family: var(--mono);
   font-style: normal;
-  opacity: 0.7;
-  margin-left: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .tabs button.active {
-  border-color: var(--group);
-  background: color-mix(in srgb, var(--group) 18%, var(--panel));
-  color: var(--text);
-  font-weight: 600;
+  border-color: color-mix(in srgb, var(--group) 70%, var(--text));
+  background: color-mix(in srgb, var(--group) 16%, var(--panel));
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.tabs button.active em {
+  color: var(--ink);
 }
 
 .search {
-  width: 200px;
-  padding: 8px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  width: 220px;
+  padding: 7px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
   background: var(--panel);
 }
 
 /* ---------- comment list ---------- */
 
 .empty {
-  margin: 0 0 12px;
+  margin: 0;
+  padding: 32px 16px;
+  text-align: center;
   font-size: 13px;
   color: var(--muted);
 }
 
-.card {
-  margin-bottom: 6px;
+/* 목록 전체가 흰 판 하나. 줄은 그 안에서 얇은 선으로만 나뉜다. */
+.list {
   border: 1px solid var(--line);
-  border-left: 3px solid var(--group);
   border-radius: var(--radius);
   background: var(--panel);
+  box-shadow: var(--shadow);
   overflow: hidden;
 }
 
+.list > div + div .card {
+  border-top: 1px solid var(--line);
+}
+
+.card {
+  position: relative;
+  background: var(--panel);
+}
+
+/* 왼쪽 가장자리의 직업 색 막대. 펼치면 굵어진다. */
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--group);
+}
+
+.card.is-open::before {
+  width: 4px;
+}
+
 .card.is-open {
-  border-color: color-mix(in srgb, var(--group) 55%, var(--line));
+  background: var(--panel-2);
 }
 
 /* 접힌 상태의 한 줄. 클릭하면 펼쳐진다. */
+/* 배지가 많은 사람은 줄을 넘겨 감는다. 닉네임이 배지에 밀려 사라지지 않게 하려는 것. */
 .card-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px 8px;
   width: 100%;
-  padding: 9px 14px;
+  padding: 11px 16px 11px 18px;
   border: 0;
   background: none;
   text-align: left;
 }
 
 .card-row:hover {
-  background: var(--panel-2);
+  background: var(--hover);
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
 }
 
 .rank-no {
-  min-width: 32px;
-  font-family: var(--mono);
-  font-size: 15px;
+  min-width: 30px;
+  font-size: 14px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--group);
+  color: var(--muted);
   flex: none;
 }
 
 .delta {
-  font-family: var(--mono);
   font-size: 11px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -419,22 +496,22 @@ button:disabled {
 }
 
 .delta.up {
-  color: #b6cc55;
+  color: var(--up);
 }
 
 .delta.down {
-  color: var(--slate);
+  color: var(--down);
 }
 
 .delta.new {
-  padding: 1px 5px;
-  border-radius: var(--radius);
-  background: color-mix(in srgb, #9ab53c 22%, transparent);
-  color: #b6cc55;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--up) 12%, var(--panel));
+  color: var(--up);
 }
 
 .chevron {
-  width: 12px;
+  width: 14px;
   text-align: center;
   font-size: 13px;
   line-height: 1;
@@ -443,73 +520,85 @@ button:disabled {
 }
 
 .card-detail {
-  padding: 4px 14px 12px 52px;
-  border-top: 1px solid var(--line);
+  padding: 2px 18px 16px 56px;
 }
 
 .avatar {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   object-fit: cover;
+  box-shadow: 0 0 0 1px var(--line);
   flex: none;
 }
 
 .avatar-empty {
-  background: var(--panel-2);
+  background: var(--line);
 }
 
 .nick {
+  flex: none;
+  max-width: 180px;
   font-weight: 600;
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 40%;
 }
 
 .uid {
+  flex: none;
+  max-width: 120px;
   font-size: 12px;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 25%;
 }
 
 .channel {
+  color: var(--muted);
   text-decoration: none;
 }
 
 .channel:hover {
   color: var(--text);
+  text-decoration: underline;
 }
 
 .likes {
-  font-family: var(--mono);
+  display: inline-block;
+  min-width: 64px;
+  text-align: right;
   font-size: 14px;
-  font-weight: 600;
-  color: var(--brass);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+/* 하트만 색을 입혀 숫자는 차분하게 둔다. */
+.likes::first-letter {
+  color: var(--like);
 }
 
 .badge {
-  padding: 1px 7px;
-  border-radius: var(--radius);
+  padding: 2px 8px;
+  border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
+  line-height: 1.5;
   white-space: nowrap;
 }
 
 .badge.group-badge {
-  background: color-mix(in srgb, var(--group) 22%, transparent);
-  color: var(--group);
+  background: color-mix(in srgb, var(--group) 20%, var(--panel));
+  color: var(--ink);
 }
 
-/* 어드민이 확인한 직업. 금테로 '공식'이라는 느낌을 준다. */
+/* 어드민이 확인한 직업. */
 .badge.manual {
-  border: 1px solid var(--accent);
-  color: var(--brass);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--accent);
 }
 
 /* ---------- admin ---------- */
@@ -519,16 +608,16 @@ button:disabled {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  margin: 0 0 16px;
-  padding: 10px 14px;
-  border: 1px solid var(--accent);
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+  background: var(--accent-soft);
   font-size: 13px;
 }
 
 .adminbar strong {
-  color: var(--brass);
+  color: var(--accent);
 }
 
 .adminbar code {
@@ -540,10 +629,11 @@ button:disabled {
   display: grid;
   gap: 12px;
   margin-top: 14px;
-  padding: 14px;
-  border: 1px solid var(--accent);
+  padding: 16px;
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--panel-2);
+  background: var(--panel);
+  box-shadow: var(--shadow);
 }
 
 .label-editor-head {
@@ -554,7 +644,7 @@ button:disabled {
 }
 
 .label-editor-head strong {
-  color: var(--brass);
+  color: var(--accent);
 }
 
 .label-field {
@@ -573,8 +663,8 @@ button:disabled {
 .label-field select,
 .label-field input {
   padding: 7px 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
   background: var(--panel);
   min-width: 0;
 }
@@ -590,20 +680,21 @@ button:disabled {
   display: flex;
   margin: 0;
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
 .tri legend {
   float: left;
-  padding: 5px 8px;
-  background: var(--panel);
+  padding: 5px 9px;
+  background: var(--panel-2);
   font-size: 12px;
+  font-weight: 600;
 }
 
 .tri label {
-  padding: 5px 8px;
+  padding: 5px 9px;
   border-left: 1px solid var(--line);
   font-size: 12px;
   color: var(--muted);
@@ -611,8 +702,8 @@ button:disabled {
 }
 
 .tri label.on {
-  background: color-mix(in srgb, var(--accent) 28%, transparent);
-  color: var(--text);
+  background: var(--text);
+  color: #fff;
 }
 
 .tri input {
@@ -639,7 +730,7 @@ button:disabled {
 }
 
 .label-status.ok {
-  color: var(--brass);
+  color: var(--up);
 }
 
 .label-status.error {
@@ -658,37 +749,36 @@ button:disabled {
 }
 
 .badge.warn {
-  background: color-mix(in srgb, #c9a227 22%, transparent);
-  color: var(--brass);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  color: var(--accent);
   cursor: help;
 }
 
 /* 같이 고민 중인 직업. 정해진 게 아니라 물러나 있게 테두리만 둔다. */
 .badge.considering {
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   color: var(--muted);
   font-weight: 500;
 }
 
 .badge.debut {
-  background: color-mix(in srgb, #e6c46a 22%, transparent);
-  color: #e6c46a;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
-/* 자기소개 꼬리표 — 본인이 쓴 말이라 확인된 크루보다 한 단계 약하게. */
+/* 자기소개 꼬리표 — 본인이 쓴 말이라 크루보다 한 단계 약하게. */
 .badge.tag-self {
-  background: color-mix(in srgb, var(--text) 9%, transparent);
-  color: var(--text);
+  background: #eef0f3;
+  color: #3d4757;
   font-weight: 500;
 }
 
 .badge.tag-crew {
-  background: color-mix(in srgb, var(--accent) 30%, transparent);
-  color: var(--brass);
+  background: #e8eefc;
+  color: #2c4fa8;
 }
 
 .station-info {
-  font-family: var(--mono);
   font-size: 12px;
   color: var(--muted);
   white-space: nowrap;
@@ -702,41 +792,55 @@ button:disabled {
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
-  margin: -4px 0 14px;
+  margin: 0 0 16px;
 }
 
 .tagbar-label {
   font-size: 12px;
+  font-weight: 600;
   color: var(--muted);
-  margin-right: 2px;
+  margin-right: 4px;
   cursor: help;
 }
 
 .tag {
-  padding: 4px 10px;
+  padding: 4px 11px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--panel);
-  color: var(--muted);
+  color: var(--text);
   font-size: 12px;
 }
 
+.tag:hover {
+  background: var(--hover);
+}
+
 .tag em {
-  font-family: var(--mono);
   font-style: normal;
-  opacity: 0.7;
+  color: var(--muted);
   margin-left: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tag.tag-crew {
+  color: #2c4fa8;
 }
 
 .tag.active {
-  border-color: var(--brass);
-  color: var(--text);
-  background: color-mix(in srgb, var(--brass) 16%, var(--panel));
+  border-color: var(--text);
+  background: var(--text);
+  color: #fff;
+}
+
+.tag.active em {
+  color: #c9ced8;
 }
 
 .text {
   margin: 8px 0 0;
   font-size: 14px;
+  line-height: 1.7;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -745,9 +849,9 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  padding: 6px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
   background: var(--panel);
   font-size: 13px;
   color: var(--muted);
@@ -755,44 +859,36 @@ button:disabled {
 }
 
 .live:has(input:checked) {
-  border-color: var(--accent);
-  color: var(--text);
+  border-color: color-mix(in srgb, var(--up) 45%, transparent);
+  background: color-mix(in srgb, var(--up) 7%, var(--panel));
+  color: var(--up);
+  font-weight: 600;
+}
+
+.live input {
+  accent-color: var(--up);
 }
 
 /* 미끄러지는 줄이 이웃 줄에 가리지 않도록 위로 띄운다. */
 .card.is-moving {
-  position: relative;
   z-index: 1;
 }
 
 .photo {
-  margin-top: 8px;
+  margin-top: 10px;
   max-width: 220px;
   max-height: 160px;
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   object-fit: cover;
 }
 
 .card-foot {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 14px;
+  margin-top: 10px;
   font-size: 12px;
   color: var(--muted);
-}
-
-.assign select {
-  padding: 3px 6px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel-2);
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.assign select:hover {
-  color: var(--text);
 }
 
 .sr-only {
@@ -805,7 +901,11 @@ button:disabled {
 
 @media (max-width: 640px) {
   .app {
-    padding: 20px 12px 60px;
+    padding: 20px 16px 60px;
+  }
+
+  .topbar .brand h1 {
+    font-size: 22px;
   }
 
   .loader {
@@ -818,6 +918,31 @@ button:disabled {
 
   .search {
     width: 100%;
+  }
+
+  .stat {
+    min-width: 0;
+    padding-right: 12px;
+    margin-right: 4px;
+  }
+
+  .uid {
+    display: none;
+  }
+
+  .fanfilter {
+    flex-wrap: wrap;
+    width: 100%;
+    border-radius: var(--radius);
+  }
+
+  .fanfilter input[type='range'] {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .card-detail {
+    padding-left: 18px;
   }
 }
 
@@ -833,8 +958,8 @@ button:disabled {
 
 .seg {
   display: flex;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
@@ -847,21 +972,21 @@ button:disabled {
 }
 
 .seg button.on {
-  background: color-mix(in srgb, var(--accent) 20%, var(--panel));
-  color: var(--text);
+  background: var(--text);
+  color: #fff;
   font-weight: 600;
 }
 
 .gain-total {
-  font-family: var(--mono);
-  color: var(--brass);
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .chart-empty {
   margin: 0;
   padding: 22px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
   background: var(--panel-2);
   color: var(--muted);
   font-size: 13px;
@@ -879,20 +1004,18 @@ button:disabled {
   overflow: visible;
 }
 
-/* 눈금선은 표면 바로 위 실선 한 겹. 축은 그보다 한 단계만 진하게. */
 .grid-line {
   stroke: var(--line);
   stroke-width: 1;
 }
 
 .axis-line {
-  stroke: color-mix(in srgb, var(--muted) 55%, transparent);
+  stroke: var(--line-strong);
   stroke-width: 1;
 }
 
 .tick {
   fill: var(--muted);
-  font-family: var(--mono);
   font-size: 10px;
   font-variant-numeric: tabular-nums;
 }
@@ -904,11 +1027,11 @@ button:disabled {
 }
 
 .bar {
-  fill: var(--brass);
+  fill: var(--accent);
 }
 
 .bar.is-down {
-  fill: var(--slate);
+  fill: var(--down);
 }
 
 .bar.is-hover {
@@ -924,23 +1047,24 @@ button:disabled {
   align-items: baseline;
   padding: 5px 9px;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--bg);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  box-shadow: var(--shadow);
   font-size: 12px;
   white-space: nowrap;
   pointer-events: none;
 }
 
 .cell-gain {
-  color: var(--brass);
-  font-family: var(--mono);
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .chart-table-wrap {
   max-height: 320px;
   overflow: auto;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
 }
 
 .chart-table {
@@ -951,7 +1075,7 @@ button:disabled {
 
 .chart-table th,
 .chart-table td {
-  padding: 5px 10px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--line);
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -963,17 +1087,11 @@ button:disabled {
   background: var(--panel-2);
   color: var(--muted);
   font-weight: 600;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-}
-
-.chart-table td:not(.cell-nick) {
-  font-family: var(--mono);
+  font-size: 12px;
 }
 
 .chart-table .cell-nick {
   text-align: left;
-  font-family: inherit;
 }
 
 /* ---------- 개인 증가량 그래프 ---------- */
@@ -994,21 +1112,22 @@ button:disabled {
 }
 
 .chip {
-  padding: 5px 10px;
+  padding: 4px 11px;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel-2);
+  border-radius: 999px;
+  background: var(--panel);
   color: var(--muted);
   font-size: 12px;
 }
 
 .chip:hover {
   color: var(--text);
+  background: var(--hover);
 }
 
 .chip.on {
   border-color: var(--chip);
-  background: color-mix(in srgb, var(--chip) 22%, var(--panel));
+  background: color-mix(in srgb, var(--chip) 16%, var(--panel));
   color: var(--text);
   font-weight: 600;
 }
@@ -1025,49 +1144,41 @@ button:disabled {
   font-weight: 700;
 }
 
-
 .topbar .brand {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.brand-logo {
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  flex: none;
-}
-
 /*
- * 컷 라인. ----- 119위 컷 · 4개 차이 ----- 처럼 가운데 글자를 두고 좌우로 선을 뻗는다.
- * 굵은 점선에 발광을 얹고 천천히 흐르게 해서, 목록을 훑다가 지나치지 않게 한다.
- * 면으로 채워 봤더니 카드처럼 보여서 오히려 목록에 섞였다.
+ * 컷 라인. 가운데 글자를 두고 좌우로 점선을 뻗는다.
+ * 천천히 흐르게 해서 목록을 훑다가 지나치지 않게 한다.
  */
 .cutline {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 20px 0;
+  padding: 14px 16px;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--danger) 4%, var(--panel));
 }
 
-/* 좌우로 뻗는 선. flex 항목이라 가운데 글자 길이에 맞춰 알아서 늘어난다. */
 .cutline::before,
 .cutline::after {
   content: '';
   flex: 1;
-  height: 3px;
-  background: repeating-linear-gradient(90deg, var(--danger) 0 13px, transparent 13px 24px);
-  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--danger) 75%, transparent));
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--danger) 0 10px, transparent 10px 18px);
   animation: cut-march 1.8s linear infinite;
 }
 
 @keyframes cut-march {
   to {
-    background-position: 24px 0;
+    background-position: 18px 0;
   }
 }
 
-/* 흐르는 효과는 어디까지나 장식이다. 싫다고 한 사람에게는 멈춰 있어야 한다. */
+/* 흐르는 효과는 장식이다. 싫다고 한 사람에게는 멈춰 있어야 한다. */
 @media (prefers-reduced-motion: reduce) {
   .cutline::before,
   .cutline::after {
@@ -1076,42 +1187,37 @@ button:disabled {
 }
 
 .cutline-label {
-  padding: 4px 11px;
-  border-radius: var(--radius);
+  padding: 3px 10px;
+  border-radius: 999px;
   background: var(--danger);
-  color: var(--bg);
-  font-family: var(--mono);
-  font-size: 13px;
+  color: #fff;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.12em;
   white-space: nowrap;
 }
 
 .cutline-gap {
-  font-family: var(--mono);
   font-size: 13px;
   font-weight: 700;
-  color: var(--brass);
+  color: var(--danger);
   white-space: nowrap;
 }
+
 /* 컷 위아래가 동점이면 좋아요가 아니라 작성 시각이 순위를 가른 것이라 따로 알린다. */
 .cutline-gap.is-tie {
-  padding: 3px 9px;
-  border: 1px solid var(--brass);
-  border-radius: var(--radius);
-  color: var(--brass);
+  padding: 2px 9px;
+  border: 1px solid var(--danger);
+  border-radius: 999px;
 }
 
-/* 시즌2 참여자 표시. 분류 배지와 색이 겹치지 않게 청록 계열로 뺀다. */
 .badge.season2 {
-  background: color-mix(in srgb, #25d7d7 22%, transparent);
-  color: #6fe3e3;
+  background: #e0f5f5;
+  color: #0e6f6f;
 }
 
-/* 시즌1 표시. 시즌2(청록)와 나란히 붙을 수 있어 확실히 다른 색을 준다. */
 .badge.season1 {
-  background: color-mix(in srgb, #9d8bff 24%, transparent);
-  color: #b9adff;
+  background: #eeeafe;
+  color: #5b45c9;
 }
 
 /* 애청자 수 필터 --------------------------------------------------------- */
@@ -1120,8 +1226,10 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 10px;
-  border-left: 1px solid var(--line);
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
 }
 
 .fanfilter-label {
@@ -1129,6 +1237,7 @@ button:disabled {
   align-items: baseline;
   gap: 5px;
   font-size: 12px;
+  font-weight: 600;
   color: var(--muted);
   white-space: nowrap;
 }
@@ -1136,12 +1245,10 @@ button:disabled {
 /* 직접 적는 칸. 슬라이더로 못 세우는 딱 떨어지는 수를 넣기 위한 것. */
 .fanfilter-num {
   width: 68px;
-  padding: 3px 6px;
-  background: var(--panel-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  color: var(--brass);
-  font-family: var(--mono);
+  padding: 2px 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -1158,14 +1265,13 @@ button:disabled {
   white-space: nowrap;
 }
 
-/* 슬라이더. 기본 모양(둥근 손잡이)을 걷어내고 조준경 눈금처럼 각지게 세운다.
-   --fill 은 App 에서 넣어 주는 현재 위치(%)로, 지나온 구간을 황동색으로 채운다. */
+/* 슬라이더. --fill 은 App 에서 넣어 주는 현재 위치(%)로, 지나온 구간을 채운다. */
 .fanfilter input[type='range'] {
   --fill: 0%;
   -webkit-appearance: none;
   appearance: none;
-  width: 220px;
-  height: 20px;
+  width: 180px;
+  height: 18px;
   background: transparent;
   cursor: pointer;
 }
@@ -1176,67 +1282,50 @@ button:disabled {
 }
 
 .fanfilter input[type='range']::-webkit-slider-runnable-track {
-  height: 6px;
-  background: linear-gradient(
-    to right,
-    var(--brass) 0 var(--fill),
-    var(--panel-2) var(--fill) 100%
-  );
-  border: 1px solid var(--line);
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--text) 0 var(--fill), var(--line) var(--fill) 100%);
 }
 
 .fanfilter input[type='range']::-moz-range-track {
-  height: 6px;
-  background: var(--panel-2);
-  border: 1px solid var(--line);
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
 }
 
 .fanfilter input[type='range']::-moz-range-progress {
-  height: 6px;
-  background: var(--brass);
+  height: 4px;
+  border-radius: 999px;
+  background: var(--text);
 }
 
-/* 손잡이 — 가늠쇠 모양의 납작한 날. 가운데 어두운 홈으로 정확한 위치를 짚는다. */
 .fanfilter input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 9px;
-  height: 20px;
-  margin-top: -8px;
-  background: var(--brass);
-  background-image: linear-gradient(
-    to bottom,
-    transparent calc(50% - 1px),
-    var(--bg) calc(50% - 1px) calc(50% + 1px),
-    transparent calc(50% + 1px)
-  );
-  border: 1px solid var(--bg);
-  border-radius: 1px;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border: 2px solid var(--text);
+  border-radius: 50%;
+  background: var(--panel);
 }
 
 .fanfilter input[type='range']::-moz-range-thumb {
-  width: 9px;
-  height: 20px;
-  background: var(--brass);
-  background-image: linear-gradient(
-    to bottom,
-    transparent calc(50% - 1px),
-    var(--bg) calc(50% - 1px) calc(50% + 1px),
-    transparent calc(50% + 1px)
-  );
-  border: 1px solid var(--bg);
-  border-radius: 1px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--text);
+  border-radius: 50%;
+  background: var(--panel);
 }
 
 .fanfilter input[type='range']:focus-visible {
-  outline: 1px solid var(--brass);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
 /* 남은 사람 수. 값이 없을 때도 자리를 차지해 옆의 검색창이 밀리지 않게 한다. */
 .fanfilter-note {
-  min-width: 148px;
+  min-width: 132px;
   font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
 }
-
