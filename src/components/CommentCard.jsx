@@ -26,7 +26,6 @@ function RankDelta({ move, hasSnapshot }) {
 function CommentCard({
   comment,
   color,
-  showGroupName,
   groupName,
   selected,
   onSelect,
@@ -55,8 +54,8 @@ function CommentCard({
         )}
 
         <span className="nick">{comment.nick}</span>
-        {/* 직업을 여러 개 고른 사람은 어느 탭에서든 고른 직업을 다 보여 준다. */}
-        {(showGroupName || comment.extraClasses?.length > 0) && groupName && (
+        {/* 목록에는 대표 직업 하나만. 나머지 직업은 오른쪽 자세히 보기에 있다. */}
+        {groupName && (
           <span
             className="badge group-badge"
             style={comment.classColor ? { '--group': comment.classColor } : undefined}
@@ -64,11 +63,6 @@ function CommentCard({
             {groupName}
           </span>
         )}
-        {comment.extraClasses?.map((c) => (
-          <span key={c.id} className="badge group-badge" style={{ '--group': c.color }}>
-            {c.name}
-          </span>
-        ))}
 
         <span className="likes">♥ {comment.likes.toLocaleString()}</span>
       </button>

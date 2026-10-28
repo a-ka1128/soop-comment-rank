@@ -98,7 +98,7 @@ export default function App() {
   const debutSection = useMemo(() => {
     if (!debut) return null
     const items = uniqueComments([...classifyByClass(debut.comments, labels).values()].flat()).map(
-      (c) => ({ ...c, postNo: debut.postNo }),
+      (c) => ({ ...c, postNo: debut.postNo, debut: true }),
     )
     return {
       id: DEBUT_TAB,
@@ -814,7 +814,6 @@ export default function App() {
                       move={moves.get(activeSection.id)?.get(comment.id)}
                       hasSnapshot={!!prevRanksRef.current}
                       color={colorOf(comment)}
-                      showGroupName={grouped && mixedTab}
                       groupName={groupNameById[comment.groupId]}
                       selected={comment.id === selected?.id}
                       onSelect={setSelectedId}

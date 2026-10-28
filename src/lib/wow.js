@@ -265,6 +265,11 @@ export function crewsOf(userId, label) {
  * @returns {Array<{id: string, name: string, hint: string, kind: 'self'|'crew'}>}
  */
 export function tagsOf(comment, label) {
+  // 데뷔 글 댓글은 와우를 처음 하는 새 와튜버라, 다른 꼬리표 없이 '와우 처음' 하나만 단다.
+  if (comment.debut) {
+    const t = SELF_TAGS.find((s) => s.id === 'newbie')
+    return [{ id: t.id, name: t.name, hint: '뉴 와튜버 데뷔 글에 댓글을 단 사람', kind: 'self' }]
+  }
   const text = comment.text || ''
   const removed = TAG_FIXES[comment.userId] ?? []
   const forced = label?.tags ?? {}
