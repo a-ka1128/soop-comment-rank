@@ -322,16 +322,24 @@ export default function App() {
     [fans, appliedMinFans],
   )
 
-  /** 직업별 인원. kept 는 애청자 하한을 넘긴 사람, total 은 신청한 전체. */
+  /**
+   * 직업별 인원. 대표 직업(처음 고른 직업)으로만 센다 — 직업을 여러 개 고른 사람을 칸마다
+   * 세면 합이 신청자보다 커진다. kept 는 애청자 하한을 넘긴 사람, total 은 신청한 전체,
+   * also 는 대표는 아니지만 이 직업도 같이 고른 사람(애청자 하한을 넘긴 사람만).
+   */
   const classCounts = useMemo(
     () =>
-      sections.map((s) => ({
-        id: s.id,
-        name: s.name,
-        color: s.color,
-        total: s.items.length,
-        kept: applyCut(s.items).length,
-      })),
+      sections.map((s) => {
+        const primary = s.items.filter((c) => c.groupId === s.id)
+        return {
+          id: s.id,
+          name: s.name,
+          color: s.color,
+          total: primary.length,
+          kept: applyCut(primary).length,
+          also: applyCut(s.items.filter((c) => c.groupId !== s.id)).length,
+        }
+      }),
     [sections, applyCut],
   )
   const maxClassCount = Math.max(1, ...classCounts.map((s) => s.kept))
@@ -648,6 +656,7 @@ export default function App() {
                   {appliedMinFans > 0
                     ? `즐찾 ${appliedMinFans.toLocaleString()}명 이상 / 전체 신청`
                     : '전체 신청'}
+                  {' · 대표 직업 기준'}
                 </span>
               </h2>
               <ul>
@@ -670,6 +679,14 @@ export default function App() {
                       <span className="cc-bar" aria-hidden="true">
                         <span style={{ width: `${(s.kept / maxClassCount) * 100}%` }} />
                       </span>
+                      {s.also > 0 && (
+                        <span
+                          className="cc-also"
+                          title={`대표 직업은 따로 있고 ${s.name}도 같이 고민 중인 사람`}
+                        >
+                          +{s.also} 고민 중
+                        </span>
+                      )}
                     </button>
                   </li>
                 ))}
