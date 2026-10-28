@@ -24,7 +24,6 @@ export default function CommentDetail({
   admin,
   onSaveLabel,
   fanCount,
-  joinedAt,
   alsoDebut,
   onClose,
 }) {
@@ -84,10 +83,6 @@ export default function CommentDetail({
         <div>
           <dt>즐겨찾기</dt>
           <dd>{fanCount != null ? fanCount.toLocaleString() : '—'}</dd>
-        </div>
-        <div title="SOOP 방송국 가입일 — 데뷔일과 다를 수 있습니다">
-          <dt>방송국 가입</dt>
-          <dd>{joinedAt ? joinedAt.slice(0, 7).replace('-', '.') : '—'}</dd>
         </div>
       </dl>
 

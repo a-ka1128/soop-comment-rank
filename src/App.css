@@ -344,6 +344,103 @@ button:disabled {
   resize: vertical;
 }
 
+/* ---------- 직업별 인원 ---------- */
+
+.class-counts {
+  margin-bottom: 20px;
+  padding: 16px 20px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.class-counts h2 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* 한 칸 = 이름 · 숫자, 그 아래 막대. 폭에 따라 다섯 칸에서 두 칸까지 접힌다. */
+.class-counts ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.class-counts button {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 4px 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  text-align: left;
+}
+
+.class-counts button:hover {
+  background: var(--hover);
+}
+
+.class-counts button.on {
+  border-color: color-mix(in srgb, var(--group) 55%, var(--line));
+  background: color-mix(in srgb, var(--group) 10%, var(--panel));
+}
+
+.cc-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+}
+
+.cc-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cc-num strong {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.cc-num span {
+  margin-left: 3px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.cc-bar {
+  grid-column: 1 / -1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.cc-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--group);
+  /* 흰색에 가까운 사제 막대도 보이도록 */
+  box-shadow: inset 0 0 0 1px rgba(16, 24, 40, 0.12);
+  transition: width 0.25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-bar span {
+    transition: none;
+  }
+}
+
 /* ---------- tabs ---------- */
 
 .tabs {
@@ -539,7 +636,7 @@ button:disabled {
 
 .detail-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   margin: 18px 0 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
@@ -1010,6 +1107,14 @@ button:disabled {
 
 .tag.tag-crew {
   color: #2c4fa8;
+}
+
+/* 뉴 와튜버 데뷔. 꼬리표가 아니라 다른 글로 넘어가는 칩이라 금빛으로 구분한다. */
+.tag.tag-debut {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .tag.active {

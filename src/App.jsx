@@ -55,8 +55,6 @@ export default function App() {
 
   /** userId -> 애청자 수. null 은 '알 수 없음'이고, 그 사람은 걸러 내지 않는다. */
   const [fans, setFans] = useState(() => new Map())
-  /** userId -> 방송국 가입일('YYYY-MM-DD'). 애청자 수와 같은 요청에서 같이 온다. */
-  const [joined, setJoined] = useState(() => new Map())
   const [fansLoading, setFansLoading] = useState(false)
   const [minFans, setMinFans] = useState(MIN_FANS_RULE)
   /** 실제로 목록에 적용된 하한. 손잡이를 놓거나 잠깐 멈췄을 때 따라온다. */
@@ -242,11 +240,6 @@ export default function App() {
           for (const [id, info] of partial) next.set(id, info.n)
           return next
         })
-        setJoined((prev) => {
-          const next = new Map(prev)
-          for (const [id, info] of partial) next.set(id, info.j)
-          return next
-        })
       },
     })
       .catch(() => {})
@@ -322,6 +315,20 @@ export default function App() {
     },
     [fans, appliedMinFans],
   )
+
+  /** 직업별 인원. kept 는 애청자 하한을 넘긴 사람, total 은 신청한 전체. */
+  const classCounts = useMemo(
+    () =>
+      sections.map((s) => ({
+        id: s.id,
+        name: s.name,
+        color: s.color,
+        total: s.items.length,
+        kept: applyCut(s.items).length,
+      })),
+    [sections, applyCut],
+  )
+  const maxClassCount = Math.max(1, ...classCounts.map((s) => s.kept))
 
   // 데뷔 글은 이제 막 데뷔하는 사람들이라 즐찾 1000 조건을 걸 대상이 아니다.
   const cutItems = useMemo(
@@ -625,6 +632,37 @@ export default function App() {
 
           {exportOpen && exportSections.length > 0 && <NicknameExport sections={exportSections} />}
 
+          {/* 직업별 인원. 애청자 하한을 넘긴 사람 수가 크게, 신청한 전체는 옆에 작게. */}
+          {grouped && (
+            <section className="class-counts" aria-label="직업별 인원">
+              <h2>직업별 인원</h2>
+              <ul>
+                {classCounts.map((s) => (
+                  <li key={s.id} style={{ '--group': s.color }}>
+                    <button
+                      type="button"
+                      className={activeTab === s.id ? 'on' : ''}
+                      onClick={() => setActiveTab(s.id)}
+                      title={`${s.name} 보기`}
+                    >
+                      <span className="cc-name">
+                        <span className="dot" aria-hidden="true" />
+                        {s.name}
+                      </span>
+                      <span className="cc-num">
+                        <strong>{s.kept}</strong>
+                        {s.kept !== s.total && <span>/ {s.total}</span>}
+                      </span>
+                      <span className="cc-bar" aria-hidden="true">
+                        <span style={{ width: `${(s.kept / maxClassCount) * 100}%` }} />
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <nav className="tabs">
             {grouped && (
               <>
@@ -634,19 +672,8 @@ export default function App() {
                   onClick={() => setActiveTab(ALL_TAB)}
                   style={{ '--group': NEUTRAL_COLOR }}
                 >
-                  전체 <em>{data.comments.length}</em>
+                  전체
                 </button>
-                {debutSection && (
-                  <button
-                    type="button"
-                    className={activeTab === DEBUT_TAB ? 'active' : ''}
-                    onClick={() => setActiveTab(DEBUT_TAB)}
-                    style={{ '--group': DEBUT_COLOR }}
-                    title="「리얼 뉴 와튜버 데뷔 하기」 글의 댓글"
-                  >
-                    뉴 와튜버 데뷔 <em>{debutSection.items.length}</em>
-                  </button>
-                )}
                 {sections.map((s) => (
                   <button
                     type="button"
@@ -655,7 +682,7 @@ export default function App() {
                     onClick={() => setActiveTab(s.id)}
                     style={{ '--group': s.color }}
                   >
-                    {s.name} <em>{s.items.length}</em>
+                    {s.name}
                   </button>
                 ))}
               </>
@@ -707,7 +734,7 @@ export default function App() {
             </label>
             </div>
 
-          {tagCounts.length > 0 && (
+          {(tagCounts.length > 0 || debutSection) && (
             <div className="tagbar">
               <span
                 className="tagbar-label"
@@ -715,6 +742,17 @@ export default function App() {
               >
                 자기소개
               </span>
+              {/* 데뷔 글은 다른 글이라 꼬리표가 아니라 목록 자체를 바꾼다. 다시 누르면 전체로. */}
+              {debutSection && (
+                <button
+                  type="button"
+                  className={`tag tag-debut${activeTab === DEBUT_TAB ? ' active' : ''}`}
+                  title="「리얼 뉴 와튜버 데뷔 하기」 글에 댓글을 단 사람"
+                  onClick={() => setActiveTab((v) => (v === DEBUT_TAB ? ALL_TAB : DEBUT_TAB))}
+                >
+                  뉴 와튜버 데뷔 <em>{debutSection.items.length}</em>
+                </button>
+              )}
               {tagCounts.map((t) => (
                 <button
                   type="button"
@@ -782,7 +820,6 @@ export default function App() {
               admin={isEditing}
               onSaveLabel={saveLabelFor}
               fanCount={selected ? fans.get(selected.userId) : undefined}
-              joinedAt={selected ? joined.get(selected.userId) : undefined}
               alsoDebut={!!selected && activeTab !== DEBUT_TAB && debutUserIds.has(selected.userId)}
               onClose={closeDetail}
             />
