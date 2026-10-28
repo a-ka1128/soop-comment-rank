@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import NicknameExport from './components/NicknameExport'
 import CommentCard from './components/CommentCard'
+import CommentDetail from './components/CommentDetail'
 import PersonChart from './components/PersonChart'
 import { fetchAllComments, fetchPost, postUrl } from './lib/soop'
 import { FAN_MAX, FAN_STEP, loadFanCounts } from './lib/fans'
@@ -44,6 +45,9 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState(ALL_TAB)
   const [query, setQuery] = useState('')
+  // 목록에서 고른 댓글. 옆 패널(좁은 화면에선 시트)에 자세히 뜬다.
+  const [selectedId, setSelectedId] = useState(null)
+  const closeDetail = useCallback(() => setSelectedId(null), [])
   const [exportOpen, setExportOpen] = useState(false)
 
   const [personOpen, setPersonOpen] = useState(false)
@@ -508,6 +512,12 @@ export default function App() {
   )
   const isEditing = admin.route && !!admin.user
 
+  // 전체·데뷔 탭에서는 줄마다 그 사람의 직업 색을, 직업 탭에서는 탭의 색을 쓴다.
+  const mixedTab = activeTab === ALL_TAB || activeTab === DEBUT_TAB
+  const colorOf = (comment) =>
+    mixedTab ? (groupColorById[comment.groupId] ?? NEUTRAL_COLOR) : activeSection.color
+  const selected = selectedId ? visibleItems.find((c) => c.id === selectedId) : null
+
   return (
     <div className="app">
       <header className="topbar">
@@ -747,56 +757,63 @@ export default function App() {
             </div>
           )}
 
-          <main className="list" ref={listRef}>
-            {visibleItems.length === 0 && <p className="empty">표시할 댓글이 없습니다.</p>}
+          <div className={`board${selected ? ' has-selection' : ''}`}>
+            <main className="list" ref={listRef}>
+              {visibleItems.length === 0 && <p className="empty">표시할 댓글이 없습니다.</p>}
 
-            {visibleItems.map((comment, index) => {
-              const prev = visibleItems[index - 1]
-              const crossesCut =
-                CUT_RANK && prev && prev.rank <= CUT_RANK && comment.rank > CUT_RANK
-              // 컷 바로 위아래의 좋아요 차이. 지금 몇 개 차이로 갈리는지가
-              // 이 선을 보는 사람이 실제로 알고 싶은 숫자다.
-              const cutGap = cutInfo?.gap ?? 0
-              return (
-                <div key={comment.id}>
-                  {crossesCut && (
-                    <div className="cutline">
-                      <span className="cutline-label">{CUT_RANK}위 컷</span>
-                      {cutInfo && cutGap === 0 ? (
-                        // 동점이면 컷이 좋아요로 갈린 게 아니라 작성 시각으로 갈린 것이다.
-                        // "0개 차이"로 적으면 그 사실이 묻힌다.
-                        <span className="cutline-gap is-tie">
-                          동점 ♥{cutInfo.likes.toLocaleString()} — 작성 순서로 갈림
-                        </span>
-                      ) : (
-                        <span className="cutline-gap">♥{cutGap.toLocaleString()}개 차이</span>
-                      )}
-                    </div>
-                  )}
-                  <CommentCard
-                    comment={comment}
-                    bjId={data.bjId}
-                    postNo={comment.postNo ?? data.postNo}
-                    fanCount={fans.get(comment.userId)}
-                    joinedAt={joined.get(comment.userId)}
-                    alsoDebut={activeTab !== DEBUT_TAB && debutUserIds.has(comment.userId)}
-                    move={moves.get(activeSection.id)?.get(comment.id)}
-                    hasSnapshot={!!prevRanksRef.current}
-                    color={
-                      activeTab === ALL_TAB || activeTab === DEBUT_TAB
-                        ? (groupColorById[comment.groupId] ?? NEUTRAL_COLOR)
-                        : activeSection.color
-                    }
-                    showGroupName={grouped && (activeTab === ALL_TAB || activeTab === DEBUT_TAB)}
-                    groupName={groupNameById[comment.groupId]}
-                    label={labels[comment.userId]}
-                    admin={isEditing}
-                    onSaveLabel={saveLabelFor}
-                  />
-                </div>
-              )
-            })}
-          </main>
+              {visibleItems.map((comment, index) => {
+                const prev = visibleItems[index - 1]
+                const crossesCut =
+                  CUT_RANK && prev && prev.rank <= CUT_RANK && comment.rank > CUT_RANK
+                // 컷 바로 위아래의 좋아요 차이. 지금 몇 개 차이로 갈리는지가
+                // 이 선을 보는 사람이 실제로 알고 싶은 숫자다.
+                const cutGap = cutInfo?.gap ?? 0
+                return (
+                  <div key={comment.id}>
+                    {crossesCut && (
+                      <div className="cutline">
+                        <span className="cutline-label">{CUT_RANK}위 컷</span>
+                        {cutInfo && cutGap === 0 ? (
+                          // 동점이면 컷이 좋아요로 갈린 게 아니라 작성 시각으로 갈린 것이다.
+                          // "0개 차이"로 적으면 그 사실이 묻힌다.
+                          <span className="cutline-gap is-tie">
+                            동점 ♥{cutInfo.likes.toLocaleString()} — 작성 순서로 갈림
+                          </span>
+                        ) : (
+                          <span className="cutline-gap">♥{cutGap.toLocaleString()}개 차이</span>
+                        )}
+                      </div>
+                    )}
+                    <CommentCard
+                      comment={comment}
+                      move={moves.get(activeSection.id)?.get(comment.id)}
+                      hasSnapshot={!!prevRanksRef.current}
+                      color={colorOf(comment)}
+                      showGroupName={grouped && mixedTab}
+                      groupName={groupNameById[comment.groupId]}
+                      selected={comment.id === selectedId}
+                      onSelect={setSelectedId}
+                    />
+                  </div>
+                )
+              })}
+            </main>
+
+            <CommentDetail
+              comment={selected}
+              bjId={data.bjId}
+              postNo={selected?.postNo ?? data.postNo}
+              color={selected ? colorOf(selected) : undefined}
+              groupName={selected ? groupNameById[selected.groupId] : undefined}
+              label={selected ? labels[selected.userId] : undefined}
+              admin={isEditing}
+              onSaveLabel={saveLabelFor}
+              fanCount={selected ? fans.get(selected.userId) : undefined}
+              joinedAt={selected ? joined.get(selected.userId) : undefined}
+              alsoDebut={!!selected && activeTab !== DEBUT_TAB && debutUserIds.has(selected.userId)}
+              onClose={closeDetail}
+            />
+          </div>
         </>
       )}
 

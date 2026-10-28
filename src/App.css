@@ -1,5 +1,5 @@
 .app {
-  max-width: 1040px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 36px 24px 96px;
 }
@@ -417,6 +417,171 @@ button:disabled {
   color: var(--muted);
 }
 
+/*
+ * 목록 | 상세. 목록은 순위와 사람만 짧게, 고르면 오른쪽 패널에 댓글과 정보가 뜬다.
+ * 상세는 스크롤을 따라 붙어 있어서 긴 목록 아래쪽을 골라도 눈을 옮길 필요가 없다.
+ */
+.board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.detail {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.detail.is-open {
+  border-top: 4px solid var(--group);
+}
+
+.detail-empty {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  border-style: dashed;
+  box-shadow: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.detail-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--line);
+  flex: none;
+}
+
+.detail-who {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-who h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  overflow-wrap: anywhere;
+}
+
+.detail-rank {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink, var(--muted));
+}
+
+.detail {
+  --ink: color-mix(in srgb, var(--group) 40%, var(--text));
+}
+
+.detail-close {
+  align-self: flex-start;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.detail-close:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.detail-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 18px 0 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.detail-stats > div {
+  padding: 10px 12px;
+}
+
+.detail-stats > div + div {
+  border-left: 1px solid var(--line);
+}
+
+.detail-stats dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.detail-stats dd {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-likes::first-letter {
+  color: var(--like);
+}
+
+.detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.detail .text {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+/* 좁은 화면에서는 옆자리가 없으니 상세를 화면을 덮는 시트로 띄운다. */
+@media (max-width: 860px) {
+  .board {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-empty {
+    display: none;
+  }
+
+  .detail.is-open {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    max-height: none;
+    border: 0;
+    border-top: 4px solid var(--group);
+    border-radius: 0;
+  }
+}
+
+@media (min-width: 861px) {
+  /* 옆에 붙어 있을 땐 닫기보다 다른 사람을 누르는 게 자연스러워 닫기를 물린다. */
+  .detail-close {
+    opacity: 0.6;
+  }
+}
+
 /* 목록 전체가 흰 판 하나. 줄은 그 안에서 얇은 선으로만 나뉜다. */
 .list {
   border: 1px solid var(--line);
@@ -470,13 +635,6 @@ button:disabled {
 
 .card-row:hover {
   background: var(--hover);
-}
-
-.card-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: auto;
 }
 
 .rank-no {
@@ -567,6 +725,7 @@ button:disabled {
 }
 
 .likes {
+  margin-left: auto;
   display: inline-block;
   min-width: 64px;
   text-align: right;

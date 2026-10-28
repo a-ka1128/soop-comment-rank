@@ -1,0 +1,171 @@
+import { useEffect } from 'react'
+import { channelUrl, commentUrl } from '../lib/soop'
+import { seasonMatch } from '../lib/season'
+import { tagsOf } from '../lib/wow'
+import LabelEditor from './LabelEditor'
+
+function seasonTitle(label, hit) {
+  return hit.via === 'nick'
+    ? `${label} 참가자 — 명단의 '${hit.name}' 와 닉네임이 같습니다`
+    : `${label} 참가자`
+}
+
+/**
+ * 목록에서 고른 한 사람의 자세한 정보와 댓글 전문.
+ * 넓은 화면에서는 목록 옆에 붙어 있고, 좁은 화면에서는 화면을 덮는 시트로 뜬다(App.css).
+ */
+export default function CommentDetail({
+  comment,
+  bjId,
+  postNo,
+  color,
+  groupName,
+  label,
+  admin,
+  onSaveLabel,
+  fanCount,
+  joinedAt,
+  alsoDebut,
+  onClose,
+}) {
+  // 시트로 떠 있을 때 Esc 로 닫는다. 넓은 화면에서도 선택 해제로 같은 뜻이다.
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  if (!comment) {
+    return (
+      <aside className="detail detail-empty">
+        <p>왼쪽 목록에서 사람을 누르면 자기소개 댓글과 자세한 정보가 여기 뜹니다.</p>
+      </aside>
+    )
+  }
+
+  const seasons = seasonMatch(comment)
+  const tags = tagsOf(comment, label)
+
+  return (
+    <aside
+      className="detail is-open"
+      style={{ '--group': color }}
+      aria-label={`${comment.nick} 자세히`}
+    >
+      <header className="detail-head">
+        {comment.profile ? (
+          <img className="detail-avatar" src={comment.profile} alt="" />
+        ) : (
+          <span className="detail-avatar avatar-empty" aria-hidden="true" />
+        )}
+        <div className="detail-who">
+          <span className="detail-rank">{comment.rank}위</span>
+          <h2>{comment.nick}</h2>
+          <span className="muted">{comment.userId}</span>
+        </div>
+        <button type="button" className="detail-close" onClick={onClose} aria-label="닫기">
+          ✕
+        </button>
+      </header>
+
+      <dl className="detail-stats">
+        <div>
+          <dt>좋아요</dt>
+          <dd className="detail-likes">♥ {comment.likes.toLocaleString()}</dd>
+        </div>
+        <div>
+          <dt>즐겨찾기</dt>
+          <dd>{fanCount != null ? fanCount.toLocaleString() : '—'}</dd>
+        </div>
+        <div title="SOOP 방송국 가입일 — 데뷔일과 다를 수 있습니다">
+          <dt>방송국 가입</dt>
+          <dd>{joinedAt ? joinedAt.slice(0, 7).replace('-', '.') : '—'}</dd>
+        </div>
+      </dl>
+
+      <div className="detail-badges">
+        {groupName && <span className="badge group-badge">{groupName}</span>}
+        {comment.alsoConsidering?.length > 0 && (
+          <span className="badge considering" title="같이 고민 중이라고 적은 직업">
+            +{comment.alsoConsidering.join('·')}
+          </span>
+        )}
+        {comment.manual && (
+          <span className="badge manual" title="어드민이 직업을 확인했습니다">
+            확인
+          </span>
+        )}
+        {alsoDebut && (
+          <span
+            className="badge debut"
+            title="「리얼 뉴 와튜버 데뷔 하기」 글에도 댓글을 달았습니다"
+          >
+            뉴 데뷔
+          </span>
+        )}
+        {seasons.season1 && (
+          <span className="badge season1" title={seasonTitle('시즌1', seasons.season1)}>
+            시즌1
+          </span>
+        )}
+        {seasons.season2 && (
+          <span className="badge season2" title={seasonTitle('시즌2', seasons.season2)}>
+            시즌2
+          </span>
+        )}
+        {tags.map((t) => (
+          <span key={t.id} className={`badge tag-${t.kind}`} title={t.hint}>
+            {t.name}
+          </span>
+        ))}
+        {comment.conflicts?.length > 0 && (
+          <span
+            className="badge warn"
+            title={`이 분류에도 걸립니다: ${comment.conflicts.join(', ')}`}
+          >
+            중복 {comment.conflicts.length}
+          </span>
+        )}
+      </div>
+
+      <p className="text">{comment.text}</p>
+
+      {comment.photo && (
+        <a href={comment.photo} target="_blank" rel="noreferrer noopener">
+          <img className="photo" src={comment.photo} alt="" loading="lazy" />
+        </a>
+      )}
+
+      <footer className="card-foot">
+        <a
+          href={commentUrl(bjId, postNo, comment.id)}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="channel"
+        >
+          댓글 원본 ↗
+        </a>
+        <a
+          href={channelUrl(comment.userId)}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="channel"
+        >
+          방송국 ↗
+        </a>
+        <span>{comment.date}</span>
+        {comment.replyCount > 0 && <span>답글 {comment.replyCount}</span>}
+      </footer>
+
+      {/* 사람을 바꾸면 편집 중이던 값이 따라오지 않도록 새로 만든다. */}
+      {admin && (
+        <LabelEditor
+          key={comment.userId}
+          userId={comment.userId}
+          label={label}
+          onSave={onSaveLabel}
+        />
+      )}
+    </aside>
+  )
+}
