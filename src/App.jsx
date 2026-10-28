@@ -6,7 +6,7 @@ import { fetchAllComments, fetchPost, postUrl } from './lib/soop'
 import { FAN_MAX, FAN_STEP, loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, rank } from './lib/groups'
 import { CUT_RANK, DEBUT_POST, TARGET_POST } from './lib/target'
-import { WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
+import { SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
 import { fetchLabels, saveLabel } from './lib/labels'
 import { useAdmin } from './lib/admin'
 import { useFlipReorder } from './hooks/useFlipReorder'
@@ -181,7 +181,13 @@ export default function App() {
         map.set(t.id, entry)
       }
     }
-    return [...map.values()]
+    // 자기소개 꼬리표는 SELF_TAGS 순서대로, 그 뒤에 크루를 사람 많은 순으로.
+    const order = new Map(SELF_TAGS.map((t, i) => [t.id, i]))
+    return [...map.values()].sort((a, b) => {
+      if (a.kind !== b.kind) return a.kind === 'self' ? -1 : 1
+      if (a.kind === 'self') return order.get(a.id) - order.get(b.id)
+      return b.count - a.count || a.name.localeCompare(b.name, 'ko')
+    })
   }, [activeSection, labels])
 
   // 갱신 직전 순위를 찍어 두기 위해, 화면에 그려진 최신 결과를 항상 들고 있는다.
@@ -635,7 +641,14 @@ export default function App() {
           {/* 직업별 인원. 애청자 하한을 넘긴 사람 수가 크게, 신청한 전체는 옆에 작게. */}
           {grouped && (
             <section className="class-counts" aria-label="직업별 인원">
-              <h2>직업별 인원</h2>
+              <h2>
+                직업별 인원
+                <span className="cc-legend">
+                  {appliedMinFans > 0
+                    ? `즐찾 ${appliedMinFans.toLocaleString()}명 이상 / 전체 신청`
+                    : '전체 신청'}
+                </span>
+              </h2>
               <ul>
                 {classCounts.map((s) => (
                   <li key={s.id} style={{ '--group': s.color }}>

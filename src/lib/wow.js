@@ -184,21 +184,23 @@ export function uniqueComments(list) {
  * 확인할 수 있는 건 본인이 쓴 말뿐이다. 그래서 '자기소개' 꼬리표라고 화면에 밝힌다.
  * 확인된 크루는 crews.js 에 따로 적는다.
  *
- * 순서가 화면에 붙는 순서다.
+ * 순서가 화면에 붙는 순서다(자기소개 줄과 줄마다 붙는 배지 모두). 크루는 이 뒤에 온다.
+ * 맨 앞의 '뉴 와튜버 데뷔' 칩은 꼬리표가 아니라 App 이 따로 붙인다.
  */
 export const SELF_TAGS = [
-  {
-    id: 'watuber',
-    name: '와튜버 데뷔',
-    hint: '와우(불타는 성전)로 방송을 시작했다고 적은 사람',
-    // '와트너'(와우 파트너 스트리머)는 와튜버 데뷔가 아니다 — 단즈가 그렇게 잘못 붙었다.
-    test: /와튜버\s*(로|로서)?\s*(방송\s*)?데뷔|와우로\s*(뒤늦게\s*)?(방송\s*)?데뷔|순혈\s*와튜버|와튜버\s*1기|와튜버\s*2기|와튜버로\s*데뷔/,
-  },
   {
     id: 'legacy70',
     name: '와점기 70렙',
     hint: '지난 불타는 성전 서버에서 70레벨을 찍었다고 적은 사람',
     test: /70\s*(렙|레벨|랩)|레거시|만렙\s*찍고\s*불뱀/,
+  },
+  {
+    id: 'legacy60',
+    name: '와점기 60렙',
+    hint: '지난 불타는 성전 서버에서 60레벨을 찍었다고 적은 사람',
+    // 그냥 '60렙'만 보면 하드코어 서버 60레벨까지 걸린다(그건 '하코 출신'). 서버 이름이
+    // 바로 앞에 있을 때만 잡는다.
+    test: /(불성|와점기|레거시|클래식)(?:(?!하코|하드코어)[^\n]){0,12}60\s*(렙|레벨|랩)/,
   },
   {
     id: 'hardcore',
@@ -207,16 +209,23 @@ export const SELF_TAGS = [
     test: /하코|하드코어|하트코어/,
   },
   {
+    id: 'newbie',
+    name: '와우 처음',
+    hint: '와우를 해 본 적이 없다고 적은 사람',
+    test: /(^|[^\d])0\s*시간|처음\s*(입니|이에|예요)|아예\s*(x|없|처음)|쌩\s*(뉴비|신입|처음)|찐\s*뉴비|생애\s*첫\s*와우|인생\s*첫\s*설치|와우.{0,8}해\s*본\s*적(이|도)\s*없|한\s*번도\s*(없|안\s*해)|뉴\s*와튜버|뉴걸|와린이/i,
+  },
+  {
     id: 'forevers',
     name: '와우포에버즈',
     hint: '와우포에버즈 소속이라고 적은 사람',
     test: /와우\s*포에버즈/,
   },
   {
-    id: 'newbie',
-    name: '와우 처음',
-    hint: '와우를 해 본 적이 없다고 적은 사람',
-    test: /(^|[^\d])0\s*시간|처음\s*(입니|이에|예요)|아예\s*(x|없|처음)|쌩\s*(뉴비|신입|처음)|찐\s*뉴비|생애\s*첫\s*와우|인생\s*첫\s*설치|와우.{0,8}해\s*본\s*적(이|도)\s*없|한\s*번도\s*(없|안\s*해)|뉴\s*와튜버|뉴걸|와린이/i,
+    id: 'watuber',
+    name: '와튜버',
+    hint: '와우(불타는 성전)로 방송을 시작했다고 적은 사람',
+    // '와트너'(와우 파트너 스트리머)는 와튜버 데뷔가 아니다 — 단즈가 그렇게 잘못 붙었다.
+    test: /와튜버\s*(로|로서)?\s*(방송\s*)?데뷔|와우로\s*(뒤늦게\s*)?(방송\s*)?데뷔|순혈\s*와튜버|와튜버\s*1기|와튜버\s*2기|와튜버로\s*데뷔/,
   },
 ]
 
@@ -229,9 +238,30 @@ export const TAG_FIXES = {
 }
 
 /**
+ * 한 사람의 크루. crews.js 에 조사해 둔 것(from: 'research') 중 어드민이 뺀 것을 지우고,
+ * 어드민이 직접 넣은 것(from: 'admin')을 더한다. 같은 이름은 한 번만.
+ *
+ * @returns {Array<{name: string, from: 'research'|'admin'}>}
+ */
+export function crewsOf(userId, label) {
+  const off = new Set(label?.crewsOff ?? [])
+  const out = []
+  const seen = new Set()
+  const add = (name, from) => {
+    if (seen.has(name)) return
+    seen.add(name)
+    out.push({ name, from })
+  }
+  for (const name of CREWS[userId] ?? []) if (!off.has(name)) add(name, 'research')
+  for (const name of label?.crews ?? []) add(name, 'admin')
+  return out
+}
+
+/**
  * @param {object} comment
- * @param {{tags?: Record<string, boolean>, crews?: string[]}} [label] 어드민 라벨.
- *   tags 의 true 는 글과 상관없이 붙이고 false 는 뗀다. 없는 꼬리표는 자동.
+ * @param {{tags?: Record<string, boolean>, crews?: string[], crewsOff?: string[]}} [label]
+ *   어드민 라벨. tags 의 true 는 글과 상관없이 붙이고 false 는 뗀다. 없는 꼬리표는 자동.
+ *   crewsOff 는 crews.js 에 조사해 둔 크루 중 어드민이 뺀 것.
  * @returns {Array<{id: string, name: string, hint: string, kind: 'self'|'crew'}>}
  */
 export function tagsOf(comment, label) {
@@ -246,13 +276,13 @@ export function tagsOf(comment, label) {
     hint: t.id in forced ? `${t.hint} — 어드민 확인` : t.hint,
     kind: 'self',
   }))
-  const crewNames = [...new Set([...(CREWS[comment.userId] ?? []), ...(label?.crews ?? [])])]
+  const crewNames = crewsOf(comment.userId, label).map((c) => c.name)
   const crews = crewNames.map((name) => ({
     id: `crew:${name}`,
     name,
-    hint: '어드민이 확인한 소속',
+    hint: '확인된 소속',
     kind: 'crew',
   }))
-  // 확인된 크루가 자기소개 꼬리표와 같은 이름이면 확인된 쪽만 남긴다.
-  return [...crews, ...self.filter((t) => !crewNames.includes(t.name))]
+  // 자기소개 꼬리표가 먼저, 크루가 뒤. 크루가 꼬리표와 같은 이름이면 크루 쪽만 남긴다.
+  return [...self.filter((t) => !crewNames.includes(t.name)), ...crews]
 }

@@ -356,10 +356,20 @@ button:disabled {
 }
 
 .class-counts h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
   margin: 0 0 10px;
   font-size: 13px;
   font-weight: 700;
   color: var(--muted);
+}
+
+/* 큰 숫자 / 작은 숫자가 무엇인지. 애청자 하한을 바꾸면 같이 바뀐다. */
+.cc-legend {
+  font-size: 12px;
+  font-weight: 500;
 }
 
 /* 한 칸 = 이름 · 숫자, 그 아래 막대. 폭에 따라 다섯 칸에서 두 칸까지 접힌다. */
@@ -999,6 +1009,83 @@ button:disabled {
 }
 
 .class-picks-note {
+  margin: 6px 0 0;
+}
+
+/* 크루 편집. 위에 입력칸과 추가, 아래에 지금 붙은 크루 칩. */
+.crew-add {
+  display: flex;
+  gap: 6px;
+}
+
+.crew-add input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+}
+
+.crew-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.crew-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px 3px 10px;
+  border-radius: 999px;
+  background: #e8eefc;
+  color: #2c4fa8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.crew-chip em {
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(44, 79, 168, 0.12);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.crew-chip button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 11px;
+}
+
+.crew-chip button:hover {
+  background: rgba(44, 79, 168, 0.16);
+}
+
+/* 뺀 조사 크루. 흐리게 두고 되살리기만 할 수 있다. */
+.crew-chip.is-off {
+  background: #eef0f3;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.crew-chip.is-off button:hover {
+  background: rgba(16, 24, 40, 0.08);
+}
+
+.crew-note {
   margin: 6px 0 0;
 }
 

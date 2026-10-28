@@ -12,7 +12,8 @@ const RTDB_URL = import.meta.env.VITE_RTDB_URL ?? ''
  *     cls: ['mage', 'priest'],             직업 id 목록(첫 번째가 대표). 'none' 이면 미분류.
  *                                          없으면 자동. 예전 라벨은 'mage' 처럼 하나짜리 문자열
  *     tags: { watuber: true, forevers: false },   true 붙임 / false 뗌. 없으면 자동
- *     crews: ['와우포에버즈'],              확인된 크루
+ *     crews: ['와우포에버즈'],              어드민이 넣은 크루
+ *     crewsOff: ['천타버스'],               crews.js 에 조사해 둔 크루 중 어드민이 뺀 것
  *   }
  *
  * 글이 아니라 사람(userId)에 붙인다. 같은 사람이 두 글에 댓글을 달아도 라벨은 하나다.
@@ -46,6 +47,8 @@ export function cleanLabel(label) {
   if (Object.keys(tags).length > 0) out.tags = tags
   const crews = [...new Set((label?.crews ?? []).map((c) => c.trim()).filter(Boolean))]
   if (crews.length > 0) out.crews = crews
+  const crewsOff = [...new Set((label?.crewsOff ?? []).map((c) => c.trim()).filter(Boolean))]
+  if (crewsOff.length > 0) out.crewsOff = crewsOff
   return Object.keys(out).length > 0 ? out : null
 }
 
