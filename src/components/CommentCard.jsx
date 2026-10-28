@@ -65,8 +65,8 @@ function CommentCard({
         )}
 
         {comment.lowFans != null && (
-          <span className="badge low-fans" title="애청자가 기준에 모자랍니다">
-            즐찾 {comment.lowFans.toLocaleString()} 부족
+          <span className="badge low-fans" title="즐찾이 1,000명 기준에 모자랍니다">
+            즐찾 {comment.lowFans.toLocaleString()}명
           </span>
         )}
 
