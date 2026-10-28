@@ -388,12 +388,20 @@ export default function App() {
   )
   const maxClassCount = Math.max(1, ...classCounts.map((s) => s.kept))
 
-  // 데뷔 글은 이제 막 데뷔하는 사람들이라 즐찾 1000 조건을 걸 대상이 아니다.
-  const cutItems = useMemo(
-    () =>
-      activeTab === DEBUT_TAB ? (activeSection?.items ?? []) : applyCut(activeSection?.items ?? []),
-    [applyCut, activeSection, activeTab],
-  )
+  /**
+   * 목록에는 애청자가 모자란 사람도 그대로 둔다. 숨기는 대신 줄에 lowFans(그 사람의 애청자 수)를
+   * 달아 노란 배지를 붙인다. 순위도 그대로다. 직업별 인원과 닉네임 추출은
+   * 여전히 기준을 넘긴 사람만 센다(applyCut).
+   * 데뷔 글은 이제 막 데뷔하는 사람들이라 즐찾 1000 조건을 걸 대상이 아니다.
+   */
+  const cutItems = useMemo(() => {
+    const items = activeSection?.items ?? []
+    if (activeTab === DEBUT_TAB || appliedMinFans === 0) return items
+    return items.map((c) => {
+      const count = fans.get(c.userId)
+      return count != null && count < appliedMinFans ? { ...c, lowFans: count } : c
+    })
+  }, [activeSection, activeTab, fans, appliedMinFans])
 
   /**
    * 검색은 자르는 게 아니라 찾는 것이다. 여기서는 순위를 다시 매기지 않는다 —
@@ -419,21 +427,17 @@ export default function App() {
    */
   const handlePos = Math.round(Math.min(minFans, FAN_MAX) / FAN_STEP) * FAN_STEP
 
-  /** 이 조건에서 몇 명이 남는지. 애청자 수를 모르는 사람은 남는 쪽에 넣는다(숨기지 않으므로). */
+  /** 이 탭에서 기준에 모자란 사람 수. 애청자 수를 모르는 사람은 모자란 쪽에 넣지 않는다. */
   const filterInfo = useMemo(() => {
     const items = activeSection?.items ?? []
-    let remaining = 0
+    let low = 0
     let unknown = 0
     for (const c of items) {
       const count = fans.get(c.userId)
-      if (count == null) {
-        unknown += 1
-        remaining += 1
-      } else if (count >= appliedMinFans) {
-        remaining += 1
-      }
+      if (count == null) unknown += 1
+      else if (count < appliedMinFans) low += 1
     }
-    return { remaining, unknown }
+    return { total: items.length, low, unknown }
   }, [activeSection, fans, appliedMinFans])
 
   /**
@@ -830,7 +834,9 @@ export default function App() {
                 placeholder="닉네임 · 내용 검색"
               />
             <label className="fanfilter">
-              <span className="fanfilter-label">애청자</span>
+              <span className="fanfilter-label" title="기준에 모자란 사람도 숨기지 않고 노란 배지로 표시합니다">
+                애청자 기준
+              </span>
               <input
                 type="range"
                 min="0"
@@ -856,9 +862,9 @@ export default function App() {
               <span className="fanfilter-note">
                 {fansLoading
                   ? '불러오는 중…'
-                  : `${filterInfo.remaining}명 남음` +
+                  : `${filterInfo.total}명 중 ${filterInfo.low}명 부족` +
                     (appliedMinFans > 0 && filterInfo.unknown > 0
-                      ? ` · 미확인 ${filterInfo.unknown}명 포함`
+                      ? ` · 미확인 ${filterInfo.unknown}명`
                       : '')}
               </span>
             </label>

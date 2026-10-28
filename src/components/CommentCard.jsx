@@ -64,6 +64,12 @@ function CommentCard({
           </span>
         )}
 
+        {comment.lowFans != null && (
+          <span className="badge low-fans" title="애청자가 기준에 모자랍니다">
+            즐찾 {comment.lowFans.toLocaleString()} 부족
+          </span>
+        )}
+
         <span className="likes">♥ {comment.likes.toLocaleString()}</span>
       </button>
     </article>

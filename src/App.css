@@ -1604,3 +1604,19 @@ button:disabled {
   color: var(--muted);
   white-space: nowrap;
 }
+
+/* 애청자가 기준에 모자란 줄. 숨기지 않고 노란 배지로만 알린다. */
+.badge.low-fans {
+  color: #8a5a00;
+  background: #fff1c2;
+  border: 1px solid #e6c46a;
+  font-weight: 700;
+}
+
+@media (prefers-color-scheme: dark) {
+  .badge.low-fans {
+    color: #f3d98a;
+    background: rgba(230, 196, 106, 0.16);
+    border-color: rgba(230, 196, 106, 0.5);
+  }
+}
