@@ -224,6 +224,8 @@ export const SELF_TAGS = [
     id: 'watuber',
     name: '와튜버',
     hint: '와우(불타는 성전)로 방송을 시작했다고 적은 사람',
+    // 와튜버는 동아리처럼 묶이는 이름이라 크루와 같은 파란 글씨로 그린다. 순서는 자기소개 쪽 그대로.
+    look: 'crew',
     // '와트너'(와우 파트너 스트리머)는 와튜버 데뷔가 아니다 — 단즈가 그렇게 잘못 붙었다.
     test: /와튜버\s*(로|로서)?\s*(방송\s*)?데뷔|와우로\s*(뒤늦게\s*)?(방송\s*)?데뷔|순혈\s*와튜버|와튜버\s*1기|와튜버\s*2기|와튜버로\s*데뷔/,
   },
@@ -262,32 +264,43 @@ export function crewsOf(userId, label) {
  * @param {{tags?: Record<string, boolean>, crews?: string[], crewsOff?: string[]}} [label]
  *   어드민 라벨. tags 의 true 는 글과 상관없이 붙이고 false 는 뗀다. 없는 꼬리표는 자동.
  *   crewsOff 는 crews.js 에 조사해 둔 크루 중 어드민이 뺀 것.
- * @returns {Array<{id: string, name: string, hint: string, kind: 'self'|'crew'}>}
+ * @returns {Array<{id: string, name: string, hint: string, kind: 'self'|'crew', look: 'self'|'crew'}>}
+ *   kind 는 순서를 정하고, look 은 색을 정한다.
  */
 export function tagsOf(comment, label) {
   // 데뷔 글 댓글은 와우를 처음 하는 새 와튜버라, 다른 꼬리표 없이 '와우 처음' 하나만 단다.
   if (comment.debut) {
     const t = SELF_TAGS.find((s) => s.id === 'newbie')
-    return [{ id: t.id, name: t.name, hint: '뉴 와튜버 데뷔 글에 댓글을 단 사람', kind: 'self' }]
+    return [
+      { id: t.id, name: t.name, hint: '뉴 와튜버 데뷔 글에 댓글을 단 사람', kind: 'self', look: 'self' },
+    ]
   }
   const text = comment.text || ''
   const removed = TAG_FIXES[comment.userId] ?? []
   const forced = label?.tags ?? {}
+  // 어드민이 꼬리표 이름(예: '와튜버')을 크루 칸에 적었으면 크루가 아니라 그 꼬리표로 친다.
+  // 그래야 꼬리표 줄에 같은 이름이 두 번 뜨지 않는다.
+  const allCrews = crewsOf(comment.userId, label).map((c) => c.name)
+  const asTag = new Set(allCrews)
   const self = SELF_TAGS.filter((t) =>
-    t.id in forced ? forced[t.id] : !removed.includes(t.id) && t.test.test(text),
+    t.id in forced
+      ? forced[t.id]
+      : asTag.has(t.name) || (!removed.includes(t.id) && t.test.test(text)),
   ).map((t) => ({
     id: t.id,
     name: t.name,
     hint: t.id in forced ? `${t.hint} — 어드민 확인` : t.hint,
     kind: 'self',
+    look: t.look ?? 'self',
   }))
-  const crewNames = crewsOf(comment.userId, label).map((c) => c.name)
-  const crews = crewNames.map((name) => ({
+  const selfNames = new Set(SELF_TAGS.map((t) => t.name))
+  const crews = allCrews.filter((name) => !selfNames.has(name)).map((name) => ({
     id: `crew:${name}`,
     name,
     hint: '확인된 소속',
     kind: 'crew',
+    look: 'crew',
   }))
-  // 자기소개 꼬리표가 먼저, 크루가 뒤. 크루가 꼬리표와 같은 이름이면 크루 쪽만 남긴다.
-  return [...self.filter((t) => !crewNames.includes(t.name)), ...crews]
+  // 자기소개 꼬리표가 먼저, 크루가 뒤.
+  return [...self, ...crews]
 }

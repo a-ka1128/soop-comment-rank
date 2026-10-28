@@ -771,7 +771,7 @@ export default function App() {
                 <button
                   type="button"
                   key={t.id}
-                  className={`tag tag-${t.kind}${tagFilter === t.id ? ' active' : ''}`}
+                  className={`tag tag-${t.look}${tagFilter === t.id ? ' active' : ''}`}
                   title={t.hint}
                   onClick={() => setTagFilter((v) => (v === t.id ? null : t.id))}
                 >

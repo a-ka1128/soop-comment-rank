@@ -129,7 +129,7 @@ export default function CommentDetail({
           </span>
         )}
         {tags.map((t) => (
-          <span key={t.id} className={`badge tag-${t.kind}`} title={t.hint}>
+          <span key={t.id} className={`badge tag-${t.look}`} title={t.hint}>
             {t.name}
           </span>
         ))}
