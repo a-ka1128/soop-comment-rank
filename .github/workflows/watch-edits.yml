@@ -1,0 +1,45 @@
+name: Watch comment edits
+
+on:
+  schedule:
+    # 5분마다. GitHub 스케줄은 이보다 촘촘하게 못 돌리고, 러너가 몰리면 몇 분 밀리기도 한다.
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 겹쳐 돌면 둘 다 같은 기준을 읽고 같은 수정을 두 번 알린다.
+concurrency:
+  group: watch-edits
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 지난 실행의 댓글 본문. 캐시 키는 덮어쓸 수 없어서 실행마다 새 키로 저장하고,
+      # 읽을 때는 접두사로 가장 최근 것을 가져온다.
+      - id: state
+        uses: actions/cache/restore@v4
+        with:
+          path: .watch-state
+          key: watch-edits-${{ github.run_id }}
+          restore-keys: watch-edits-
+
+      - run: node scripts/watch-edits.mjs
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      # 알림까지 성공했을 때만 기준을 갱신한다. 실패하면 다음 실행이 같은 수정을 다시 알린다.
+      - uses: actions/cache/save@v4
+        if: success()
+        with:
+          path: .watch-state
+          key: watch-edits-${{ github.run_id }}
