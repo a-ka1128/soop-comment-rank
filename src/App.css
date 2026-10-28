@@ -1493,18 +1493,22 @@ button:disabled {
   white-space: nowrap;
 }
 
-/* 애청자가 기준에 모자란 줄. 숨기지 않고 노란 배지로만 알린다. */
-.badge.low-fans {
-  color: #8a5a00;
-  background: #fff1c2;
-  border: 1px solid #e6c46a;
-  font-weight: 700;
+/* 애청자가 기준에 모자란 줄. 숨기지 않고, 줄 바탕을 옅은 노랑으로 깔고 각진 경고 표지를 단다.
+   직업 배지(둥근 알약)와 모양부터 달라서 한눈에 갈린다. */
+.card.is-low:not(.is-open) {
+  background: color-mix(in srgb, #f0b429 11%, var(--panel));
 }
 
-@media (prefers-color-scheme: dark) {
-  .badge.low-fans {
-    color: #f3d98a;
-    background: rgba(230, 196, 106, 0.16);
-    border-color: rgba(230, 196, 106, 0.5);
-  }
+.badge.low-fans {
+  padding: 2px 8px 2px 6px;
+  border-radius: 4px;
+  background: #f0b429;
+  color: #3d2800;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.badge.low-fans::before {
+  content: '⚠';
+  margin-right: 4px;
 }

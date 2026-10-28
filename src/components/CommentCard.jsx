@@ -34,7 +34,7 @@ function CommentCard({
 }) {
   return (
     <article
-      className={`card${selected ? ' is-open' : ''}`}
+      className={`card${selected ? ' is-open' : ''}${comment.lowFans != null ? ' is-low' : ''}`}
       style={{ '--group': color }}
       data-flip-id={comment.id}
     >
