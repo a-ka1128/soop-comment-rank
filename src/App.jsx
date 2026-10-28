@@ -9,6 +9,7 @@ import { CUT_RANK, DEBUT_POST, TARGET_POST } from './lib/target'
 import { SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
 import { fetchLabels, saveLabel } from './lib/labels'
 import { useAdmin } from './lib/admin'
+import { findEdits, loadTexts, saveTexts } from './lib/edits'
 import { useFlipReorder } from './hooks/useFlipReorder'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import './App.css'
@@ -22,10 +23,9 @@ const DEBUT_COLOR = '#e6c46a'
 const NEUTRAL_COLOR = '#a7a089'
 // 목록 옆에 상세 패널을 둘 자리가 있는 폭. App.css 의 860px 경계와 맞춘다.
 const WIDE_QUERY = '(min-width: 861px)'
-// 실측: 이런 신청 글은 45초 사이 상위 30개 중 32개의 좋아요가 움직인다.
-// 10초면 순위 변동이 눈에 보이면서 요청도 과하지 않다.
-const REFRESH_SEC = 10
-// 순위 변동 표시를 얼마나 붙들어 둘지. 10초마다 새로 그리면 화살표가 깜빡이고 지나가
+// 1분마다 다시 읽는다. 어드민 창에서는 이때 수정된 댓글도 같이 찾는다(lib/edits).
+const REFRESH_SEC = 60
+// 순위 변동 표시를 얼마나 붙들어 둘지. 갱신마다 새로 그리면 화살표가 깜빡이고 지나가
 // 무엇이 움직였는지 볼 틈이 없다. 다시 움직이지 않으면 이 시간까지 남긴다.
 const MOVE_TTL_MS = 5 * 60 * 1000
 
@@ -40,6 +40,15 @@ export default function App() {
    */
   const [labels, setLabels] = useState({})
   const admin = useAdmin()
+  // 어드민으로 로그인해 있을 때만 수정된 댓글을 찾고 알린다.
+  const watchEdits = admin.route && !!admin.user
+  /** 갱신 사이에 본문이 바뀐 댓글. 새것이 앞. 어드민이 확인하면 지운다. */
+  const [edits, setEdits] = useState([])
+  const [notifyPerm, setNotifyPerm] = useState(() =>
+    typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
+  )
+  /** 글 번호 -> (댓글 id -> 지난번 본문). */
+  const textsRef = useRef(new Map())
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(null)
   const [error, setError] = useState('')
@@ -73,7 +82,7 @@ export default function App() {
   const renderRef = useRef({ allSection: null, sections: [] })
   const listRef = useRef(null)
   const animateNextRef = useRef(false)
-  /** 이미 물어본 userId. 10초마다 갱신될 때 같은 사람을 다시 묻지 않기 위한 것. */
+  /** 이미 물어본 userId. 1분마다 갱신될 때 같은 사람을 다시 묻지 않기 위한 것. */
   const fansAskedRef = useRef(new Set())
 
   // 다룰 글이 하나로 정해져 있으므로 열자마자 불러온다.
@@ -199,15 +208,50 @@ export default function App() {
   })
 
   // 자동 갱신. 늘 켜져 있고 화면에는 따로 드러내지 않는다.
-  // 탭이 뒤에 있을 때는 쉬게 해서 헛된 요청을 보내지 않는다.
+  // 탭이 뒤에 있을 때는 쉬게 해서 헛된 요청을 보내지 않는다. 어드민 창은 예외 —
+  // 다른 일을 하는 동안에도 수정 알림이 와야 한다.
   const hasData = !!data
   useEffect(() => {
     if (!hasData) return
     const timer = setInterval(() => {
-      if (!document.hidden) refreshRef.current?.()
+      if (watchEdits || !document.hidden) refreshRef.current?.()
     }, REFRESH_SEC * 1000)
     return () => clearInterval(timer)
-  }, [hasData])
+  }, [hasData, watchEdits])
+
+  /**
+   * 새로 받은 댓글을 지난번 본문과 비교한다. 지난번은 이 창에서 마지막으로 본 것,
+   * 없으면 이 브라우저에 남겨 둔 것이다. 둘 다 없는 첫 방문은 기준만 잡는다.
+   */
+  useEffect(() => {
+    if (!watchEdits) return
+    const found = []
+    for (const post of [data, debut]) {
+      if (!post?.postNo) continue
+      const before = textsRef.current.get(post.postNo) ?? loadTexts(post.postNo)
+      if (before) {
+        for (const e of findEdits(before, post.comments)) {
+          found.push({ ...e, postNo: post.postNo, debut: post === debut, at: Date.now() })
+        }
+      }
+      textsRef.current.set(post.postNo, new Map(post.comments.map((c) => [String(c.id), c.text])))
+      saveTexts(post.postNo, post.comments)
+    }
+    if (found.length === 0) return
+    const key = (e) => `${e.postNo}:${e.id}`
+    const fresh = new Set(found.map(key))
+    setEdits((prev) => [...found, ...prev.filter((e) => !fresh.has(key(e)))])
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try {
+        new Notification(`수정된 댓글 ${found.length}개`, {
+          body: found.map((e) => e.nick).join(', '),
+          tag: 'comment-edit',
+        })
+      } catch {
+        // 알림을 못 띄워도 화면의 목록은 남는다.
+      }
+    }
+  }, [data, debut, watchEdits])
 
   /**
    * 손잡이를 끄는 동안 목록을 매번 다시 세우면, 줄이 사라질 때마다 아래 줄이
@@ -469,7 +513,7 @@ export default function App() {
   /**
    * 데뷔 글과 어드민 라벨은 곁가지라, 실패해도 오류를 띄우지 않는다.
    * 데뷔 글이 안 오면 탭만 안 그리고, 라벨이 안 오면 자동 판정 그대로 보인다.
-   * 라벨도 10초마다 같이 읽는다 — 어드민이 고친 게 열어 둔 화면에도 따라오게.
+   * 라벨도 갱신마다 같이 읽는다 — 어드민이 고친 게 열어 둔 화면에도 따라오게.
    */
   function loadDebut(signal) {
     fetchLabels({ signal })
@@ -531,7 +575,17 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   )
-  const isEditing = admin.route && !!admin.user
+  const isEditing = watchEdits
+
+  /** 알림에서 고른 댓글을 목록에서 펼친다. 필터에 가려 있으면 안 보이니 검색·꼬리표는 푼다. */
+  const openEdit = (e) => {
+    setActiveTab(e.debut ? DEBUT_TAB : ALL_TAB)
+    setTagFilter(null)
+    setQuery('')
+    setSelectedId(e.id)
+  }
+  const dismissEdit = (e) =>
+    setEdits((prev) => prev.filter((x) => !(x.postNo === e.postNo && x.id === e.id)))
 
   // 전체·데뷔 탭에서는 줄마다 그 사람의 직업 색을, 직업 탭에서는 탭의 색을 쓴다.
   const mixedTab = activeTab === ALL_TAB || activeTab === DEBUT_TAB
@@ -588,6 +642,51 @@ export default function App() {
                 </button>
               </>
             )}
+          </div>
+        )}
+
+        {watchEdits && (
+          <div className="edit-alerts">
+            <div className="edit-alerts-head">
+              <strong>수정된 댓글 {edits.length}</strong>
+              <span className="muted">{REFRESH_SEC / 60}분마다 본문을 비교합니다.</span>
+              <span className="spacer" />
+              {notifyPerm === 'default' && (
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => Notification.requestPermission().then(setNotifyPerm)}
+                >
+                  브라우저 알림 켜기
+                </button>
+              )}
+              {edits.length > 0 && (
+                <button type="button" className="ghost" onClick={() => setEdits([])}>
+                  모두 지우기
+                </button>
+              )}
+            </div>
+            {edits.map((e) => (
+              <div className="edit-item" key={`${e.postNo}:${e.id}`}>
+                <div className="edit-item-head">
+                  <button type="button" className="edit-nick" onClick={() => openEdit(e)}>
+                    {e.nick}
+                  </button>
+                  <span className="muted">
+                    {new Date(e.at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                    {e.debut ? ' · 데뷔 글' : ''}
+                  </span>
+                  <span className="spacer" />
+                  <button type="button" className="ghost" onClick={() => dismissEdit(e)}>
+                    지우기
+                  </button>
+                </div>
+                <div className="edit-diff">
+                  <p className="edit-before">{e.before}</p>
+                  <p className="edit-after">{e.after}</p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

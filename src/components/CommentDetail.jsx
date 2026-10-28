@@ -105,11 +105,6 @@ export default function CommentDetail({
             +{comment.alsoConsidering.join('·')}
           </span>
         )}
-        {comment.manual && (
-          <span className="badge manual" title="어드민이 직업을 확인했습니다">
-            확인
-          </span>
-        )}
         {alsoDebut && (
           <span
             className="badge debut"
