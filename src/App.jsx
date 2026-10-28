@@ -3,7 +3,7 @@ import NicknameExport from './components/NicknameExport'
 import CommentCard from './components/CommentCard'
 import CommentDetail from './components/CommentDetail'
 import { fetchAllComments, fetchPost, postUrl } from './lib/soop'
-import { FAN_MAX, FAN_STEP, loadFanCounts } from './lib/fans'
+import { loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, rank } from './lib/groups'
 import { CUT_RANK, DEBUT_POST, TARGET_POST } from './lib/target'
 import { SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
@@ -65,9 +65,6 @@ export default function App() {
   /** userId -> 애청자 수. null 은 '알 수 없음'이고, 그 사람은 걸러 내지 않는다. */
   const [fans, setFans] = useState(() => new Map())
   const [fansLoading, setFansLoading] = useState(false)
-  const [minFans, setMinFans] = useState(MIN_FANS_RULE)
-  /** 실제로 목록에 적용된 하한. 손잡이를 놓거나 잠깐 멈췄을 때 따라온다. */
-  const [appliedMinFans, setAppliedMinFans] = useState(MIN_FANS_RULE)
 
   /**
    * 분류별 { 댓글id -> { delta, at } }. delta 는 마지막으로 움직인 폭이고
@@ -254,16 +251,6 @@ export default function App() {
   }, [data, debut, watchEdits])
 
   /**
-   * 손잡이를 끄는 동안 목록을 매번 다시 세우면, 줄이 사라질 때마다 아래 줄이
-   * 위로 올라붙어 화면이 덜그럭거린다. 특히 5만 근처는 한 번 움직일 때마다
-   * 수십 명이 빠져서 더 심하다. 손이 잠깐 멈춘 뒤에 한 번만 반영한다.
-   */
-  useEffect(() => {
-    const timer = setTimeout(() => setAppliedMinFans(minFans), 140)
-    return () => clearTimeout(timer)
-  }, [minFans])
-
-  /**
    * 애청자 수는 댓글 API 에 없어서 사람마다 따로 묻는다. 갱신 때마다 200번씩 다시
    * 물을 수는 없으니, 아직 안 물어본 사람만 골라 낸다. 새로 댓글을 단 사람은
    * 다음 갱신에서 한 명분 요청으로 채워진다.
@@ -353,17 +340,16 @@ export default function App() {
    */
   const applyCut = useCallback(
     (items) => {
-      if (appliedMinFans === 0) return items
       return items
         .filter((c) => {
           const count = fans.get(c.userId)
           // 아직 못 받았거나 방송국이 없는 사람은 숨기지 않는다. 자료가 없다는 이유로
           // 사람을 지우면, 방금 댓글을 단 사람이 조용히 사라진다.
-          return count == null || count >= appliedMinFans
+          return count == null || count >= MIN_FANS_RULE
         })
         .map((c, i) => ({ ...c, rank: i + 1 }))
     },
-    [fans, appliedMinFans],
+    [fans],
   )
 
   /**
@@ -396,12 +382,12 @@ export default function App() {
    */
   const cutItems = useMemo(() => {
     const items = activeSection?.items ?? []
-    if (activeTab === DEBUT_TAB || appliedMinFans === 0) return items
+    if (activeTab === DEBUT_TAB) return items
     return items.map((c) => {
       const count = fans.get(c.userId)
-      return count != null && count < appliedMinFans ? { ...c, lowFans: count } : c
+      return count != null && count < MIN_FANS_RULE ? { ...c, lowFans: count } : c
     })
-  }, [activeSection, activeTab, fans, appliedMinFans])
+  }, [activeSection, activeTab, fans])
 
   /**
    * 검색은 자르는 게 아니라 찾는 것이다. 여기서는 순위를 다시 매기지 않는다 —
@@ -421,12 +407,6 @@ export default function App() {
     )
   }, [cutItems, query, tagFilter, labels])
 
-  /**
-   * 손잡이가 설 자리. 눈금 위에만 선다. 숫자 칸에 눈금 사이 값을 적으면 손잡이는
-   * 가장 가까운 눈금에 놓이지만, 거르는 기준은 적어 넣은 수 그대로다.
-   */
-  const handlePos = Math.round(Math.min(minFans, FAN_MAX) / FAN_STEP) * FAN_STEP
-
   /** 이 탭에서 기준에 모자란 사람 수. 애청자 수를 모르는 사람은 모자란 쪽에 넣지 않는다. */
   const filterInfo = useMemo(() => {
     const items = activeSection?.items ?? []
@@ -435,10 +415,10 @@ export default function App() {
     for (const c of items) {
       const count = fans.get(c.userId)
       if (count == null) unknown += 1
-      else if (count < appliedMinFans) low += 1
+      else if (count < MIN_FANS_RULE) low += 1
     }
     return { total: items.length, low, unknown }
-  }, [activeSection, fans, appliedMinFans])
+  }, [activeSection, fans])
 
   /**
    * 컷 위아래의 좋아요 차이. 검색으로 119등이 가려져 있어도 흔들리지 않게
@@ -609,7 +589,7 @@ export default function App() {
             <h1>와우 포에버 · 우왁굳 길드 사전 신청</h1>
             <p>
               신청 댓글을 해보려는 직업별로 나눠 좋아요 순으로 세웁니다. 신청 조건이 SOOP 버튜버 ·
-              즐찾 {MIN_FANS_RULE.toLocaleString()}명 이상이라 처음엔 그 기준으로 걸러 둡니다.
+              즐찾 {MIN_FANS_RULE.toLocaleString()}명 이상이라, 모자란 사람은 노란 배지로 표시해 둡니다.
             </p>
           </div>
         </div>
@@ -756,9 +736,7 @@ export default function App() {
               <h2>
                 직업별 인원
                 <span className="cc-legend">
-                  {appliedMinFans > 0
-                    ? `즐찾 ${appliedMinFans.toLocaleString()}명 이상 / 전체 신청`
-                    : '전체 신청'}
+                  {`즐찾 ${MIN_FANS_RULE.toLocaleString()}명 이상 / 전체 신청`}
                   {' · 대표 직업 기준'}
                 </span>
               </h2>
@@ -833,41 +811,15 @@ export default function App() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="닉네임 · 내용 검색"
               />
-            <label className="fanfilter">
-              <span className="fanfilter-label" title="기준에 모자란 사람도 숨기지 않고 노란 배지로 표시합니다">
-                애청자 기준
-              </span>
-              <input
-                type="range"
-                min="0"
-                max={FAN_MAX}
-                step={FAN_STEP}
-                value={handlePos}
-                onChange={(e) => setMinFans(Number(e.target.value))}
-                disabled={fans.size === 0}
-                style={{ '--fill': `${(handlePos / FAN_MAX) * 100}%` }}
-                aria-label="애청자 수 하한"
-              />
-              {/* 슬라이더로는 정확히 1,000 같은 수에 세우기 어렵다. 직접 적을 수도 있게 둔다. */}
-              <input
-                className="fanfilter-num"
-                type="number"
-                min="0"
-                step={FAN_STEP}
-                value={minFans}
-                onChange={(e) => setMinFans(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
-                aria-label="애청자 수 하한 직접 입력"
-              />
-              <span className="fanfilter-unit">명 이상</span>
-              <span className="fanfilter-note">
+              <span
+                className="fanfilter-note"
+                title="기준에 모자란 사람도 숨기지 않고 노란 배지로 표시합니다"
+              >
                 {fansLoading
-                  ? '불러오는 중…'
-                  : `${filterInfo.total}명 중 ${filterInfo.low}명 부족` +
-                    (appliedMinFans > 0 && filterInfo.unknown > 0
-                      ? ` · 미확인 ${filterInfo.unknown}명`
-                      : '')}
+                  ? '애청자 수 불러오는 중…'
+                  : `즐찾 ${MIN_FANS_RULE.toLocaleString()}명 미만 ${filterInfo.low}명` +
+                    (filterInfo.unknown > 0 ? ` · 미확인 ${filterInfo.unknown}명` : '')}
               </span>
-            </label>
             </div>
 
           {(tagCounts.length > 0 || debutSection) && (
