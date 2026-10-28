@@ -10,7 +10,7 @@
     "labels": {
       ".read": true,
       "$userId": {
-        ".write": "auth != null && auth.uid === 'ADMIN_UID'"
+        ".write": "auth != null && auth.uid === 'ko2UDZwBNXVO3qBKWyf2ykqsqPa2'"
       }
     }
   }

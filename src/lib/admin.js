@@ -17,7 +17,16 @@ const CONFIG = {
 
 export const adminConfigured = () => Boolean(CONFIG.apiKey && CONFIG.authDomain && labelsEnabled())
 
-const isAdminRoute = () => window.location.hash === '#admin'
+// 팝업 로그인이 실패할 때 화면에 띄울 말. 앱 안 브라우저처럼 팝업을 막는 곳에서는 조용히 실패한다.
+const SIGN_IN_ERRORS = {
+  'auth/popup-blocked': '로그인 팝업이 막혔습니다. 크롬 같은 일반 브라우저에서 팝업을 허용하고 다시 누르세요.',
+  'auth/popup-closed-by-user': '로그인 창이 닫혔습니다. 다시 눌러 주세요.',
+  'auth/cancelled-popup-request': '로그인 창이 닫혔습니다. 다시 눌러 주세요.',
+  'auth/unauthorized-domain': '이 주소는 Firebase 승인된 도메인에 없습니다. Authentication → 설정에서 추가하세요.',
+  'auth/operation-not-allowed': 'Firebase Authentication 에서 Google 로그인이 꺼져 있습니다.',
+}
+
+const isAdminRoute =() => window.location.hash === '#admin'
 
 let authPromise = null
 
@@ -74,7 +83,11 @@ export function useAdmin() {
     user: route ? user : null,
     signIn: async () => {
       const { auth, mod } = await loadAuth()
-      await mod.signInWithPopup(auth, new mod.GoogleAuthProvider())
+      try {
+        await mod.signInWithPopup(auth, new mod.GoogleAuthProvider())
+      } catch (e) {
+        throw new Error(SIGN_IN_ERRORS[e.code] ?? `로그인 실패: ${e.code ?? e.message}`)
+      }
     },
     signOut: async () => {
       const { auth, mod } = await loadAuth()
