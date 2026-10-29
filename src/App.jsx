@@ -366,8 +366,10 @@ export default function App() {
   const classCounts = useMemo(() => {
     // 상위 N명을 정해 두면 전체 N등 안에 든 사람만 센다. 데뷔 탭의 N 은 데뷔 글끼리의 순위라 여기엔 쓰지 않는다.
     const inTop = (c) => topN == null || activeTab === DEBUT_TAB || (overallRankById.get(c.id) ?? Infinity) <= topN
+    // 자기소개 꼬리표를 골랐으면 그 꼬리표를 가진 사람만 센다. 직업 칸마다 그 경력이 몇 명인지 보인다.
+    const hasTag = (c) => !tagFilter || tagsOf(c, labels[c.userId]).some((t) => t.id === tagFilter)
     return sections.map((s) => {
-      const items = s.items.filter(inTop)
+      const items = s.items.filter((c) => inTop(c) && hasTag(c))
       return {
         id: s.id,
         name: s.name,
@@ -376,7 +378,7 @@ export default function App() {
         also: items.filter((c) => c.groupId !== s.id).length,
       }
     })
-  }, [sections, topN, activeTab, overallRankById])
+  }, [sections, topN, activeTab, overallRankById, tagFilter, labels])
   const maxClassCount = Math.max(1, ...classCounts.map((s) => s.total))
 
   /** 신청 인원. 답글(대댓글)을 뺀 일반 댓글의 개수다. */
@@ -837,9 +839,15 @@ export default function App() {
               <h2>
                 직업별 인원
                 <span className="cc-legend">
-                  {topN != null && activeTab !== DEBUT_TAB && topLimit < rankTotal
-                    ? `전체 상위 ${topLimit}명 · 대표 직업 기준`
-                    : '전체 신청 · 대표 직업 기준'}
+                  {[
+                    tagFilter && `${tagCounts.find((t) => t.id === tagFilter)?.name ?? ''} 기준`,
+                    topN != null && activeTab !== DEBUT_TAB && topLimit < rankTotal
+                      ? `전체 상위 ${topLimit}명`
+                      : !tagFilter && '전체 신청',
+                    '대표 직업 기준',
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
                 </span>
               </h2>
               <ul>
@@ -983,7 +991,11 @@ export default function App() {
                   type="button"
                   className={`tag tag-debut${activeTab === DEBUT_TAB ? ' active' : ''}`}
                   title="「리얼 뉴 와튜버 데뷔 하기」 글에 댓글을 단 사람"
-                  onClick={() => setActiveTab((v) => (v === DEBUT_TAB ? ALL_TAB : DEBUT_TAB))}
+                  onClick={() => {
+                    // 다른 꼬리표와 같이 하나만 고른다. 데뷔를 누르면 꼬리표는 풀린다.
+                    setTagFilter(null)
+                    setActiveTab((v) => (v === DEBUT_TAB ? ALL_TAB : DEBUT_TAB))
+                  }}
                 >
                   뉴 와튜버 데뷔 <em>{debutSection.items.length}</em>
                 </button>
@@ -994,7 +1006,11 @@ export default function App() {
                   key={t.id}
                   className={`tag tag-${t.look}${tagFilter === t.id ? ' active' : ''}`}
                   title={t.hint}
-                  onClick={() => setTagFilter((v) => (v === t.id ? null : t.id))}
+                  onClick={() => {
+                    // 데뷔 칩이 켜져 있으면 꺼진다(둘 중 하나만 선택).
+                    if (activeTab === DEBUT_TAB) setActiveTab(ALL_TAB)
+                    setTagFilter((v) => (v === t.id ? null : t.id))
+                  }}
                 >
                   {t.name} <em>{t.count}</em>
                 </button>

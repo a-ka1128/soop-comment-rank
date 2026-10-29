@@ -128,6 +128,7 @@ export async function fetchDebutArticles({ cafeId, menuId, manual = {} }) {
   for (const c of out) {
     const m = manual[c.id]
     if (!m) continue
+    if (m.nick) c.nick = m.nick
     if (m.userId) c.userId = m.userId
     if (m.text) c.text = `${c.text.split('\n')[0]}\n${m.text}`
   }
