@@ -32,6 +32,20 @@ export const DEBUT_BOARD = {
   menuId: '1371',
   url: 'https://cafe.naver.com/f-e/cafes/27842958/menus/1371?viewType=L',
   exclude: ['nboxox182'], // 뱀부안범부
+  // 비공개 글(회원 전용)은 로그인 없이는 본문을 못 읽는다. 글 번호 → 손으로 옮겨 적은 내용.
+  // userId 는 SOOP 아이디, text 는 본문(제목은 자동으로 앞에 붙는다). 사진은 목록이 주는 대표 이미지를 쓴다.
+  manual: {
+    22131964: {
+      userId: 'kimdamsu0112', // 김담수
+      text: [
+        'https://www.sooplive.com/station/kimdamsu0112',
+        '1. 스카이본 마법사',
+        '2. 우왁굳 와우 강점기 때 물빵배달&포탈택시 5분대기조(비공식)',
+        '3. 와우 하려고 데뷔했습니다',
+        '형 나 준비 됏어',
+      ].join('\n'),
+    },
+  },
 }
 
 /**

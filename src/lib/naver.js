@@ -4,18 +4,22 @@
  *
  * 글 하나가 데뷔 신청 하나다. 글쓴이는 카페 닉네임만 있고 SOOP 아이디는 본문에 적은 방송국
  * 주소에서 뽑는다. 주소가 없으면 userId 를 비워 둔다(애청자 수·라벨은 그 사람만 건너뛴다).
- * 목록 API 는 본문을 앞부분(summary)만 준다.
+ * 목록 API 는 본문을 앞부분(summary)만 주고, 주소를 링크 카드로 붙인 글은 summary 에 주소가 없다.
+ * 그런 글만 글 상세 API 로 본문 전체를 읽어 링크 카드의 주소를 찾는다.
  */
 const LIST_API = 'https://apis.naver.com/cafe-web/cafe-boardlist-api/v1/cafes'
 const MAX_PAGES = 20
+const ARTICLE_API = 'https://apis.naver.com/cafe-web/cafe-articleapi/v2.1/cafes'
+const HEADERS = { Referer: 'https://cafe.naver.com/', 'User-Agent': 'Mozilla/5.0' }
 
-const SOOP_ID = /(?:sooplive\.com\/(?:station\/|play\/)?|play\.sooplive\.com\/|bj\.afreecatv\.com\/|ch\.sooplive\.co\.kr\/)([A-Za-z0-9_]{2,20})(?![A-Za-z0-9_])/i
+// 방송국 주소 형태만 받는다. 'sooplive.com/player/번호'(다시보기)처럼 경로 첫 마디를 아이디로 착각하지 않게.
+// 목록의 summary 는 잘려서 주소 중간에서 '...' 로 끝날 수 있다. 그때는 아이디가 반쪽이라 버린다.
+const SOOP_ID =
+  /(?:sooplive\.com\/station\/|ch\.sooplive\.co\.kr\/|bj\.afreecatv\.com\/)([A-Za-z0-9_]{2,20})(?![A-Za-z0-9_]|\.\.\.|…)/i
 
 export function soopIdFrom(text) {
   const m = SOOP_ID.exec(text || '')
-  if (!m) return ''
-  // station/post 같은 경로 단어가 아이디로 잡히지 않게.
-  return ['station', 'post', 'play', 'www'].includes(m[1].toLowerCase()) ? '' : m[1]
+  return m ? m[1] : ''
 }
 
 export function articleUrl(cafeId, articleId) {
@@ -44,12 +48,26 @@ function normalize(item, cafeId) {
   }
 }
 
+/** 글 본문 전체에서 SOOP 방송국 주소를 찾는다. 못 읽으면 ''. 링크 카드의 href 도 본문 HTML 에 들어 있다. */
+async function soopIdFromArticle(cafeId, articleId) {
+  try {
+    const res = await fetch(`${ARTICLE_API}/${cafeId}/articles/${articleId}?query=&useCafeId=true&requestFrom=A`, {
+      headers: HEADERS,
+    })
+    if (!res.ok) return ''
+    const html = (await res.json())?.result?.article?.contentHtml
+    return typeof html === 'string' ? soopIdFrom(html) : ''
+  } catch {
+    return ''
+  }
+}
+
 /** @returns {Promise<Array>} 댓글과 같은 모양(+ link)으로 맞춘 글 목록 */
-export async function fetchDebutArticles({ cafeId, menuId }) {
+export async function fetchDebutArticles({ cafeId, menuId, manual = {} }) {
   const out = []
   for (let page = 1; page <= MAX_PAGES; page += 1) {
     const url = `${LIST_API}/${cafeId}/menus/${menuId}/articles?page=${page}&pageSize=50&sortBy=TIME&viewType=L`
-    const res = await fetch(url, { headers: { Referer: 'https://cafe.naver.com/' } })
+    const res = await fetch(url, { headers: HEADERS })
     if (!res.ok) throw new Error(`네이버 카페 목록 HTTP ${res.status} (${page}페이지)`)
     const data = await res.json()
     const list = data?.result?.articleList
@@ -59,6 +77,24 @@ export async function fetchDebutArticles({ cafeId, menuId }) {
       if (item && row.type === 'ARTICLE' && !item.blindArticle) out.push(normalize(item, cafeId))
     }
     if (!data.result.pageInfo?.visibleNextButton) break
+  }
+
+  // 손으로 적어 둔 내용이 먼저다(비공개 글은 본문을 읽을 수 없다).
+  for (const c of out) {
+    const m = manual[c.id]
+    if (!m) continue
+    if (m.userId) c.userId = m.userId
+    if (m.text) c.text = `${c.text.split('\n')[0]}\n${m.text}`
+  }
+
+  // 목록에서 아이디를 못 찾은 글만 본문을 따로 읽는다. 한 번에 몇 개씩만 묻는다.
+  const todo = out.filter((c) => !c.userId)
+  for (let i = 0; i < todo.length; i += 4) {
+    await Promise.all(
+      todo.slice(i, i + 4).map(async (c) => {
+        c.userId = await soopIdFromArticle(cafeId, c.id)
+      }),
+    )
   }
   return out
 }
