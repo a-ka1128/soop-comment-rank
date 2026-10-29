@@ -368,6 +368,12 @@ export default function App() {
   )
   const maxClassCount = Math.max(1, ...classCounts.map((s) => s.total))
 
+  /** 신청한 사람 수. 한 사람이 댓글을 여러 번 달았어도 한 명으로 센다. */
+  const applicantCount = useMemo(
+    () => (data ? new Set(data.comments.map((c) => c.userId || c.id)).size : null),
+    [data],
+  )
+
   /**
    * 목록에는 애청자가 모자란 사람도 그대로 둔다. 숨기는 대신 줄에 lowFans(그 사람의 애청자 수)를
    * 달아 노란 배지를 붙인다. 순위도 그대로다. 직업별 인원과 닉네임 추출도 전부 센다.
@@ -605,10 +611,12 @@ export default function App() {
           <div>
             <span className="kicker">WORLD OF WARCRAFT · FOREVER</span>
             <h1>와우 포에버 · 우왁굳 길드 사전 신청</h1>
-            <p>
-              신청 댓글을 해보려는 직업별로 나눠 좋아요 순으로 세웁니다. 신청 조건이 SOOP 버튜버 ·
-              즐찾 {MIN_FANS_RULE.toLocaleString()}명 이상이라, 모자란 사람은 노란 배지로 표시해 둡니다.
-            </p>
+            <p>신청 댓글을 해보려는 직업별로 나눠 좋아요 순으로 세웁니다.</p>
+            {applicantCount != null && (
+              <p className="applicant-count">
+                신청 인원 <strong>{applicantCount.toLocaleString()}</strong>명
+              </p>
+            )}
           </div>
         </div>
 
@@ -746,6 +754,8 @@ export default function App() {
 
       {data && (
         <>
+          {/* 원댓글·답글 수와 원문 링크, 닉네임 추출은 운영용이라 어드민 화면에서만 보인다. */}
+          {admin.route && (
           <section className="summary">
             <div className="stat">
               <strong>{data.comments.length.toLocaleString()}</strong>
@@ -780,6 +790,7 @@ export default function App() {
               닉네임 추출 {exportOpen ? '닫기' : ''}
             </button>
           </section>
+          )}
 
           {exportOpen && exportSections.length > 0 && <NicknameExport sections={exportSections} />}
 
