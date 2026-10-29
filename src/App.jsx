@@ -58,6 +58,10 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState(ALL_TAB)
   const [query, setQuery] = useState('')
+  /** 상위 N명만 보기. null 이면 전부. */
+  const [topN, setTopN] = useState(null)
+  /** 숫자 칸에 타이핑 중인 글자. 비웠다 다시 쓰는 동안 값이 전체로 튀지 않게 한다. */
+  const [topDraft, setTopDraft] = useState(null)
   // 목록에서 고른 댓글. 옆 패널(좁은 화면에선 시트)에 자세히 뜬다.
   const [selectedId, setSelectedId] = useState(null)
   const closeDetail = useCallback(() => setSelectedId(null), [])
@@ -386,26 +390,52 @@ export default function App() {
   }, [activeSection, activeTab, fans])
 
   /**
+   * 상위 N명만 보기. N 은 직업·꼬리표와 상관없이 '전체 순위'로 센다 — 150으로 두고 전사 탭을 열면
+   * 전사 중 상위 150명이 아니라, 전체 150등 안에 든 전사만 남는다. 데뷔 탭은 따로 순위를 매기니
+   * 그 탭 안의 순위로 센다. null 이면 자르지 않는다.
+   */
+  const overallRankById = useMemo(
+    () => new Map((allSection?.items ?? []).map((c) => [c.id, c.rank])),
+    [allSection],
+  )
+  const rankTotal = activeTab === DEBUT_TAB ? (debutSection?.items.length ?? 0) : (allSection?.items.length ?? 0)
+  const limitedItems = useMemo(() => {
+    if (topN == null) return cutItems
+    if (activeTab === DEBUT_TAB) return cutItems.filter((c) => c.rank <= topN)
+    return cutItems.filter((c) => (overallRankById.get(c.id) ?? Infinity) <= topN)
+  }, [cutItems, topN, activeTab, overallRankById])
+
+  /**
+   * 꼬리표로 거른 목록. 꼬리표를 고르면 그 꼬리표 안에서의 순위를 보여 준다. 전체 순위는
+   * overallRank 에 남겨 컷 선과 상세 화면이 쓴다. 이미 좋아요 순이라 앞에서부터 번호를 붙이면 된다.
+   */
+  const taggedItems = useMemo(
+    () =>
+      tagFilter
+        ? limitedItems
+            .filter((c) => tagsOf(c, labels[c.userId]).some((t) => t.id === tagFilter))
+            .map((c, i) => ({ ...c, overallRank: c.rank, rank: i + 1 }))
+        : limitedItems,
+    [limitedItems, tagFilter, labels],
+  )
+
+  /** 슬라이더가 가리키는 값. 전체 인원보다 크게 적어도 전부로 친다. */
+  const topLimit = topN == null ? rankTotal : Math.min(topN, rankTotal)
+
+  /**
    * 검색은 자르는 게 아니라 찾는 것이다. 여기서는 순위를 다시 매기지 않는다 —
-   * 한 사람을 검색했다고 그 사람이 1등이 되면 곤란하다.
+   * 한 사람을 검색했다고 그 사람이 1등이 되면 곤란하다. 상위 N명 자르기는 그 앞(limitedItems)에서 이미 했다.
    */
   const visibleItems = useMemo(() => {
     const q = query.trim().toLowerCase()
-    // 꼬리표로 거르면 그 꼬리표 안에서의 순위를 보여 준다. 전체 순위는 overallRank 에 남겨
-    // 컷 선과 상세 화면이 쓴다. 이미 좋아요 순이라 앞에서부터 번호를 붙이면 된다.
-    const tagged = tagFilter
-      ? cutItems
-          .filter((c) => tagsOf(c, labels[c.userId]).some((t) => t.id === tagFilter))
-          .map((c, i) => ({ ...c, overallRank: c.rank, rank: i + 1 }))
-      : cutItems
-    if (!q) return tagged
-    return tagged.filter(
+    if (!q) return taggedItems
+    return taggedItems.filter(
       (c) =>
         c.nick.toLowerCase().includes(q) ||
         c.userId.toLowerCase().includes(q) ||
         c.text.toLowerCase().includes(q),
     )
-  }, [cutItems, query, tagFilter, labels])
+  }, [taggedItems, query])
 
   /** 이 탭에서 기준에 모자란 사람 수. 애청자 수를 모르는 사람은 모자란 쪽에 넣지 않는다. */
   const filterInfo = useMemo(() => {
@@ -877,6 +907,50 @@ export default function App() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="닉네임 · 내용 검색"
               />
+              <div className="topn" title="전체 순위 이 등수 안에 든 사람만 보여 줍니다. 직업·꼬리표를 골라도 이 기준은 그대로입니다">
+                <span className="topn-label">상위</span>
+                <input
+                  className="topn-num"
+                  type="number"
+                  min={1}
+                  max={rankTotal || 1}
+                  value={topDraft ?? String(topN ?? (rankTotal || ''))}
+                  onChange={(e) => {
+                    setTopDraft(e.target.value)
+                    const n = Number.parseInt(e.target.value, 10)
+                    if (Number.isFinite(n) && n > 0) setTopN(n)
+                  }}
+                  onBlur={() => setTopDraft(null)}
+                  aria-label="상위 몇 명까지 볼지"
+                />
+                <span className="topn-label">명</span>
+                <input
+                  className="topn-range"
+                  type="range"
+                  min={1}
+                  max={rankTotal || 1}
+                  value={topLimit || 1}
+                  style={{ '--pct': `${rankTotal > 1 ? ((topLimit - 1) / (rankTotal - 1)) * 100 : 100}%` }}
+                  onChange={(e) => {
+                    setTopDraft(null)
+                    setTopN(Number(e.target.value))
+                  }}
+                  aria-label="상위 인원 조절"
+                />
+                {/* 자리를 늘 차지해 두고 숨기기만 한다. 나타났다 사라질 때 슬라이더 폭이 흔들리지 않게. */}
+                <button
+                  type="button"
+                  className="ghost topn-reset"
+                  style={{ visibility: topN != null && topLimit < rankTotal ? 'visible' : 'hidden' }}
+                  tabIndex={topN != null && topLimit < rankTotal ? 0 : -1}
+                  onClick={() => {
+                    setTopDraft(null)
+                    setTopN(null)
+                  }}
+                >
+                  전체 보기
+                </button>
+              </div>
               <span
                 className="fanfilter-note"
                 title="기준에 모자란 사람도 숨기지 않고 노란 배지로 표시합니다"

@@ -1760,3 +1760,108 @@ button.primary:hover {
     font-size: 30px;
   }
 }
+
+/* ---------- 상위 N명만 보기 ---------- */
+
+/* 폭을 고정해 둔다. 숫자 자릿수나 버튼 유무로 슬라이더와 옆 글자가 밀리지 않게. */
+.topn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  width: 400px;
+  font-size: 13px;
+}
+
+.topn-label {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.topn-num {
+  flex: none;
+  width: 64px;
+  padding: 5px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 슬라이더: 브라우저 기본 모양 대신 얇은 막대와 동그란 손잡이. 채워진 쪽은 --pct 로 칠한다. */
+.topn-range {
+  flex: 1;
+  min-width: 60px;
+  height: 22px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.topn-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--brand) var(--pct, 100%), var(--line) var(--pct, 100%));
+}
+
+.topn-range::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border: 2px solid var(--brand);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(47, 61, 92, 0.3);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.topn-range::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.topn-range::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--brand);
+}
+
+.topn-range::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--brand);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(47, 61, 92, 0.3);
+}
+
+.topn-range:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+/* button.ghost 의 안쪽 여백(7px 14px)이 더 세서, 같은 무게로 겹쳐 써야 글자가 가운데에 온다. */
+.topn button.topn-reset {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  padding: 5px 0;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .topn {
+    width: 100%;
+  }
+}
