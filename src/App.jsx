@@ -359,17 +359,24 @@ export default function App() {
    * 직업별 인원. 대표 직업(처음 고른 직업)으로만 센다 — 직업을 여러 개 고른 사람을 칸마다
    * 세면 합이 신청자보다 커진다. also 는 대표는 아니지만 이 직업도 같이 고른 사람.
    */
-  const classCounts = useMemo(
-    () =>
-      sections.map((s) => ({
+  const overallRankById = useMemo(
+    () => new Map((allSection?.items ?? []).map((c) => [c.id, c.rank])),
+    [allSection],
+  )
+  const classCounts = useMemo(() => {
+    // 상위 N명을 정해 두면 전체 N등 안에 든 사람만 센다. 데뷔 탭의 N 은 데뷔 글끼리의 순위라 여기엔 쓰지 않는다.
+    const inTop = (c) => topN == null || activeTab === DEBUT_TAB || (overallRankById.get(c.id) ?? Infinity) <= topN
+    return sections.map((s) => {
+      const items = s.items.filter(inTop)
+      return {
         id: s.id,
         name: s.name,
         color: s.color,
-        total: s.items.filter((c) => c.groupId === s.id).length,
-        also: s.items.filter((c) => c.groupId !== s.id).length,
-      })),
-    [sections],
-  )
+        total: items.filter((c) => c.groupId === s.id).length,
+        also: items.filter((c) => c.groupId !== s.id).length,
+      }
+    })
+  }, [sections, topN, activeTab, overallRankById])
   const maxClassCount = Math.max(1, ...classCounts.map((s) => s.total))
 
   /** 신청 인원. 답글(대댓글)을 뺀 일반 댓글의 개수다. */
@@ -394,10 +401,6 @@ export default function App() {
    * 전사 중 상위 150명이 아니라, 전체 150등 안에 든 전사만 남는다. 데뷔 탭은 따로 순위를 매기니
    * 그 탭 안의 순위로 센다. null 이면 자르지 않는다.
    */
-  const overallRankById = useMemo(
-    () => new Map((allSection?.items ?? []).map((c) => [c.id, c.rank])),
-    [allSection],
-  )
   const rankTotal = activeTab === DEBUT_TAB ? (debutSection?.items.length ?? 0) : (allSection?.items.length ?? 0)
   const limitedItems = useMemo(() => {
     if (topN == null) return cutItems
@@ -834,7 +837,9 @@ export default function App() {
               <h2>
                 직업별 인원
                 <span className="cc-legend">
-                  전체 신청 · 대표 직업 기준
+                  {topN != null && activeTab !== DEBUT_TAB && topLimit < rankTotal
+                    ? `전체 상위 ${topLimit}명 · 대표 직업 기준`
+                    : '전체 신청 · 대표 직업 기준'}
                 </span>
               </h2>
               <ul>
