@@ -5,12 +5,12 @@ import CommentDetail from './components/CommentDetail'
 import { fetchAllComments, fetchPost, postUrl } from './lib/soop'
 import { loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, rank } from './lib/groups'
-import { CUT_RANK, DEBUT_POST, TARGET_POST } from './lib/target'
+import { CUT_RANK, DEBUT_BOARD, TARGET_POST } from './lib/target'
 import { SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
 import { fetchLabels, saveLabel } from './lib/labels'
 import { useAdmin } from './lib/admin'
 import { findEdits, loadTexts, saveTexts } from './lib/edits'
-import { fetchLive } from './lib/live'
+import { fetchDebut, fetchLive } from './lib/live'
 import { BANNER, safeUrl } from './lib/banner'
 import { useFlipReorder } from './hooks/useFlipReorder'
 import { useMediaQuery } from './hooks/useMediaQuery'
@@ -496,10 +496,10 @@ export default function App() {
     fetchLabels({ signal })
       .then(setLabels)
       .catch(() => {})
-    if (!DEBUT_POST) return
-    const exclude = new Set(DEBUT_POST.exclude ?? [])
-    fetchAllComments(DEBUT_POST.bjId, DEBUT_POST.postNo, { signal })
-      .then((d) => setDebut({ ...d, comments: d.comments.filter((c) => !exclude.has(c.userId)) }))
+    if (!DEBUT_BOARD) return
+    const exclude = new Set(DEBUT_BOARD.exclude ?? [])
+    fetchDebut({ signal })
+      .then((d) => d && setDebut({ ...d, comments: d.comments.filter((c) => !exclude.has(c.userId)) }))
       .catch(() => {})
   }
 

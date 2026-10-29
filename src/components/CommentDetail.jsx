@@ -68,7 +68,7 @@ export default function CommentDetail({
         <div className="detail-who">
           <span className="detail-rank">{comment.rank}위</span>
           <h2>{comment.nick}</h2>
-          <span className="muted">{comment.userId}</span>
+          <span className="muted">{comment.userId || 'SOOP 아이디 없음'}</span>
         </div>
         <button type="button" className="detail-close" onClick={onClose} aria-label="닫기">
           ✕
@@ -148,27 +148,29 @@ export default function CommentDetail({
 
       <footer className="card-foot">
         <a
-          href={commentUrl(bjId, postNo, comment.id)}
+          href={comment.link ?? commentUrl(bjId, postNo, comment.id)}
           target="_blank"
           rel="noreferrer noopener"
           className="channel"
         >
-          댓글 원본 ↗
+          {comment.link ? '카페 글 ↗' : '댓글 원본 ↗'}
         </a>
-        <a
-          href={channelUrl(comment.userId)}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="channel"
-        >
-          방송국 ↗
-        </a>
+        {comment.userId && (
+          <a
+            href={channelUrl(comment.userId)}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="channel"
+          >
+            방송국 ↗
+          </a>
+        )}
         <span>{comment.date}</span>
         {comment.replyCount > 0 && <span>답글 {comment.replyCount}</span>}
       </footer>
 
       {/* 사람을 바꾸면 편집 중이던 값이 따라오지 않도록 새로 만든다. */}
-      {admin && (
+      {admin && comment.userId && (
         <LabelEditor
           key={comment.userId}
           userId={comment.userId}

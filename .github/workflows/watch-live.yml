@@ -25,7 +25,7 @@ jobs:
 
       - run: node scripts/watch-live.mjs out/live.json
 
-      # live-data 브랜치는 이 파일 하나만 담는다. 기록이 쌓일 이유가 없어 매번 새로 만들어 덮어쓴다.
+      # live-data 브랜치는 live.json 과 debut.json 만 담는다. 기록이 쌓일 이유가 없어 매번 새로 만들어 덮어쓴다.
       - name: Publish live.json to live-data
         run: |
           cd out
@@ -33,5 +33,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add live.json
+          [ -f debut.json ] && git add debut.json
           git commit -q -m "live $(date -u +%FT%TZ)"
           git push -q --force "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" live-data

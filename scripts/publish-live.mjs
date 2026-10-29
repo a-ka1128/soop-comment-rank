@@ -8,7 +8,7 @@
  * 있어도 영향받지 않고, 토큰은 파일에 남기지 않는다.
  */
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, rmSync, copyFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -26,7 +26,7 @@ try {
   git(['init', '-q', '-b', 'live-data'])
   git(['config', 'user.name', 'local-live-publisher'])
   git(['config', 'user.email', 'a-ka1128@users.noreply.github.com'])
-  git(['add', 'live.json'])
+  git(['add', 'live.json', ...(existsSync(join(work, 'debut.json')) ? ['debut.json'] : [])])
   git(['commit', '-q', '-m', `live ${new Date().toISOString()}`])
   git(['push', '-q', '--force', `https://x-access-token:${token}@github.com/${REPO}.git`, 'live-data'])
   console.log('live-data 에 올렸습니다.')

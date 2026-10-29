@@ -13,3 +13,18 @@ export async function fetchLive({ signal } = {}) {
   if (!data || !Array.isArray(data.live)) throw new Error('방송 목록 모양이 다릅니다')
   return data
 }
+
+const DEBUT_URL = 'https://raw.githubusercontent.com/a-ka1128/soop-comment-rank/live-data/debut.json'
+
+/**
+ * 네이버 카페 데뷔 게시판의 글. 댓글과 같은 모양으로 맞춰 둬서 화면이 댓글처럼 그린다.
+ * @returns {Promise<{postNo: string, updatedAt: string, comments: Array}|null>} 아직 파일이 없으면 null
+ */
+export async function fetchDebut({ signal } = {}) {
+  const res = await fetch(`${DEBUT_URL}?t=${Date.now()}`, { signal, cache: 'no-store' })
+  if (res.status === 404) return null
+  if (!res.ok) throw new Error(`데뷔 목록 HTTP ${res.status}`)
+  const data = await res.json()
+  if (!data || !Array.isArray(data.comments)) throw new Error('데뷔 목록 모양이 다릅니다')
+  return { postNo: 'naver-debut', ...data }
+}

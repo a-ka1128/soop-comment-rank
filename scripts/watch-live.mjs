@@ -1,5 +1,6 @@
 /**
  * 신청자 중 지금 방송 중인 사람을 시청자 순으로 뽑아 JSON 으로 저장한다.
+ * 같이 네이버 카페 데뷔 게시판 글을 받아 같은 폴더에 debut.json 으로 저장한다.
  *
  *   node scripts/watch-live.mjs [출력파일]
  *
@@ -8,9 +9,10 @@
  * 어드민 화면은 그 파일을 읽는다. 시청자 수는 이 스크립트가 돈 시점 기준이다.
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { dirname } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fetchAllComments } from '../src/lib/soop.js'
-import { DEBUT_POST, TARGET_POST } from '../src/lib/target.js'
+import { fetchDebutArticles } from '../src/lib/naver.js'
+import { DEBUT_BOARD, DEBUT_POST, TARGET_POST } from '../src/lib/target.js'
 
 const OUT = process.argv[2] || 'out/live.json'
 const LIST = 'https://live.sooplive.com/api/main_broad_list_api.php'
@@ -55,3 +57,17 @@ const unique = [...new Map(live.map((l) => [l.userId, l])).values()].sort(
 mkdirSync(dirname(OUT), { recursive: true })
 writeFileSync(OUT, JSON.stringify({ updatedAt: new Date().toISOString(), live: unique }))
 console.log(`신청자 ${ids.size}명, 방송 중 ${seen}명 훑어 ${unique.length}명 일치`)
+
+// 데뷔 게시판은 곁가지다. 못 읽어도 방송 중 목록은 이미 저장했으니 여기서 끊지 않고 알리기만 한다.
+if (DEBUT_BOARD) {
+  try {
+    const comments = await fetchDebutArticles(DEBUT_BOARD)
+    writeFileSync(
+      join(dirname(OUT), 'debut.json'),
+      JSON.stringify({ updatedAt: new Date().toISOString(), comments }),
+    )
+    console.log(`데뷔 게시판 글 ${comments.length}개`)
+  } catch (err) {
+    console.error(`데뷔 게시판을 못 읽었습니다: ${err.message}`)
+  }
+}
