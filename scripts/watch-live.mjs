@@ -10,7 +10,7 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { fetchAllComments } from '../src/lib/soop.js'
+import { fetchAllComments, fetchStation } from '../src/lib/soop.js'
 import { fetchDebutArticles } from '../src/lib/naver.js'
 import { DEBUT_BOARD, DEBUT_POST, TARGET_POST } from '../src/lib/target.js'
 
@@ -62,6 +62,19 @@ console.log(`신청자 ${ids.size}명, 방송 중 ${seen}명 훑어 ${unique.len
 if (DEBUT_BOARD) {
   try {
     const comments = await fetchDebutArticles(DEBUT_BOARD)
+    // 글에는 프로필 사진이 없어서, 본문에 적은 방송국 주소의 주인 사진을 방송국 정보에서 가져온다.
+    // 한 사람을 못 읽어도 그 사람만 사진이 빈다.
+    await Promise.all(
+      comments
+        .filter((c) => c.userId)
+        .map((c) =>
+          fetchStation(c.userId)
+            .then((st) => {
+              c.profile = st.profile
+            })
+            .catch(() => {}),
+        ),
+    )
     writeFileSync(
       join(dirname(OUT), 'debut.json'),
       JSON.stringify({ updatedAt: new Date().toISOString(), comments }),

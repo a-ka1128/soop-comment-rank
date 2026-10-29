@@ -157,7 +157,7 @@ export async function fetchFanCount(userId, { signal } = {}) {
  * 가입일(station.joinTime)은 SOOP 계정을 만든 날이다. 데뷔일과 같지는 않지만
  * (다른 플랫폼에서 넘어온 사람은 훨씬 뒤다) 공개 API 로 얻을 수 있는 유일한 날짜다.
  *
- * @returns {Promise<{fans: number|null, joined: string|null}>} joined 는 'YYYY-MM-DD'
+ * @returns {Promise<{fans: number|null, joined: string|null, profile: string}>} joined 는 'YYYY-MM-DD', profile 은 프로필 사진 주소(없으면 '')
  */
 export async function fetchStation(userId, { signal } = {}) {
   const data = await fetchJson(
@@ -170,6 +170,7 @@ export async function fetchStation(userId, { signal } = {}) {
   return {
     fans: Number.isFinite(count) ? count : null,
     joined: typeof joinTime === 'string' ? joinTime.slice(0, 10) : null,
+    profile: safeHttpUrl(data?.station?.profileImage),
   }
 }
 
