@@ -843,7 +843,9 @@ export default function App() {
                     <button
                       type="button"
                       className={activeTab === s.id ? 'on' : ''}
-                      onClick={() => setActiveTab(s.id)}
+                      // 이미 고른 직업을 한 번 더 누르면 전체로 돌아간다.
+                      onClick={() => setActiveTab((v) => (v === s.id ? ALL_TAB : s.id))}
+                      aria-pressed={activeTab === s.id}
                       title={`${s.name} 보기`}
                     >
                       <span className="cc-name">
