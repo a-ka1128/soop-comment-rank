@@ -10,6 +10,7 @@ import { SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from 
 import { fetchLabels, saveLabel } from './lib/labels'
 import { useAdmin } from './lib/admin'
 import { findEdits, loadTexts, saveTexts } from './lib/edits'
+import { fetchLive } from './lib/live'
 import { useFlipReorder } from './hooks/useFlipReorder'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import './App.css'
@@ -44,6 +45,7 @@ export default function App() {
   const watchEdits = admin.route && !!admin.user
   /** 갱신 사이에 본문이 바뀐 댓글. 새것이 앞. 어드민이 확인하면 지운다. */
   const [edits, setEdits] = useState([])
+  const [live, setLive] = useState(null)
   const [notifyPerm, setNotifyPerm] = useState(() =>
     typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
   )
@@ -215,6 +217,22 @@ export default function App() {
     }, REFRESH_SEC * 1000)
     return () => clearInterval(timer)
   }, [hasData, watchEdits])
+
+  // 지금 방송 중인 신청자(어드민 화면). 파일은 서버가 5분마다 갱신하므로 1분마다 읽으면 충분하다.
+  useEffect(() => {
+    if (!admin.route) return
+    const ctrl = new AbortController()
+    const load = () =>
+      fetchLive({ signal: ctrl.signal })
+        .then((d) => setLive(d ?? { live: [], updatedAt: null }))
+        .catch(() => {})
+    load()
+    const timer = setInterval(load, 60 * 1000)
+    return () => {
+      ctrl.abort()
+      clearInterval(timer)
+    }
+  }, [admin.route])
 
   /**
    * 새로 받은 댓글을 지난번 본문과 비교한다. 지난번은 이 창에서 마지막으로 본 것,
@@ -601,6 +619,41 @@ export default function App() {
               </>
             )}
           </div>
+        )}
+
+        {admin.route && live && (
+          <details className="live-panel" open>
+            <summary>
+              <strong>지금 방송 중 {live.live.length}명</strong>
+              <span className="muted">
+                {live.updatedAt
+                  ? `${new Date(live.updatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} 기준 · 시청자 순`
+                  : '아직 집계 전'}
+              </span>
+            </summary>
+            <div className="live-grid">
+              {live.live.map((l) => (
+                <a
+                  className="live-card"
+                  key={l.userId}
+                  href={`https://play.sooplive.com/${encodeURIComponent(l.userId)}/${encodeURIComponent(l.broadNo)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span className="live-thumb-wrap">
+                    <img
+                      className="live-thumb"
+                      src={`https://liveimg.sooplive.com/m/${encodeURIComponent(l.broadNo)}?t=${encodeURIComponent(live.updatedAt ?? '')}`}
+                      alt=""
+                    />
+                    <span className="live-viewers">{l.viewers.toLocaleString()}</span>
+                  </span>
+                  <span className="live-nick">{l.nick}</span>
+                  <span className="live-title muted">{l.title}</span>
+                </a>
+              ))}
+            </div>
+          </details>
         )}
 
         {watchEdits && (

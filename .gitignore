@@ -33,3 +33,4 @@ service-account*.json
 collector.log
 collector.pid
 .watch-state/
+out/
