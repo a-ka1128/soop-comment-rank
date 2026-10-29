@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="300" viewBox="0 0 960 300">
-  <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#3b2a6e"/><stop offset="1" stop-color="#c2410c"/></linearGradient></defs>
-  <rect width="960" height="300" fill="url(#g)"/>
-  <text x="60" y="140" font-family="sans-serif" font-size="56" font-weight="800" fill="#fff">테스트 포스터 배너</text>
-  <text x="60" y="190" font-family="sans-serif" font-size="22" fill="#ffffffcc">960 × 300 · 비율이 달라도 가운데 기준으로 맞춰집니다</text>
-</svg>
