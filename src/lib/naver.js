@@ -48,17 +48,48 @@ function normalize(item, cafeId) {
   }
 }
 
-/** 글 본문 전체에서 SOOP 방송국 주소를 찾는다. 못 읽으면 ''. 링크 카드의 href 도 본문 HTML 에 들어 있다. */
-async function soopIdFromArticle(cafeId, articleId) {
+const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }
+
+function decode(text) {
+  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, body) => {
+    if (body[0] === '#') {
+      const code = body[1].toLowerCase() === 'x' ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10)
+      return Number.isFinite(code) && code <= 0x10ffff ? String.fromCodePoint(code) : whole
+    }
+    return ENTITIES[body.toLowerCase()] ?? whole
+  })
+}
+
+/**
+ * 스마트에디터 본문(contentHtml)에서 글자만 뽑는다. 줄은 문단(<p class="se-text-paragraph">)마다 하나.
+ * 링크 카드·이미지는 문단이 아니라서 빠진다(링크 카드 안의 "~님의 방송국에 오신 것을 환영합니다" 같은 글).
+ * 문단이 하나도 없는 예전 편집기 글은 태그를 모두 걷어 낸다.
+ */
+export function htmlToText(html) {
+  const paras = html.match(/<p class="se-text-paragraph[^>]*>[\s\S]*?<\/p>/g)
+  const lines = paras
+    ? paras.map((p) => p.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, ''))
+    : [html.replace(/<(?:br|\/p|\/div)\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '')]
+  return decode(lines.join('\n'))
+    .replace(/[​﻿]/g, '')
+    .split('\n')
+    .map((l) => l.trimEnd())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+/** 글 상세 API 로 본문 전체를 읽는다. 비공개 글 등 못 읽으면 null. 링크 카드의 href 도 본문 HTML 에 들어 있다. */
+async function readArticle(cafeId, articleId) {
   try {
     const res = await fetch(`${ARTICLE_API}/${cafeId}/articles/${articleId}?query=&useCafeId=true&requestFrom=A`, {
       headers: HEADERS,
     })
-    if (!res.ok) return ''
+    if (!res.ok) return null
     const html = (await res.json())?.result?.article?.contentHtml
-    return typeof html === 'string' ? soopIdFrom(html) : ''
+    return typeof html === 'string' ? { text: htmlToText(html), userId: soopIdFrom(html) } : null
   } catch {
-    return ''
+    return null
   }
 }
 
@@ -79,22 +110,26 @@ export async function fetchDebutArticles({ cafeId, menuId, manual = {} }) {
     if (!data.result.pageInfo?.visibleNextButton) break
   }
 
-  // 손으로 적어 둔 내용이 먼저다(비공개 글은 본문을 읽을 수 없다).
+
+  // 목록의 summary 는 앞부분만이라, 글마다 본문 전체를 읽어 바꿔 넣는다. 한 번에 몇 개씩만 묻는다.
+  // 못 읽은 글(비공개 등)은 summary 그대로 둔다.
+  for (let i = 0; i < out.length; i += 4) {
+    await Promise.all(
+      out.slice(i, i + 4).map(async (c) => {
+        const full = await readArticle(cafeId, c.id)
+        if (!full) return
+        if (full.text) c.text = `${c.text.split('\n')[0]}\n${full.text}`
+        if (!c.userId) c.userId = full.userId || soopIdFrom(full.text)
+      }),
+    )
+  }
+
+  // 손으로 적어 둔 내용이 마지막에 덮는다(비공개 글은 본문을 읽을 수 없다).
   for (const c of out) {
     const m = manual[c.id]
     if (!m) continue
     if (m.userId) c.userId = m.userId
     if (m.text) c.text = `${c.text.split('\n')[0]}\n${m.text}`
-  }
-
-  // 목록에서 아이디를 못 찾은 글만 본문을 따로 읽는다. 한 번에 몇 개씩만 묻는다.
-  const todo = out.filter((c) => !c.userId)
-  for (let i = 0; i < todo.length; i += 4) {
-    await Promise.all(
-      todo.slice(i, i + 4).map(async (c) => {
-        c.userId = await soopIdFromArticle(cafeId, c.id)
-      }),
-    )
   }
   return out
 }
