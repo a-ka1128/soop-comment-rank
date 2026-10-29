@@ -368,11 +368,8 @@ export default function App() {
   )
   const maxClassCount = Math.max(1, ...classCounts.map((s) => s.total))
 
-  /** 신청한 사람 수. 한 사람이 댓글을 여러 번 달았어도 한 명으로 센다. */
-  const applicantCount = useMemo(
-    () => (data ? new Set(data.comments.map((c) => c.userId || c.id)).size : null),
-    [data],
-  )
+  /** 신청 인원. 답글(대댓글)을 뺀 일반 댓글의 개수다. */
+  const applicantCount = data ? data.comments.length : null
 
   /**
    * 목록에는 애청자가 모자란 사람도 그대로 둔다. 숨기는 대신 줄에 lowFans(그 사람의 애청자 수)를
@@ -394,8 +391,12 @@ export default function App() {
    */
   const visibleItems = useMemo(() => {
     const q = query.trim().toLowerCase()
+    // 꼬리표로 거르면 그 꼬리표 안에서의 순위를 보여 준다. 전체 순위는 overallRank 에 남겨
+    // 컷 선과 상세 화면이 쓴다. 이미 좋아요 순이라 앞에서부터 번호를 붙이면 된다.
     const tagged = tagFilter
-      ? cutItems.filter((c) => tagsOf(c, labels[c.userId]).some((t) => t.id === tagFilter))
+      ? cutItems
+          .filter((c) => tagsOf(c, labels[c.userId]).some((t) => t.id === tagFilter))
+          .map((c, i) => ({ ...c, overallRank: c.rank, rank: i + 1 }))
       : cutItems
     if (!q) return tagged
     return tagged.filter(
@@ -608,16 +609,19 @@ export default function App() {
       )}
       <header className="topbar">
         <div className="brand">
-          <div>
+          <div className="brand-text">
             <span className="kicker">WORLD OF WARCRAFT · FOREVER</span>
             <h1>와우 포에버 · 우왁굳 길드 사전 신청</h1>
             <p>신청 댓글을 해보려는 직업별로 나눠 좋아요 순으로 세웁니다.</p>
-            {applicantCount != null && (
-              <p className="applicant-count">
-                신청 인원 <strong>{applicantCount.toLocaleString()}</strong>명
-              </p>
-            )}
           </div>
+          {applicantCount != null && (
+            <div className="applicant-count" aria-label={`신청 인원 ${applicantCount}명`}>
+              <span className="ac-label">신청 인원</span>
+              <span className="ac-num">
+                <strong>{applicantCount.toLocaleString()}</strong>명
+              </span>
+            </div>
+          )}
         </div>
 
         {admin.route && (
@@ -925,7 +929,10 @@ export default function App() {
               {visibleItems.map((comment, index) => {
                 const prev = visibleItems[index - 1]
                 const crossesCut =
-                  CUT_RANK && prev && prev.rank <= CUT_RANK && comment.rank > CUT_RANK
+                  CUT_RANK &&
+                  prev &&
+                  (prev.overallRank ?? prev.rank) <= CUT_RANK &&
+                  (comment.overallRank ?? comment.rank) > CUT_RANK
                 // 컷 바로 위아래의 좋아요 차이. 지금 몇 개 차이로 갈리는지가
                 // 이 선을 보는 사람이 실제로 알고 싶은 숫자다.
                 const cutGap = cutInfo?.gap ?? 0
@@ -947,7 +954,8 @@ export default function App() {
                     )}
                     <CommentCard
                       comment={comment}
-                      move={moves.get(activeSection.id)?.get(comment.id)}
+                      // 꼬리표 순위일 때의 오르내림은 전체 순위 기준이라 보여 주면 헷갈린다.
+                      move={tagFilter ? undefined : moves.get(activeSection.id)?.get(comment.id)}
                       hasSnapshot={!!prevRanksRef.current}
                       color={colorOf(comment)}
                       groupName={groupNameById[comment.groupId]}

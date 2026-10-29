@@ -66,7 +66,10 @@ export default function CommentDetail({
           <span className="detail-avatar avatar-empty" aria-hidden="true" />
         )}
         <div className="detail-who">
-          <span className="detail-rank">{comment.rank}위</span>
+          <span className="detail-rank">
+            {comment.rank}위
+            {comment.overallRank ? <span className="muted"> · 전체 {comment.overallRank}위</span> : null}
+          </span>
           <h2>{comment.nick}</h2>
           <span className="muted">{comment.userId || 'SOOP 아이디 없음'}</span>
         </div>

@@ -38,6 +38,21 @@
 
 /* ---------- top bar ---------- */
 
+/* 머리 카드: 흰 패널. 신청 인원만 금빛 상자로 눈에 띄게 한다. */
+.topbar .brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px 32px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 26px 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
 .topbar .brand h1 {
   margin: 0;
   font-size: 28px;
@@ -60,9 +75,44 @@
 
 .topbar .brand p {
   max-width: 640px;
-  margin: 8px 0 24px;
+  margin: 8px 0 0;
   color: var(--muted);
   font-size: 14px;
+}
+
+/* 신청 인원: 제목 오른쪽에 크게. 좁은 화면에서는 제목 아래로 내려온다. */
+.applicant-count {
+  display: grid;
+  gap: 2px;
+  min-width: 150px;
+  padding: 14px 22px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  text-align: center;
+}
+
+.ac-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+.ac-num {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.ac-num strong {
+  margin-right: 3px;
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
 }
 
 .loader {
@@ -1638,14 +1688,75 @@ button:disabled {
   text-align: center;
 }
 
-.topbar .brand .applicant-count {
-  margin-top: 6px;
-  font-size: 15px;
-  color: var(--muted);
+
+/* ---------- 남색 포인트 ---------- */
+
+.loader button[type='submit'],
+button.primary {
+  border-color: var(--brand);
+  background: var(--brand);
 }
 
-.topbar .brand .applicant-count strong {
-  font-size: 20px;
-  font-weight: 800;
+button.primary:hover {
+  background: var(--brand-deep);
+}
+
+/* 패널 제목 앞에 금빛 띠. 흰 면에 시선이 머물 자리를 준다. */
+.class-counts h2 {
+  position: relative;
+  padding-left: 12px;
+  font-size: 14px;
   color: var(--text);
+}
+
+.class-counts h2::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+  width: 4px;
+  border-radius: 2px;
+  background: #f0b429;
+}
+
+.tag.active {
+  border-color: var(--brand);
+  background: var(--brand);
+}
+
+.tag.active em {
+  color: #cdd6f3;
+}
+
+.live-panel,
+.edit-alerts {
+  border-color: color-mix(in srgb, var(--brand) 18%, var(--line));
+  box-shadow: var(--shadow);
+}
+
+.live-panel summary strong {
+  color: var(--brand);
+}
+
+@media (max-width: 600px) {
+  .topbar .brand {
+    padding: 20px 18px;
+  }
+
+  .topbar .brand h1 {
+    font-size: 22px;
+  }
+
+  .applicant-count {
+    width: 100%;
+    grid-auto-flow: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 18px;
+  }
+
+  .ac-num strong {
+    font-size: 30px;
+  }
 }
