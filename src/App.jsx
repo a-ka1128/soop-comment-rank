@@ -576,15 +576,22 @@ export default function App() {
   return (
     <div className="app">
       {BANNER ? (
-        <a
-          className="ad-banner"
-          href={safeUrl(BANNER.href) || undefined}
-          target="_blank"
-          rel="sponsored noopener noreferrer"
-        >
-          <img src={safeUrl(BANNER.image)} alt={BANNER.alt ?? '광고'} />
-          <span className="ad-tag">광고</span>
-        </a>
+        BANNER.href ? (
+          <a
+            className="ad-banner"
+            href={safeUrl(BANNER.href) || undefined}
+            target="_blank"
+            rel={BANNER.ad ? 'sponsored noopener noreferrer' : 'noopener noreferrer'}
+          >
+            <img src={safeUrl(BANNER.image)} alt={BANNER.alt ?? ''} />
+            {BANNER.ad && <span className="ad-tag">광고</span>}
+          </a>
+        ) : (
+          <div className="ad-banner">
+            <img src={safeUrl(BANNER.image)} alt={BANNER.alt ?? ''} />
+            {BANNER.ad && <span className="ad-tag">광고</span>}
+          </div>
+        )
       ) : (
         admin.route && (
           <div className="ad-banner ad-empty">

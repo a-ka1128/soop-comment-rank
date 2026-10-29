@@ -1606,17 +1606,11 @@ button:disabled {
   line-height: 0;
 }
 
+/* 이미지 비율 그대로 가로에 맞춘다. 비율이 정해져 있으면 글자가 잘리지 않는다. */
 .ad-banner img {
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 5;
-  object-fit: cover;
-}
-
-@media (max-width: 600px) {
-  .ad-banner img {
-    aspect-ratio: 2 / 1;
-  }
+  height: auto;
 }
 
 .ad-tag {
