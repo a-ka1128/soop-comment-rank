@@ -11,6 +11,7 @@ import { fetchLabels, saveLabel } from './lib/labels'
 import { useAdmin } from './lib/admin'
 import { findEdits, loadTexts, saveTexts } from './lib/edits'
 import { fetchLive } from './lib/live'
+import { BANNER, safeUrl } from './lib/banner'
 import { useFlipReorder } from './hooks/useFlipReorder'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import './App.css'
@@ -574,6 +575,24 @@ export default function App() {
 
   return (
     <div className="app">
+      {BANNER ? (
+        <a
+          className="ad-banner"
+          href={safeUrl(BANNER.href) || undefined}
+          target="_blank"
+          rel="sponsored noopener noreferrer"
+        >
+          <img src={safeUrl(BANNER.image)} alt={BANNER.alt ?? '광고'} />
+          <span className="ad-tag">광고</span>
+        </a>
+      ) : (
+        admin.route && (
+          <div className="ad-banner ad-empty">
+            광고 배너 자리 · 960×300 · <code>src/lib/banner.js</code> 에 이미지와 주소를 적으면 여기에 뜹니다
+            (일반 방문자에게는 비어 있는 동안 보이지 않습니다)
+          </div>
+        )
+      )}
       <header className="topbar">
         <div className="brand">
           <div>
