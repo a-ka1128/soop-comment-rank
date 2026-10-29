@@ -11,10 +11,7 @@
  *
  * 이미지는 public/ 에 넣고 './파일이름' 으로 적는다(주소가 바뀌어도 사이트 안에서 찾는다).
  */
-export const BANNER = {
-  image: './banner.webp',
-  alt: '와우 포에버 모험 시작을 환영합니다',
-}
+export const BANNER = null
 
 /** http(s) 주소만 통과시킨다. javascript: 같은 스킴이 href 로 들어가지 않게. */
 export function safeUrl(url) {
