@@ -871,14 +871,15 @@ export default function App() {
                       <span className="cc-bar" aria-hidden="true">
                         <span style={{ width: `${(s.total / maxClassCount) * 100}%` }} />
                       </span>
-                      {s.also > 0 && (
-                        <span
-                          className="cc-also"
-                          title={`대표 직업은 따로 있고 ${s.name}도 같이 고민 중인 사람`}
-                        >
-                          +{s.also} 고민 중
-                        </span>
-                      )}
+                      {/* 0명이어도 줄은 남겨 둔다(숨김). 없애면 카드 높이가 바뀌어 아래 UI 가 밀린다. */}
+                      <span
+                        className="cc-also"
+                        style={s.also > 0 ? undefined : { visibility: 'hidden' }}
+                        aria-hidden={s.also > 0 ? undefined : true}
+                        title={`대표 직업은 따로 있고 ${s.name}도 같이 고민 중인 사람`}
+                      >
+                        +{s.also} 고민 중
+                      </span>
                     </button>
                   </li>
                 ))}
