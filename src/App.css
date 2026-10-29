@@ -623,7 +623,8 @@ button:disabled {
   height: calc(100vh - 32px);
   overflow: auto;
   scrollbar-gutter: stable;
-  overscroll-behavior: contain;
+  /* contain 이면 패널 끝에서 휠이 페이지로 넘어가지 않아 마우스를 올린 구간에서 페이지가 멈춘다. */
+  overscroll-behavior: auto;
   padding: 22px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
