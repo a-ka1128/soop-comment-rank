@@ -274,13 +274,6 @@ export function crewsOf(userId, label) {
  *   kind 는 순서를 정하고, look 은 색을 정한다.
  */
 export function tagsOf(comment, label) {
-  // 데뷔 글 댓글은 와우를 처음 하는 새 와튜버라, 다른 꼬리표 없이 '와우 처음' 하나만 단다.
-  if (comment.debut) {
-    const t = SELF_TAGS.find((s) => s.id === 'newbie')
-    return [
-      { id: t.id, name: t.name, hint: '뉴 와튜버 데뷔 글에 댓글을 단 사람', kind: 'self', look: 'self' },
-    ]
-  }
   const text = comment.text || ''
   const removed = TAG_FIXES[comment.userId] ?? []
   const forced = label?.tags ?? {}
@@ -288,17 +281,22 @@ export function tagsOf(comment, label) {
   // 그래야 꼬리표 줄에 같은 이름이 두 번 뜨지 않는다.
   const allCrews = crewsOf(comment.userId, label).map((c) => c.name)
   const asTag = new Set(allCrews)
+  // 데뷔 글은 와우를 처음 하는 새 와튜버라 '와우 처음'만 기본으로 달고, 글에서 자동으로 뽑는
+  // 다른 꼬리표는 달지 않는다. 어드민이 고친 것(켜기·끄기)은 그대로 따른다.
   const hit = SELF_TAGS.filter((t) =>
     t.id in forced
       ? forced[t.id]
-      : asTag.has(t.name) || (!removed.includes(t.id) && t.test.test(text)),
+      : comment.debut
+        ? t.id === 'newbie' || asTag.has(t.name)
+        : asTag.has(t.name) || (!removed.includes(t.id) && t.test.test(text)),
   )
   // 경력 꼬리표는 셋 중 가장 높은 하나만 남긴다.
   const top = CAREER_RANK.find((id) => hit.some((t) => t.id === id))
   const self = hit.filter((t) => !CAREER_RANK.includes(t.id) || t.id === top).map((t) => ({
     id: t.id,
     name: t.name,
-    hint: t.id in forced ? `${t.hint} — 어드민 확인` : t.hint,
+    hint:
+      t.id in forced ? `${t.hint} — 어드민 확인` : comment.debut && t.id === 'newbie' ? '뉴 와튜버 데뷔 글을 올린 사람(기본값)' : t.hint,
     kind: 'self',
     look: t.look ?? 'self',
   }))
