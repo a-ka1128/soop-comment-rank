@@ -76,13 +76,6 @@ export default function CommentDetail({
           {gameNick && (
             <span className="detail-game-nick">
               인게임 <b>{gameNick}</b>
-              <button
-                type="button"
-                className="ghost copy-nick"
-                onClick={() => navigator.clipboard?.writeText(gameNick).catch(() => {})}
-              >
-                복사
-              </button>
             </span>
           )}
         </div>

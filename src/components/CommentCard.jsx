@@ -54,27 +54,30 @@ function CommentCard({
           <span className="avatar avatar-empty" aria-hidden="true" />
         )}
 
-        <span className="nick">{comment.nick}</span>
-        {gameNick && (
-          <span className="game-nick" title="인게임 닉네임">
-            {gameNick}
+        <span className="nick-col">
+          <span className="nick-line">
+            <span className="nick">{comment.nick}</span>
+            {/* 목록에는 대표 직업 하나만. 나머지 직업은 오른쪽 자세히 보기에 있다. */}
+            {groupName && (
+              <span
+                className="badge group-badge"
+                style={comment.classColor ? { '--group': comment.classColor } : undefined}
+              >
+                {groupName}
+              </span>
+            )}
+            {comment.lowFans != null && (
+              <span className="badge low-fans" title="즐찾이 1,000명 기준에 모자랍니다">
+                즐찾 {comment.lowFans.toLocaleString()}명
+              </span>
+            )}
           </span>
-        )}
-        {/* 목록에는 대표 직업 하나만. 나머지 직업은 오른쪽 자세히 보기에 있다. */}
-        {groupName && (
-          <span
-            className="badge group-badge"
-            style={comment.classColor ? { '--group': comment.classColor } : undefined}
-          >
-            {groupName}
-          </span>
-        )}
-
-        {comment.lowFans != null && (
-          <span className="badge low-fans" title="즐찾이 1,000명 기준에 모자랍니다">
-            즐찾 {comment.lowFans.toLocaleString()}명
-          </span>
-        )}
+          {gameNick && (
+            <span className="game-nick" title="인게임 닉네임">
+              {gameNick}
+            </span>
+          )}
+        </span>
 
         <span className="likes">♥ {comment.likes.toLocaleString()}</span>
       </button>
