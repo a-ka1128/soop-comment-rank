@@ -19,7 +19,8 @@ function tagState(label, id) {
  * 어드민이 한 사람의 라벨을 고치는 칸. 카드를 펼쳤을 때만 보인다.
  * 저장하면 그 사람의 모든 댓글(두 글 모두)에 똑같이 적용된다 — 라벨은 사람에 붙는다.
  */
-export default function LabelEditor({ userId, label, onSave }) {
+export default function LabelEditor({ userId, label, defaultGameNick, onSave }) {
+  const [gameNick, setGameNick] = useState(() => label?.gameNick ?? '')
   // 직업은 여러 개 고를 수 있다. 고른 순서를 지키고, 처음 고른 게 대표 직업이 된다.
   // 아무것도 안 고르면 자동, '미분류'를 고르면 직업 없이 고정.
   const [cls, setCls] = useState(() => labelClasses(label) ?? [])
@@ -85,10 +86,11 @@ export default function LabelEditor({ userId, label, onSave }) {
     )
     // 입력칸에 적어 두고 추가를 안 누른 채 저장해도 들어가게 한다.
     const next = addDraft()
-    save(cleanLabel({ cls, tags: tagValues, ...next }))
+    save(cleanLabel({ cls, tags: tagValues, gameNick, ...next }))
   }
 
   function reset() {
+    setGameNick('')
     setCls([])
     setTags(Object.fromEntries(SELF_TAGS.map((t) => [t.id, 'auto'])))
     setCrews([])
@@ -109,6 +111,24 @@ export default function LabelEditor({ userId, label, onSave }) {
       <div className="label-editor-head">
         <strong>라벨 고치기</strong>
         <span className="muted">{userId} — 이 사람의 모든 댓글에 적용</span>
+      </div>
+
+      <div className="label-field">
+        <span>인게임</span>
+        <div>
+          <input
+            className="game-nick-input"
+            value={gameNick}
+            onChange={(e) => setGameNick(e.target.value)}
+            placeholder={defaultGameNick ? `${defaultGameNick} (기본값)` : '인게임 닉네임'}
+            aria-label="인게임 닉네임"
+          />
+          <p className="muted class-picks-note">
+            {defaultGameNick
+              ? '비워 두면 기본값(wakfogg에서 가져온 닉네임)을 보여 줍니다.'
+              : '비워 두면 표시하지 않습니다.'}
+          </p>
+        </div>
       </div>
 
       <div className="label-field">

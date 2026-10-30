@@ -22,6 +22,7 @@ export default function CommentDetail({
   groupName,
   label,
   gameNick,
+  defaultGameNick,
   admin,
   onSaveLabel,
   fanCount,
@@ -184,6 +185,7 @@ export default function CommentDetail({
           key={comment.userId}
           userId={comment.userId}
           label={label}
+          defaultGameNick={defaultGameNick}
           onSave={onSaveLabel}
         />
       )}
