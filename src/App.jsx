@@ -36,6 +36,8 @@ export default function App() {
   /** 「리얼 뉴 와튜버 데뷔 하기」 글의 댓글. 못 불러와도 본 화면은 그대로 뜬다. */
   const [debut, setDebut] = useState(null)
   const [tagFilter, setTagFilter] = useState(null)
+  /** 즐찾이 기준에 모자란 사람을 목록에서 숨긴다. 순위는 그대로 두고 줄만 뺀다. */
+  const [hideLow, setHideLow] = useState(false)
   /**
    * 어드민이 고친 라벨(userId -> 라벨). 모든 방문자가 같은 값을 본다.
    * 예전의 '수동 지정'은 그 브라우저에만 남아 남에게 안 보였다 — 그래서 없앴다.
@@ -368,8 +370,13 @@ export default function App() {
     const inTop = (c) => topN == null || activeTab === DEBUT_TAB || (overallRankById.get(c.id) ?? Infinity) <= topN
     // 자기소개 꼬리표를 골랐으면 그 꼬리표를 가진 사람만 센다. 직업 칸마다 그 경력이 몇 명인지 보인다.
     const hasTag = (c) => !tagFilter || tagsOf(c, labels[c.userId]).some((t) => t.id === tagFilter)
+    const notHidden = (c) => {
+      if (!hideLow || activeTab === DEBUT_TAB) return true
+      const count = fans.get(c.userId)
+      return !(count != null && count < MIN_FANS_RULE)
+    }
     return sections.map((s) => {
-      const items = s.items.filter((c) => inTop(c) && hasTag(c))
+      const items = s.items.filter((c) => inTop(c) && hasTag(c) && notHidden(c))
       return {
         id: s.id,
         name: s.name,
@@ -378,7 +385,7 @@ export default function App() {
         also: items.filter((c) => c.groupId !== s.id).length,
       }
     })
-  }, [sections, topN, activeTab, overallRankById, tagFilter, labels])
+  }, [sections, topN, activeTab, overallRankById, tagFilter, labels, hideLow, fans])
   const maxClassCount = Math.max(1, ...classCounts.map((s) => s.total))
 
   /** 신청 인원. 답글(대댓글)을 뺀 일반 댓글의 개수다. */
@@ -405,10 +412,11 @@ export default function App() {
    */
   const rankTotal = activeTab === DEBUT_TAB ? (debutSection?.items.length ?? 0) : (allSection?.items.length ?? 0)
   const limitedItems = useMemo(() => {
-    if (topN == null) return cutItems
-    if (activeTab === DEBUT_TAB) return cutItems.filter((c) => c.rank <= topN)
-    return cutItems.filter((c) => (overallRankById.get(c.id) ?? Infinity) <= topN)
-  }, [cutItems, topN, activeTab, overallRankById])
+    const base = hideLow && activeTab !== DEBUT_TAB ? cutItems.filter((c) => c.lowFans == null) : cutItems
+    if (topN == null) return base
+    if (activeTab === DEBUT_TAB) return base.filter((c) => c.rank <= topN)
+    return base.filter((c) => (overallRankById.get(c.id) ?? Infinity) <= topN)
+  }, [cutItems, topN, activeTab, overallRankById, hideLow])
 
   /**
    * 꼬리표로 거른 목록. 꼬리표를 고르면 그 꼬리표 안에서의 순위를 보여 준다. 전체 순위는
@@ -441,19 +449,6 @@ export default function App() {
         c.text.toLowerCase().includes(q),
     )
   }, [taggedItems, query])
-
-  /** 이 탭에서 기준에 모자란 사람 수. 애청자 수를 모르는 사람은 모자란 쪽에 넣지 않는다. */
-  const filterInfo = useMemo(() => {
-    const items = activeSection?.items ?? []
-    let low = 0
-    let unknown = 0
-    for (const c of items) {
-      const count = fans.get(c.userId)
-      if (count == null) unknown += 1
-      else if (count < MIN_FANS_RULE) low += 1
-    }
-    return { total: items.length, low, unknown }
-  }, [activeSection, fans])
 
   /**
    * 컷 위아래의 좋아요 차이. 검색으로 119등이 가려져 있어도 흔들리지 않게
@@ -967,15 +962,20 @@ export default function App() {
                   전체 보기
                 </button>
               </div>
-              <span
-                className="fanfilter-note"
-                title="기준에 모자란 사람도 숨기지 않고 노란 배지로 표시합니다"
+              {/* 켜면 즐찾이 모자란 사람(노란 배지)을 목록에서 뺀다. 순위 번호는 그대로다. */}
+              <button
+                type="button"
+                className={`fanfilter-toggle${hideLow ? ' on' : ''}`}
+                aria-pressed={hideLow}
+                disabled={fansLoading || activeTab === DEBUT_TAB}
+                onClick={() => setHideLow((v) => !v)}
+                title="즐찾이 기준에 모자란 사람을 순위표에서 숨깁니다. 순위 번호는 그대로입니다"
               >
+                <span className="ft-box" aria-hidden="true" />
                 {fansLoading
                   ? '애청자 수 불러오는 중…'
-                  : `즐찾 ${MIN_FANS_RULE.toLocaleString()}명 미만 ${filterInfo.low}명` +
-                    (filterInfo.unknown > 0 ? ` · 미확인 ${filterInfo.unknown}명` : '')}
-              </span>
+                  : `즐찾 ${MIN_FANS_RULE}명 미만 숨기기`}
+              </button>
             </div>
 
           {(tagCounts.length > 0 || debutSection) && (

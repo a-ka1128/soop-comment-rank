@@ -1538,10 +1538,49 @@ button:disabled {
 
 /* 애청자 기준 안내 ---------------------------------------------------------- */
 
-.fanfilter-note {
-  font-size: 11px;
+.fanfilter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
   color: var(--muted);
   white-space: nowrap;
+  cursor: pointer;
+}
+
+.fanfilter-toggle:hover:not(:disabled) {
+  background: color-mix(in srgb, #f0b429 14%, transparent);
+}
+
+.fanfilter-toggle:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.fanfilter-toggle .ft-box {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid #c9a23a;
+  border-radius: 3px;
+  background: #fff;
+  flex: none;
+}
+
+.fanfilter-toggle.on {
+  color: #3d2800;
+  font-weight: 700;
+}
+
+.fanfilter-toggle.on .ft-box {
+  background: #f0b429
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3 7.4l2.6 2.6L11 4.4' fill='none' stroke='%233d2800' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 100% no-repeat;
+  border-color: #f0b429;
 }
 
 /* 애청자가 기준에 모자란 줄. 숨기지 않고, 줄 바탕을 옅은 노랑으로 깔고 각진 경고 표지를 단다.
