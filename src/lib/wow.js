@@ -35,7 +35,14 @@ export const WOW_CLASSES = [
     color: '#4aa3f5',
     words: ['주술', '술사', '고술', '정술', '복술'],
   },
-  { id: 'mage', name: '마법사', color: '#3fc7eb', words: ['마법사', '법사', '법ㅅㅏ'] },
+  {
+    id: 'mage',
+    name: '마법사',
+    color: '#3fc7eb',
+    words: ['마법사', '법사', '법ㅅㅏ'],
+    // "흑마법사"의 "마법사"·"법사"는 마법사가 아니다.
+    notIn: ['흑마법사'],
+  },
   { id: 'warlock', name: '흑마법사', color: '#8788ee', words: ['흑마', '악흑'] },
   {
     id: 'druid',
@@ -55,8 +62,11 @@ function squash(text) {
 /** 직업마다 "가장 먼저 나온 위치"를 찾는 함수 하나씩. */
 const LOCATORS = WOW_CLASSES.map((cls) => {
   const alone = (cls.alone ?? []).map((w) => new RegExp(`(?<!${HANGUL})${w}(?!${HANGUL})`, 'u'))
-  return (squashed, raw) => {
+  return (squashedAll, raw) => {
     let best = Infinity
+    // 다른 직업 이름 안에 든 글자는 지운다(길이는 그대로 두어 위치가 어긋나지 않게).
+    let squashed = squashedAll
+    for (const w of cls.notIn ?? []) squashed = squashed.replaceAll(w, '_'.repeat(w.length))
     for (const w of cls.words) {
       const at = squashed.indexOf(w)
       if (at >= 0 && at < best) best = at
@@ -98,6 +108,7 @@ export function pickClass(text) {
   return {
     id: hits[0]?.cls.id ?? null,
     others: hits.slice(1).map((h) => h.cls.name),
+    otherIds: hits.slice(1).map((h) => h.cls.id),
   }
 }
 
@@ -137,7 +148,7 @@ export function labelClasses(label) {
  * @param {Array} comments
  * @param {Record<string, {cls?: string|string[]}>} labels userId -> 어드민 라벨
  */
-export function classifyByClass(comments, labels = {}) {
+export function classifyByClass(comments, labels = {}, { considering = false } = {}) {
   const buckets = new Map(WOW_CLASSES.map((c) => [c.id, []]))
   buckets.set(UNGROUPED_ID, [])
 
@@ -167,6 +178,13 @@ export function classifyByClass(comments, labels = {}) {
       conflicts: [],
     }
     for (const id of targets) buckets.get(id).push(item)
+    // considering: 자동 판정은 대표 직업 칸에만 넣지만, 같이 고민 중인 직업 칸에도 사본을 둔다.
+    // 사본(considerCopy)은 인원·전체 탭·내보내기에서는 세지 않는다.
+    if (considering && !manual) {
+      for (const id of picked.otherIds ?? []) {
+        if (!targets.includes(id)) buckets.get(id).push({ ...item, considerCopy: true })
+      }
+    }
   }
   return buckets
 }

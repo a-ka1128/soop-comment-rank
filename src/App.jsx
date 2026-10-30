@@ -7,7 +7,7 @@ import { loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, rank } from './lib/groups'
 import { CUT_RANK, DEBUT_BOARD, TARGET_POST } from './lib/target'
 import { SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
-import { fetchLabels, saveLabel } from './lib/labels'
+import { cleanLabel, fetchLabels, saveLabel } from './lib/labels'
 import QaModal from './components/QaModal'
 import { useAdmin } from './lib/admin'
 import GAME_NICKS from './lib/gameNicks.json'
@@ -110,9 +110,10 @@ export default function App() {
   const grouped = true
 
   const buckets = useMemo(
-    () => (data ? classifyByClass(data.comments, labels) : null),
-    [data, labels],
+    () => (data ? classifyByClass(data.comments, labels, { considering: admin.route }) : null),
+    [data, labels, admin.route],
   )
+  const notCopy = (c) => !c.considerCopy
 
   /** 데뷔 글 댓글. 직업 색을 칠하려고 같은 규칙으로 나눈 뒤 한 줄로 편다. */
   const debutSection = useMemo(() => {
@@ -162,13 +163,13 @@ export default function App() {
       name: '전체',
       color: NEUTRAL_COLOR,
       topN: null,
-      items: rank(uniqueComments([...buckets.values()].flat())),
+      items: rank(uniqueComments([...buckets.values()].flat().filter(notCopy))),
     }
   }, [buckets])
 
   const counts = useMemo(() => {
     const map = {}
-    for (const s of sections) map[s.id] = s.items.length
+    for (const s of sections) map[s.id] = s.items.filter(notCopy).length
     return map
   }, [sections])
 
@@ -482,7 +483,7 @@ export default function App() {
       : allSection
         ? [allSection]
         : []
-    return base.map((s) => ({ ...s, items: s.items }))
+    return base.map((s) => ({ ...s, items: s.items.filter(notCopy) }))
   }, [grouped, sections, allSection])
 
   async function load() {
@@ -601,6 +602,33 @@ export default function App() {
   )
   const isEditing = watchEdits
 
+  /** 어드민이 손으로 고른 직업(cls)만 모두 지워 자동 판정으로 되돌린다. 태그·크루·인게임 닉네임은 그대로. */
+  const [resetting, setResetting] = useState(false)
+  const resetClasses = async () => {
+    const targets = Object.entries(labels).filter(([, l]) => l && l.cls !== undefined)
+    if (targets.length === 0) return window.alert('직업을 손으로 고른 사람이 없습니다.')
+    if (
+      !window.confirm(
+        `직업을 손으로 고른 ${targets.length}명의 직업을 모두 자동 판정으로 되돌립니다.\n태그·크루·인게임 닉네임은 그대로 둡니다. 계속할까요?`,
+      )
+    )
+      return
+    setResetting(true)
+    let done = 0
+    try {
+      for (const [userId, label] of targets) {
+        const { cls: _cls, ...rest } = label
+        await saveLabelFor(userId, cleanLabel(rest))
+        done += 1
+      }
+      window.alert(`${done}명의 직업을 자동으로 되돌렸습니다.`)
+    } catch (e) {
+      setError(`${done}/${targets.length}명까지 되돌리고 멈췄습니다: ${e.message}`)
+    } finally {
+      setResetting(false)
+    }
+  }
+
   /** 알림에서 고른 댓글을 목록에서 펼친다. 필터에 가려 있으면 안 보이니 검색·꼬리표는 푼다. */
   const openEdit = (e) => {
     setActiveTab(e.debut ? DEBUT_TAB : ALL_TAB)
@@ -693,6 +721,9 @@ export default function App() {
                 </span>
                 <span className="muted">카드를 펼치면 라벨을 고칠 수 있습니다.</span>
                 <span className="spacer" />
+                <button type="button" className="ghost" disabled={resetting} onClick={resetClasses}>
+                  {resetting ? '되돌리는 중…' : '직업 전부 자동으로'}
+                </button>
                 <button type="button" className="ghost" onClick={() => admin.signOut()}>
                   로그아웃
                 </button>

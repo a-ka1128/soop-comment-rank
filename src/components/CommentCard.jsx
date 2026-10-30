@@ -66,6 +66,11 @@ function CommentCard({
                 {groupName}
               </span>
             )}
+            {comment.considerCopy && (
+              <span className="badge considering" title="대표 직업은 따로 있고, 이 직업도 같이 고민 중이라고 적었습니다">
+                고민 중
+              </span>
+            )}
             {comment.lowFans != null && (
               <span className="badge low-fans" title="즐찾이 1,000명 기준에 모자랍니다">
                 즐찾 {comment.lowFans.toLocaleString()}명
