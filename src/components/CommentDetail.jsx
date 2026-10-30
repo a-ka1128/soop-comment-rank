@@ -72,12 +72,12 @@ export default function CommentDetail({
             {comment.overallRank ? <span className="muted"> · 전체 {comment.overallRank}위</span> : null}
           </span>
           <h2>{comment.nick}</h2>
-          <span className="muted">{comment.userId || 'SOOP 아이디 없음'}</span>
           {gameNick && (
             <span className="detail-game-nick">
               인게임 <b>{gameNick}</b>
             </span>
           )}
+          <span className="muted">{comment.userId || 'SOOP 아이디 없음'}</span>
         </div>
         <button type="button" className="detail-close" onClick={onClose} aria-label="닫기">
           ✕

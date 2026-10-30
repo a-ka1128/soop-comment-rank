@@ -1061,7 +1061,7 @@ export default function App() {
                       hasSnapshot={!!prevRanksRef.current}
                       color={colorOf(comment)}
                       groupName={groupNameById[comment.groupId]}
-                      gameNick={admin.route ? GAME_NICKS[comment.userId] : undefined}
+                      gameNick={GAME_NICKS[comment.userId]}
                       selected={comment.id === selected?.id}
                       onSelect={setSelectedId}
                     />
@@ -1077,7 +1077,7 @@ export default function App() {
               color={selected ? colorOf(selected) : undefined}
               groupName={selected ? groupNameById[selected.groupId] : undefined}
               label={selected ? labels[selected.userId] : undefined}
-              gameNick={admin.route && selected ? GAME_NICKS[selected.userId] : undefined}
+              gameNick={selected ? GAME_NICKS[selected.userId] : undefined}
               admin={isEditing}
               onSaveLabel={saveLabelFor}
               fanCount={selected ? fans.get(selected.userId) : undefined}
