@@ -9,6 +9,7 @@ import { CUT_RANK, DEBUT_BOARD, TARGET_POST } from './lib/target'
 import { SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
 import { fetchLabels, saveLabel } from './lib/labels'
 import { useAdmin } from './lib/admin'
+import GAME_NICKS from './lib/gameNicks.json'
 import { findEdits, loadTexts, saveTexts } from './lib/edits'
 import { fetchDebut, fetchLive } from './lib/live'
 import { BANNER, safeUrl } from './lib/banner'
@@ -1062,6 +1063,7 @@ export default function App() {
                       hasSnapshot={!!prevRanksRef.current}
                       color={colorOf(comment)}
                       groupName={groupNameById[comment.groupId]}
+                      gameNick={admin.route ? GAME_NICKS[comment.userId] : undefined}
                       selected={comment.id === selected?.id}
                       onSelect={setSelectedId}
                     />
@@ -1077,6 +1079,7 @@ export default function App() {
               color={selected ? colorOf(selected) : undefined}
               groupName={selected ? groupNameById[selected.groupId] : undefined}
               label={selected ? labels[selected.userId] : undefined}
+              gameNick={admin.route && selected ? GAME_NICKS[selected.userId] : undefined}
               admin={isEditing}
               onSaveLabel={saveLabelFor}
               fanCount={selected ? fans.get(selected.userId) : undefined}

@@ -27,6 +27,7 @@ function CommentCard({
   comment,
   color,
   groupName,
+  gameNick,
   selected,
   onSelect,
   move,
@@ -54,6 +55,11 @@ function CommentCard({
         )}
 
         <span className="nick">{comment.nick}</span>
+        {gameNick && (
+          <span className="game-nick" title="인게임 닉네임">
+            {gameNick}
+          </span>
+        )}
         {/* 목록에는 대표 직업 하나만. 나머지 직업은 오른쪽 자세히 보기에 있다. */}
         {groupName && (
           <span

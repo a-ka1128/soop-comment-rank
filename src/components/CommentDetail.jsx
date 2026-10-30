@@ -21,6 +21,7 @@ export default function CommentDetail({
   color,
   groupName,
   label,
+  gameNick,
   admin,
   onSaveLabel,
   fanCount,
@@ -72,6 +73,18 @@ export default function CommentDetail({
           </span>
           <h2>{comment.nick}</h2>
           <span className="muted">{comment.userId || 'SOOP 아이디 없음'}</span>
+          {gameNick && (
+            <span className="detail-game-nick">
+              인게임 <b>{gameNick}</b>
+              <button
+                type="button"
+                className="ghost copy-nick"
+                onClick={() => navigator.clipboard?.writeText(gameNick).catch(() => {})}
+              >
+                복사
+              </button>
+            </span>
+          )}
         </div>
         <button type="button" className="detail-close" onClick={onClose} aria-label="닫기">
           ✕
