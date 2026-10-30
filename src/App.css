@@ -1905,3 +1905,16 @@ button.primary:hover {
     width: 100%;
   }
 }
+
+/* 제목 아래 설명 끝의 원문 보기 링크 */
+.source-link {
+  margin-left: 10px;
+  font-weight: 700;
+  color: var(--brand-deep);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.source-link:hover {
+  text-decoration: underline;
+}

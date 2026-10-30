@@ -642,7 +642,12 @@ export default function App() {
           <div className="brand-text">
             <span className="kicker">WORLD OF WARCRAFT · FOREVER</span>
             <h1>와우 포에버 · 우왁굳 길드 사전 신청</h1>
-            <p>신청 댓글을 해보려는 직업별로 나눠 좋아요 순으로 세웁니다.</p>
+            <p>
+              신청 댓글을 해보려는 직업별로 나눠 좋아요 순으로 세웁니다.
+              <a className="source-link" href={TARGET_POST.url} target="_blank" rel="noopener noreferrer">
+                원문 보기 ↗
+              </a>
+            </p>
           </div>
           {applicantCount != null && (
             <div className="applicant-count" aria-label={`신청 인원 ${applicantCount}명`}>
