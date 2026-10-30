@@ -8,6 +8,7 @@ import { UNGROUPED_ID, rank } from './lib/groups'
 import { CUT_RANK, DEBUT_BOARD, TARGET_POST } from './lib/target'
 import { SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
 import { fetchLabels, saveLabel } from './lib/labels'
+import QaModal from './components/QaModal'
 import { useAdmin } from './lib/admin'
 import GAME_NICKS from './lib/gameNicks.json'
 import { findEdits, loadTexts, saveTexts } from './lib/edits'
@@ -36,6 +37,7 @@ export default function App() {
   const [data, setData] = useState(null)
   /** 「리얼 뉴 와튜버 데뷔 하기」 글의 댓글. 못 불러와도 본 화면은 그대로 뜬다. */
   const [debut, setDebut] = useState(null)
+  const [showQa, setShowQa] = useState(false)
   /** 카페 글에는 프로필 사진이 없어서 방송국 정보에서 받아 온 사진(userId -> 주소). */
   const [profiles, setProfiles] = useState(() => new Map())
   const [tagFilter, setTagFilter] = useState(null)
@@ -645,6 +647,7 @@ export default function App() {
           </div>
         )
       )}
+      {showQa && <QaModal onClose={() => setShowQa(false)} />}
       <header className="topbar">
         <div className="brand">
           <div className="brand-text">
@@ -657,14 +660,24 @@ export default function App() {
               </a>
             </p>
           </div>
-          {applicantCount != null && (
-            <div className="applicant-count" aria-label={`신청 인원 ${applicantCount}명`}>
-              <span className="ac-label">신청 인원</span>
-              <span className="ac-num">
-                <strong>{applicantCount.toLocaleString()}</strong>명
+          <div className="brand-side">
+            {applicantCount != null && (
+              <div className="applicant-count" aria-label={`신청 인원 ${applicantCount}명`}>
+                <span className="ac-label">신청 인원</span>
+                <span className="ac-num">
+                  <strong>{applicantCount.toLocaleString()}</strong>명
+                </span>
+              </div>
+            )}
+            <button type="button" className="qa-open" onClick={() => setShowQa(true)}>
+              <span className="qa-open-icon" aria-hidden="true">?</span>
+              <span className="qa-open-text">
+                <strong>우왁굳 Q&amp;A</strong>
+                <small>와포 궁금증, 답변 모음</small>
               </span>
-            </div>
-          )}
+              <span className="qa-open-go" aria-hidden="true">→</span>
+            </button>
+          </div>
         </div>
 
         {admin.route && (
