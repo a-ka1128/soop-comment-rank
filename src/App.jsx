@@ -852,6 +852,30 @@ export default function App() {
                 </span>
               </h2>
               <ul>
+                {/* 맨 앞 칸: 아래 "전체" 탭과 같은 동작. 숫자는 위 직업 칸을 모두 더한 인원(한 사람은 대표 직업 한 곳에만 센다). */}
+                <li style={{ '--group': NEUTRAL_COLOR }}>
+                  <button
+                    type="button"
+                    className={activeTab === ALL_TAB ? 'on' : ''}
+                    onClick={() => setActiveTab(ALL_TAB)}
+                    aria-pressed={activeTab === ALL_TAB}
+                    title="전체 보기"
+                  >
+                    <span className="cc-name">
+                      <span className="dot" aria-hidden="true" />
+                      전체
+                    </span>
+                    <span className="cc-num">
+                      <strong>{classCounts.reduce((sum, s) => sum + s.total, 0)}</strong>
+                    </span>
+                    <span className="cc-bar" aria-hidden="true">
+                      <span style={{ width: '100%' }} />
+                    </span>
+                    <span className="cc-also" style={{ visibility: 'hidden' }} aria-hidden="true">
+                      +0 고민 중
+                    </span>
+                  </button>
+                </li>
                 {classCounts.map((s) => (
                   <li key={s.id} style={{ '--group': s.color }}>
                     <button
@@ -879,7 +903,7 @@ export default function App() {
                         aria-hidden={s.also > 0 ? undefined : true}
                         title={`대표 직업은 따로 있고 ${s.name}도 같이 고민 중인 사람`}
                       >
-                        +{s.also} 고민 중
+                        +{s.also} 고민 중 · 합 {s.total + s.also}명
                       </span>
                     </button>
                   </li>
@@ -887,32 +911,6 @@ export default function App() {
               </ul>
             </section>
           )}
-
-          <nav className="tabs">
-            {grouped && (
-              <>
-                <button
-                  type="button"
-                  className={activeTab === ALL_TAB ? 'active' : ''}
-                  onClick={() => setActiveTab(ALL_TAB)}
-                  style={{ '--group': NEUTRAL_COLOR }}
-                >
-                  전체
-                </button>
-                {sections.map((s) => (
-                  <button
-                    type="button"
-                    key={s.id}
-                    className={activeTab === s.id ? 'active' : ''}
-                    onClick={() => setActiveTab(s.id)}
-                    style={{ '--group': s.color }}
-                  >
-                    {s.name}
-                  </button>
-                ))}
-              </>
-            )}
-          </nav>
 
           {/* 거르는 도구는 한 판에 모은다. 탭(무엇을 볼지)과 섞이면 둘 다 읽기 어렵다. */}
           <section className="filters">
