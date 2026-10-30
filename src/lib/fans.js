@@ -54,7 +54,7 @@ export async function loadFanCounts(userIds, { signal, onUpdate } = {}) {
 
   for (const id of new Set(userIds.filter(Boolean))) {
     const hit = cache[id]
-    if (hit && now - hit.t < TTL_MS) result.set(id, { n: hit.n, j: hit.j ?? null })
+    if (hit && 'p' in hit && now - hit.t < TTL_MS) result.set(id, { n: hit.n, j: hit.j ?? null, p: hit.p || '' })
     else todo.push(id)
   }
   onUpdate?.(new Map(result))
@@ -74,8 +74,8 @@ export async function loadFanCounts(userIds, { signal, onUpdate } = {}) {
         if (err.name === 'AbortError') return
         // 한 사람을 못 읽었다고 전체를 세울 이유는 없다. 그 사람만 '모름'이 된다.
       }
-      result.set(id, { n: info.fans, j: info.joined })
-      cache[id] = { n: info.fans, j: info.joined, t: Date.now() }
+      result.set(id, { n: info.fans, j: info.joined, p: info.profile || '' })
+      cache[id] = { n: info.fans, j: info.joined, p: info.profile || '', t: Date.now() }
       sinceReport += 1
       // 다 끝날 때까지 기다렸다 한 번에 바꾸면 목록이 통째로 덜컹인다.
       if (sinceReport >= 20) {

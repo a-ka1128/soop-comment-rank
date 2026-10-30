@@ -36,6 +36,8 @@ export default function App() {
   const [data, setData] = useState(null)
   /** 「리얼 뉴 와튜버 데뷔 하기」 글의 댓글. 못 불러와도 본 화면은 그대로 뜬다. */
   const [debut, setDebut] = useState(null)
+  /** 카페 글에는 프로필 사진이 없어서 방송국 정보에서 받아 온 사진(userId -> 주소). */
+  const [profiles, setProfiles] = useState(() => new Map())
   const [tagFilter, setTagFilter] = useState(null)
   /** 즐찾이 기준에 모자란 사람을 목록에서 숨긴다. 순위는 그대로 두고 줄만 뺀다. */
   const [hideLow, setHideLow] = useState(false)
@@ -114,7 +116,7 @@ export default function App() {
   const debutSection = useMemo(() => {
     if (!debut) return null
     const items = uniqueComments([...classifyByClass(debut.comments, labels).values()].flat()).map(
-      (c) => ({ ...c, postNo: debut.postNo, debut: true }),
+      (c) => ({ ...c, postNo: debut.postNo, debut: true, profile: c.profile || profiles.get(c.userId) || '' }),
     )
     return {
       id: DEBUT_TAB,
@@ -123,7 +125,7 @@ export default function App() {
       topN: null,
       items: rank(items),
     }
-  }, [debut, labels])
+  }, [debut, labels, profiles])
 
   /** 데뷔 글에도 댓글을 단 길드 신청자. 카드에 표시한다. */
   const debutUserIds = useMemo(() => new Set(debut?.comments.map((c) => c.userId) ?? []), [debut])
@@ -301,6 +303,11 @@ export default function App() {
         setFans((prev) => {
           const next = new Map(prev)
           for (const [id, info] of partial) next.set(id, info.n)
+          return next
+        })
+        setProfiles((prev) => {
+          const next = new Map(prev)
+          for (const [id, info] of partial) if (info.p) next.set(id, info.p)
           return next
         })
       },
