@@ -23,6 +23,7 @@ export default function CommentDetail({
   label,
   gameNick,
   defaultGameNick,
+  scan,
   admin,
   onSaveLabel,
   fanCount,
@@ -76,6 +77,11 @@ export default function CommentDetail({
           {gameNick && (
             <span className="detail-game-nick">
               인게임 <b>{gameNick}</b>
+            </span>
+          )}
+          {scan && (
+            <span className="detail-game-nick scan-line">
+              사진 스캔 <b>{scan.map((c) => c.name).join(' · ')}</b>
             </span>
           )}
           <span className="muted">{comment.userId || 'SOOP 아이디 없음'}</span>

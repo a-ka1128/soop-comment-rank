@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import { scanAgrees } from '../lib/scanNicks'
 
 /**
  * 마지막으로 움직였을 때의 순위 변동. 갱신마다 지워지지 않고, 다시 움직이거나
@@ -28,6 +29,7 @@ function CommentCard({
   color,
   groupName,
   gameNick,
+  scan,
   selected,
   onSelect,
   move,
@@ -75,6 +77,16 @@ function CommentCard({
           {gameNick && (
             <span className="game-nick" title="인게임 닉네임">
               {gameNick}
+              {scan && !scanAgrees(gameNick, scan) && (
+                <em className="scan-diff" title={`사진 스캔은 다르게 읽음: ${scan.map((c) => c.name).join(' / ')}`}>
+                  ≠
+                </em>
+              )}
+            </span>
+          )}
+          {!gameNick && scan && (
+            <span className="game-nick scan-only" title="사진 스캔 후보 (확인 안 됨)">
+              {scan[0].name}
             </span>
           )}
         </span>

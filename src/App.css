@@ -915,6 +915,22 @@ button:disabled {
   text-overflow: ellipsis;
 }
 
+.game-nick .scan-diff {
+  margin-left: 4px;
+  font-style: normal;
+  font-weight: 700;
+  color: #d9534f;
+}
+
+.game-nick.scan-only {
+  font-style: italic;
+  color: #3b82f6;
+}
+
+.detail-game-nick.scan-line {
+  color: #3b82f6;
+}
+
 .game-nick-input {
   width: 100%;
   max-width: 320px;

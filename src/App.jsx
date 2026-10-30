@@ -8,6 +8,7 @@ import { UNGROUPED_ID, rank } from './lib/groups'
 import { CUT_RANK, DEBUT_BOARD, TARGET_POST } from './lib/target'
 import { SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
 import { cleanLabel, fetchLabels, saveLabel } from './lib/labels'
+import { loadScanNicks } from './lib/scanNicks'
 import QaModal from './components/QaModal'
 import { useAdmin } from './lib/admin'
 import GAME_NICKS from './lib/gameNicks.json'
@@ -602,6 +603,12 @@ export default function App() {
   )
   const isEditing = watchEdits
 
+  /** 사진 스캔으로 읽은 인게임 닉네임 후보. 어드민 화면에서만 불러온다. */
+  const [scanNicks, setScanNicks] = useState({})
+  useEffect(() => {
+    if (admin.route) loadScanNicks().then(setScanNicks).catch(() => {})
+  }, [admin.route])
+
   /** 어드민이 손으로 고른 직업(cls)만 모두 지워 자동 판정으로 되돌린다. 태그·크루·인게임 닉네임은 그대로. */
   const [resetting, setResetting] = useState(false)
   const resetClasses = async () => {
@@ -1111,6 +1118,7 @@ export default function App() {
                       color={colorOf(comment)}
                       groupName={groupNameById[comment.groupId]}
                       gameNick={labels[comment.userId]?.gameNick || GAME_NICKS[comment.userId]}
+                      scan={scanNicks[comment.userId]}
                       selected={comment.id === selected?.id}
                       onSelect={setSelectedId}
                     />
@@ -1125,6 +1133,7 @@ export default function App() {
               postNo={selected?.postNo ?? data.postNo}
               color={selected ? colorOf(selected) : undefined}
               groupName={selected ? groupNameById[selected.groupId] : undefined}
+              scan={selected ? scanNicks[selected.userId] : undefined}
               label={selected ? labels[selected.userId] : undefined}
               gameNick={selected ? labels[selected.userId]?.gameNick || GAME_NICKS[selected.userId] : undefined}
               defaultGameNick={selected ? GAME_NICKS[selected.userId] : undefined}
