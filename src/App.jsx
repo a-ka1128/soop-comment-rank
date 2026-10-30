@@ -110,8 +110,8 @@ export default function App() {
   const grouped = true
 
   const buckets = useMemo(
-    () => (data ? classifyByClass(data.comments, labels, { considering: admin.route }) : null),
-    [data, labels, admin.route],
+    () => (data ? classifyByClass(data.comments, labels, { considering: true }) : null),
+    [data, labels],
   )
   const notCopy = (c) => !c.considerCopy
 
