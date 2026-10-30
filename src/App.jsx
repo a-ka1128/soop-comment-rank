@@ -673,9 +673,7 @@ export default function App() {
               <span className="qa-open-icon" aria-hidden="true">?</span>
               <span className="qa-open-text">
                 <strong>우왁굳 Q&amp;A</strong>
-                <small>와포 궁금증, 답변 모음</small>
               </span>
-              <span className="qa-open-go" aria-hidden="true">→</span>
             </button>
           </div>
         </div>

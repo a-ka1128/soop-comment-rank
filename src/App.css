@@ -2193,3 +2193,18 @@ button.primary:hover {
 .qa-sort { display: inline-flex; gap: 4px; margin-top: 10px; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, 0.14); }
 .qa-sort button { padding: 4px 12px; border: 0; border-radius: 999px; background: none; color: rgba(255, 255, 255, 0.8); font-size: 12px; font-weight: 700; cursor: pointer; }
 .qa-sort button.on { background: #fff; color: var(--brand-deep); }
+
+/* 머리 카드 높이 줄이기: 신청 인원과 Q&A 를 가로로 나란히 */
+.topbar .brand { padding: 18px 26px; margin-bottom: 16px; }
+.brand-side { display: flex; align-items: stretch; gap: 10px; min-width: 0; }
+.brand-side .applicant-count { min-width: 120px; padding: 8px 16px; }
+.brand-side .ac-num strong { font-size: 30px; }
+.brand-side .qa-open { width: auto; padding: 8px 16px; gap: 10px; }
+.brand-side .qa-open-icon { width: 32px; height: 32px; font-size: 18px; }
+.brand-side .qa-open-text strong { font-size: 15px; }
+@media (max-width: 600px) {
+  .brand-side { width: 100%; flex-wrap: wrap; }
+  .brand-side .applicant-count { flex: 1; }
+  .brand-side .qa-open { flex: 1 1 100%; }
+}
+.brand-side .qa-open { padding: 8px 18px; }
