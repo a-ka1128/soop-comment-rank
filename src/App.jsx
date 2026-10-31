@@ -6,7 +6,7 @@ import { fetchAllComments, fetchPost, postUrl } from './lib/soop'
 import { loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, rank } from './lib/groups'
 import { CUT_RANK, DEBUT_BOARD, TARGET_POST } from './lib/target'
-import { SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
+import { ISEDOL, SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
 import { cleanLabel, fetchLabels, saveLabel } from './lib/labels'
 import { loadScanNicks } from './lib/scanNicks'
 import QaModal from './components/QaModal'
@@ -1119,6 +1119,7 @@ export default function App() {
                       groupName={groupNameById[comment.groupId]}
                       gameNick={labels[comment.userId]?.gameNick || GAME_NICKS[comment.userId]}
                       scan={scanNicks[comment.userId]}
+                      isedol={tagsOf(comment, labels[comment.userId]).some((t) => t.name === ISEDOL)}
                       selected={comment.id === selected?.id}
                       onSelect={setSelectedId}
                     />

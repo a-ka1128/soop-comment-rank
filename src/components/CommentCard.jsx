@@ -30,6 +30,7 @@ function CommentCard({
   groupName,
   gameNick,
   scan,
+  isedol,
   selected,
   onSelect,
   move,
@@ -37,7 +38,7 @@ function CommentCard({
 }) {
   return (
     <article
-      className={`card${selected ? ' is-open' : ''}${comment.lowFans != null ? ' is-low' : ''}`}
+      className={`card${selected ? ' is-open' : ''}${comment.lowFans != null ? ' is-low' : ''}${isedol ? ' is-isedol' : ''}`}
       style={{ '--group': color }}
       data-flip-id={comment.id}
     >
@@ -59,6 +60,11 @@ function CommentCard({
         <span className="nick-col">
           <span className="nick-line">
             <span className="nick">{comment.nick}</span>
+            {isedol && (
+              <span className="badge isedol-badge" title="이세계아이돌">
+                ISEGYE IDOL
+              </span>
+            )}
             {/* 목록에는 대표 직업 하나만. 나머지 직업은 오른쪽 자세히 보기에 있다. */}
             {groupName && (
               <span

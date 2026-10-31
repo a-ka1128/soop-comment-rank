@@ -2224,3 +2224,67 @@ button.primary:hover {
   .brand-side .qa-open { flex: 1 1 100%; }
 }
 .brand-side .qa-open { padding: 8px 18px; }
+
+/* ---------- 이세계아이돌 ----------
+ * 로고 배경의 파스텔 홀로그램(노랑 → 하늘 → 보라 → 분홍)을 가장자리 막대, 줄 배경, 배지에 쓴다.
+ * 줄 위로 빛이 한 번씩 훑고 지나간다. 모션을 줄인 환경에서는 멈춘다. */
+.card.is-isedol::before {
+  width: 4px;
+  background: linear-gradient(180deg, #f7f08a, #8fe3f7, #b9a0f5, #f7a3e6, #f7f08a);
+  background-size: 100% 300%;
+  animation: isedol-bar 4s linear infinite;
+}
+
+.card.is-isedol .card-row {
+  background:
+    linear-gradient(100deg, rgba(247, 240, 138, 0.16), rgba(143, 227, 247, 0.16) 35%, rgba(185, 160, 245, 0.16) 65%, rgba(247, 163, 230, 0.16));
+}
+
+.card.is-isedol .card-row::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.7) 50%, transparent 60%);
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  animation: isedol-shine 5s ease-in-out infinite;
+}
+
+.card.is-isedol .card-row {
+  position: relative;
+  overflow: hidden;
+}
+
+.badge.isedol-badge,
+.badge.tag-isedol {
+  border: 0;
+  background: linear-gradient(120deg, #f7f08a, #8fe3f7, #b9a0f5, #f7a3e6, #f7f08a);
+  background-size: 250% 100%;
+  color: #1b1b1b;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  animation: isedol-flow 6s linear infinite;
+}
+
+@keyframes isedol-bar {
+  to { background-position: 0 300%; }
+}
+
+@keyframes isedol-shine {
+  0%, 55% { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
+
+@keyframes isedol-flow {
+  to { background-position: 250% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card.is-isedol::before,
+  .card.is-isedol .card-row::after,
+  .badge.isedol-badge,
+  .badge.tag-isedol {
+    animation: none;
+  }
+}

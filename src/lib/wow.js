@@ -291,6 +291,9 @@ export function crewsOf(userId, label) {
  * @returns {Array<{id: string, name: string, hint: string, kind: 'self'|'crew', look: 'self'|'crew'}>}
  *   kind 는 순서를 정하고, look 은 색을 정한다.
  */
+/** 특수효과를 받는 크루 이름. */
+export const ISEDOL = '이세계아이돌'
+
 export function tagsOf(comment, label) {
   const text = comment.text || ''
   const removed = TAG_FIXES[comment.userId] ?? []
@@ -324,7 +327,8 @@ export function tagsOf(comment, label) {
     name,
     hint: '확인된 소속',
     kind: 'crew',
-    look: 'crew',
+    // 이세계아이돌은 로고 색(파스텔 홀로그램)으로 따로 꾸민다.
+    look: name === ISEDOL ? 'isedol' : 'crew',
   }))
   // 자기소개 꼬리표가 먼저, 크루가 뒤.
   return [...self, ...crews]
