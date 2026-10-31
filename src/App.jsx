@@ -9,7 +9,6 @@ import { CUT_RANK, DEBUT_BOARD, TARGET_POST } from './lib/target'
 import { ISEDOL, SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
 import { cleanLabel, fetchLabels, saveLabel } from './lib/labels'
 import { loadScanNicks } from './lib/scanNicks'
-import QaModal from './components/QaModal'
 import FeedbackModal from './components/FeedbackModal'
 import AdminFeedback from './components/AdminFeedback'
 import { feedbackEnabled } from './lib/feedback'
@@ -41,7 +40,6 @@ export default function App() {
   const [data, setData] = useState(null)
   /** 「리얼 뉴 와튜버 데뷔 하기」 글의 댓글. 못 불러와도 본 화면은 그대로 뜬다. */
   const [debut, setDebut] = useState(null)
-  const [showQa, setShowQa] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
   /** 카페 글에는 프로필 사진이 없어서 방송국 정보에서 받아 온 사진(userId -> 주소). */
   const [profiles, setProfiles] = useState(() => new Map())
@@ -686,7 +684,6 @@ export default function App() {
           </div>
         )
       )}
-      {showQa && <QaModal onClose={() => setShowQa(false)} />}
       {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
       <header className="topbar">
         <div className="brand">
@@ -716,12 +713,6 @@ export default function App() {
                   <strong>피드백 하기</strong>
                 </button>
               )}
-              <button type="button" className="qa-open" onClick={() => setShowQa(true)}>
-                <span className="qa-open-icon" aria-hidden="true">?</span>
-                <span className="qa-open-text">
-                  <strong>우왁굳 Q&amp;A</strong>
-                </span>
-              </button>
             </div>
           </div>
         </div>
