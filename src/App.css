@@ -2409,3 +2409,38 @@ button.primary:hover {
 .fb-meta button {
   margin-left: auto;
 }
+
+/* 피드백과 Q&A 는 세로로 쌓아 같은 너비로 맞춘다. 둘 합친 높이가 신청 인원 카드와 비슷하다. */
+.brand-side .side-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 150px;
+}
+
+.brand-side .side-actions .fb-open,
+.brand-side .side-actions .qa-open {
+  flex: 1;
+  width: 100%;
+  padding: 4px 14px;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.brand-side .side-actions .fb-open-icon,
+.brand-side .side-actions .qa-open-icon {
+  width: 26px;
+  height: 26px;
+  font-size: 14px;
+}
+
+.brand-side .side-actions .fb-open strong,
+.brand-side .side-actions .qa-open-text strong {
+  font-size: 14px;
+}
+
+@media (max-width: 600px) {
+  .brand-side .side-actions {
+    flex: 1;
+  }
+}

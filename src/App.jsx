@@ -709,18 +709,20 @@ export default function App() {
                 </span>
               </div>
             )}
-            {feedbackEnabled() && (
-              <button type="button" className="fb-open" onClick={() => setShowFeedback(true)}>
-                <span className="fb-open-icon" aria-hidden="true">✎</span>
-                <strong>피드백 하기</strong>
+            <div className="side-actions">
+              {feedbackEnabled() && (
+                <button type="button" className="fb-open" onClick={() => setShowFeedback(true)}>
+                  <span className="fb-open-icon" aria-hidden="true">✎</span>
+                  <strong>피드백 하기</strong>
+                </button>
+              )}
+              <button type="button" className="qa-open" onClick={() => setShowQa(true)}>
+                <span className="qa-open-icon" aria-hidden="true">?</span>
+                <span className="qa-open-text">
+                  <strong>우왁굳 Q&amp;A</strong>
+                </span>
               </button>
-            )}
-            <button type="button" className="qa-open" onClick={() => setShowQa(true)}>
-              <span className="qa-open-icon" aria-hidden="true">?</span>
-              <span className="qa-open-text">
-                <strong>우왁굳 Q&amp;A</strong>
-              </span>
-            </button>
+            </div>
           </div>
         </div>
 
