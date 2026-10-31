@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CONTACT_MAX, MESSAGE_MAX, cooldownLeft, sendFeedback } from '../lib/feedback'
+import { CONTACT_MAX, FEEDBACK_OPEN, MESSAGE_MAX, cooldownLeft, sendFeedback } from '../lib/feedback'
 
 /** 방문자 피드백 창. 보내면 어드민 화면(#admin)에서 볼 수 있다. */
 export default function FeedbackModal({ onClose }) {
@@ -37,7 +37,14 @@ export default function FeedbackModal({ onClose }) {
             닫기
           </button>
         </div>
-        {state === 'done' ? (
+        {!FEEDBACK_OPEN ? (
+          <div className="fb-body">
+            <p>피드백 기능을 추가중입니다. 조금만 기다려 주세요.</p>
+            <button type="button" className="primary" onClick={onClose}>
+              확인
+            </button>
+          </div>
+        ) : state === 'done' ? (
           <div className="fb-body">
             <p>보내 주셔서 감사합니다. 운영자가 확인할게요.</p>
             <button type="button" className="primary" onClick={onClose}>
