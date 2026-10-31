@@ -706,14 +706,14 @@ export default function App() {
                 </span>
               </div>
             )}
-            <div className="side-actions">
-              {feedbackEnabled() && (
-                <button type="button" className="fb-open" onClick={() => setShowFeedback(true)}>
-                  <span className="fb-open-icon" aria-hidden="true">✎</span>
-                  <strong>피드백 하기</strong>
-                </button>
-              )}
-            </div>
+            {feedbackEnabled() && (
+              <button type="button" className="fb-open" onClick={() => setShowFeedback(true)}>
+                <span className="ac-label">의견 · 버그 제보</span>
+                <strong className="fb-open-main">
+                  <span aria-hidden="true">✎</span> 피드백 하기
+                </strong>
+              </button>
+            )}
           </div>
         </div>
 
