@@ -29,9 +29,9 @@ export default function FeedbackModal({ onClose }) {
   }
 
   return (
-    <div className="qa-backdrop" onClick={onClose}>
-      <div className="qa-modal fb-modal" role="dialog" aria-label="피드백" onClick={(e) => e.stopPropagation()}>
-        <div className="qa-head">
+    <div className="fb-backdrop" onClick={onClose}>
+      <div className="fb-modal" role="dialog" aria-label="피드백" onClick={(e) => e.stopPropagation()}>
+        <div className="fb-head">
           <h2>피드백 보내기</h2>
           <button type="button" className="ghost" onClick={onClose}>
             닫기
