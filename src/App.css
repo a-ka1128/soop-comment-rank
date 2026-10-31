@@ -2211,30 +2211,38 @@ button.primary:hover {
   margin-left: auto;
 }
 
-/* 꼬리표 고르는 줄의 이세계아이돌 칩. 배지와 같은 홀로그램 흐름을 쓴다(반복 길이와 이동 거리를 같게 해 끊기지 않는다).
- * 골랐을 때는 바탕은 그대로 두고 테두리 고리로 표시한다. */
+/* 꼬리표 고르는 줄의 이세계아이돌 칩. 칸 전체가 아니라 테두리만 홀로그램으로 흐른다.
+ * 안쪽은 평소 칩 그대로(padding-box), 테두리 자리에만 그라데이션(border-box)을 깐다.
+ * 반복 길이와 이동 거리를 같게 해 끊기지 않는다. 골랐을 때는 안쪽도 홀로그램으로 채운다. */
 .tag.tag-isedol {
-  border-color: transparent;
-  background: linear-gradient(120deg, #f7f08a, #8fe3f7, #b9a0f5, #f7a3e6, #f7f08a) 0 0 / 200px 100% repeat-x;
-  color: #1b1b1b;
+  border: 2px solid transparent;
+  padding: 3px 10px;
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    linear-gradient(120deg, #f7f08a, #8fe3f7, #b9a0f5, #f7a3e6, #f7f08a) border-box 0 0 / 200px 100% repeat-x;
+  background-repeat: no-repeat, repeat-x;
+  background-size: 100% 100%, 200px 100%;
+  color: var(--text);
   font-weight: 700;
-  animation: isedol-flow 5s linear infinite;
+  animation: isedol-chip 5s linear infinite;
 }
 
 .tag.tag-isedol:hover {
-  filter: brightness(1.05);
+  filter: brightness(0.98);
 }
 
-.tag.tag-isedol em,
+.tag.tag-isedol.active {
+  background:
+    linear-gradient(120deg, #f7f08a, #8fe3f7, #b9a0f5, #f7a3e6, #f7f08a) 0 0 / 200px 100% repeat-x;
+  color: #1b1b1b;
+}
+
 .tag.tag-isedol.active em {
   color: rgba(27, 27, 27, 0.6);
 }
 
-.tag.tag-isedol.active {
-  border-color: transparent;
-  background: linear-gradient(120deg, #f7f08a, #8fe3f7, #b9a0f5, #f7a3e6, #f7f08a) 0 0 / 200px 100% repeat-x;
-  color: #1b1b1b;
-  box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--brand);
+@keyframes isedol-chip {
+  to { background-position: 0 0, 200px 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
