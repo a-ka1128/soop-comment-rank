@@ -10,6 +10,9 @@ import { ISEDOL, SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments
 import { cleanLabel, fetchLabels, saveLabel } from './lib/labels'
 import { loadScanNicks } from './lib/scanNicks'
 import QaModal from './components/QaModal'
+import FeedbackModal from './components/FeedbackModal'
+import AdminFeedback from './components/AdminFeedback'
+import { feedbackEnabled } from './lib/feedback'
 import { useAdmin } from './lib/admin'
 import GAME_NICKS from './lib/gameNicks.json'
 import { findEdits, loadTexts, saveTexts } from './lib/edits'
@@ -39,6 +42,7 @@ export default function App() {
   /** 「리얼 뉴 와튜버 데뷔 하기」 글의 댓글. 못 불러와도 본 화면은 그대로 뜬다. */
   const [debut, setDebut] = useState(null)
   const [showQa, setShowQa] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
   /** 카페 글에는 프로필 사진이 없어서 방송국 정보에서 받아 온 사진(userId -> 주소). */
   const [profiles, setProfiles] = useState(() => new Map())
   const [tagFilter, setTagFilter] = useState(null)
@@ -683,6 +687,7 @@ export default function App() {
         )
       )}
       {showQa && <QaModal onClose={() => setShowQa(false)} />}
+      {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
       <header className="topbar">
         <div className="brand">
           <div className="brand-text">
@@ -703,6 +708,11 @@ export default function App() {
                   <strong>{applicantCount.toLocaleString()}</strong>명
                 </span>
               </div>
+            )}
+            {feedbackEnabled() && (
+              <button type="button" className="ghost fb-open" onClick={() => setShowFeedback(true)}>
+                피드백 하기
+              </button>
             )}
             <button type="button" className="qa-open" onClick={() => setShowQa(true)}>
               <span className="qa-open-icon" aria-hidden="true">?</span>
@@ -750,6 +760,8 @@ export default function App() {
             )}
           </div>
         )}
+
+        {admin.route && admin.user && <AdminFeedback getToken={admin.getToken} />}
 
         {admin.route && live && (
           <details className="live-panel" open>

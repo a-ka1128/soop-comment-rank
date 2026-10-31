@@ -7,6 +7,17 @@
         ".read": true
       }
     },
+    "feedback": {
+      ".read": "auth != null && auth.uid === 'ko2UDZwBNXVO3qBKWyf2ykqsqPa2'",
+      "$id": {
+        ".write": "(!data.exists() && newData.exists()) || (auth != null && auth.uid === 'ko2UDZwBNXVO3qBKWyf2ykqsqPa2')",
+        ".validate": "newData.hasChildren(['message', 'createdAt']) && newData.child('message').isString() && newData.child('message').val().length > 0 && newData.child('message').val().length <= 1000 && newData.child('createdAt').val() == now && (!newData.hasChild('contact') || (newData.child('contact').isString() && newData.child('contact').val().length <= 100))",
+        "message": {},
+        "createdAt": {},
+        "contact": {},
+        "$other": { ".validate": false }
+      }
+    },
     "labels": {
       ".read": true,
       "$userId": {
