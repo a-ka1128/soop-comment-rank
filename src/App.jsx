@@ -710,8 +710,9 @@ export default function App() {
               </div>
             )}
             {feedbackEnabled() && (
-              <button type="button" className="ghost fb-open" onClick={() => setShowFeedback(true)}>
-                피드백 하기
+              <button type="button" className="fb-open" onClick={() => setShowFeedback(true)}>
+                <span className="fb-open-icon" aria-hidden="true">✎</span>
+                <strong>피드백 하기</strong>
               </button>
             )}
             <button type="button" className="qa-open" onClick={() => setShowQa(true)}>
