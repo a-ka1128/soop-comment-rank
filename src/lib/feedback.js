@@ -13,7 +13,7 @@ const RTDB_URL = import.meta.env.VITE_RTDB_URL ?? ''
  * 보내기를 열지. DB 규칙(database.rules.json)을 배포하기 전에는 보내기가 거절되니 false 로
  * 두고, 창에는 "기능 추가중"만 띄운다. `firebase deploy --only database` 를 한 뒤 true 로 바꾼다.
  */
-export const FEEDBACK_OPEN = false
+export const FEEDBACK_OPEN = true
 
 export const feedbackEnabled = () => RTDB_URL.length > 0
 
