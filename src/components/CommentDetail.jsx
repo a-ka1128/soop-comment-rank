@@ -58,7 +58,7 @@ export default function CommentDetail({
   return (
     <aside
       ref={paneRef}
-      className="detail is-open"
+      className={`detail is-open${comment.userId === 'doormomo' ? ' is-momo' : ''}`}
       style={{ '--group': color }}
       aria-label={`${comment.nick} 자세히`}
     >
