@@ -2067,37 +2067,21 @@ button.primary:hover {
   }
 }
 
-/* ---------- 문모모 (제작자 최애) ----------
- * 이름은 보라·흰색 홀로그램 글씨, 줄 테두리는 보라빛으로 은은하게 빛난다.
- * 그라데이션은 처음·끝 색이 같고 이동 거리가 타일 길이와 같아 끊기지 않는다. */
-.card.is-momo::before { display: none; }
-
-.card.is-momo .card-row {
-  border-radius: 10px;
-  box-shadow: 0 0 0 1px rgba(185, 140, 255, 0.7), 0 0 10px rgba(185, 140, 255, 0.45);
+/* ---------- 문모모 (드루이드 · 제작자 최애) ----------
+ * 줄 모양은 그대로 두고 이름에만 주황색 글로우가 숨 쉬듯 번진다. */
+.card.is-momo .nick {
+  color: #ffb066;
+  font-weight: 700;
   animation: momo-glow 2.6s ease-in-out infinite;
 }
 
-.card.is-momo .nick {
-  background: linear-gradient(110deg, #a56cff, #ffffff, #c9a6ff, #ffffff, #a56cff) 0 0 / 200px 100% repeat-x;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  font-weight: 700;
-  animation: momo-flow 4s linear infinite;
-}
-
-@keyframes momo-flow { to { background-position: 200px 0; } }
-
 @keyframes momo-glow {
-  0%, 100% { box-shadow: 0 0 0 1px rgba(185, 140, 255, 0.6), 0 0 6px rgba(185, 140, 255, 0.3); }
-  50% { box-shadow: 0 0 0 1px rgba(220, 200, 255, 0.95), 0 0 16px rgba(185, 140, 255, 0.7); }
+  0%, 100% { text-shadow: 0 0 4px rgba(255, 140, 40, 0.5), 0 0 8px rgba(255, 140, 40, 0.3); }
+  50% { text-shadow: 0 0 6px rgba(255, 150, 50, 0.95), 0 0 16px rgba(255, 130, 30, 0.7); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card.is-momo .card-row,
-  .card.is-momo .nick { animation: none; }
+  .card.is-momo .nick { animation: none; text-shadow: 0 0 8px rgba(255, 140, 40, 0.7); }
 }
 
 /* ---------- 피드백 ---------- */
