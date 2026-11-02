@@ -1,6 +1,9 @@
 import { memo } from 'react'
 import { scanAgrees } from '../lib/scanNicks'
 
+// 제작자의 최애 스트리머(문모모). 줄에 강조 효과와 배지를 붙인다.
+const MOMO_ID = 'doormomo'
+
 /**
  * 마지막으로 움직였을 때의 순위 변동. 갱신마다 지워지지 않고, 다시 움직이거나
  * 정해진 시간이 지날 때까지 남는다(App 의 MOVE_TTL_MS).
@@ -36,9 +39,10 @@ function CommentCard({
   move,
   hasSnapshot,
 }) {
+  const momo = comment.userId === MOMO_ID
   return (
     <article
-      className={`card${selected ? ' is-open' : ''}${comment.lowFans != null ? ' is-low' : ''}${isedol ? ' is-isedol' : ''}`}
+      className={`card${selected ? ' is-open' : ''}${momo ? ' is-momo' : ''}${comment.lowFans != null ? ' is-low' : ''}${isedol ? ' is-isedol' : ''}`}
       style={{ '--group': color }}
       data-flip-id={comment.id}
     >
@@ -63,6 +67,11 @@ function CommentCard({
             {isedol && (
               <span className="badge isedol-badge" title="이세계아이돌">
                 ISEGYE IDOL
+              </span>
+            )}
+            {momo && (
+              <span className="badge momo-badge" title="이 사이트 제작자는 문모모 팬입니다">
+                ♥ 제작자 최애
               </span>
             )}
             {/* 목록에는 대표 직업 하나만. 나머지 직업은 오른쪽 자세히 보기에 있다. */}
