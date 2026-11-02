@@ -254,7 +254,7 @@ export const SELF_TAGS = [
     id: 'male',
     name: '추',
     hint: '남성 스트리머(확인된 사람과 자기소개에 적은 사람)',
-    look: 'self',
+    look: 'chu',
     test: /남자\s*(스트리머|와튜버|방송인)|남성\s*(스트리머|와튜버|방송인)/,
   },
 ]
