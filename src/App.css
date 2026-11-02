@@ -2059,16 +2059,23 @@ button.primary:hover {
   animation: momo-flow 4s linear infinite;
 }
 
-.card.is-momo .avatar,
-.detail.is-momo .detail-avatar {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #8a3dff, 0 0 10px 3px rgba(138, 61, 255, 0.55);
-  animation: momo-ring 3s ease-in-out infinite;
+/* 프로필 사진 둘레를 보라 링이 한 바퀴씩 돈다. 사진 안쪽 여백(padding)에 원뿔 그라데이션을 깔고 각도를 돌린다. */
+@property --momo-a {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
 }
 
-@keyframes momo-ring {
-  0%, 100% { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #8a3dff, 0 0 6px 1px rgba(138, 61, 255, 0.35); }
-  50% { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #b27cff, 0 0 14px 4px rgba(178, 124, 255, 0.75); }
+.card.is-momo .avatar,
+.detail.is-momo .detail-avatar {
+  box-sizing: border-box;
+  padding: 3px;
+  background: conic-gradient(from var(--momo-a), #8a3dff, #ffffff, #b27cff, #1a1a1a, #8a3dff);
+  box-shadow: 0 0 10px 2px rgba(138, 61, 255, 0.5);
+  animation: momo-spin 3s linear infinite;
 }
+
+@keyframes momo-spin { to { --momo-a: 360deg; } }
 
 @keyframes momo-flow { to { background-position: 200px 0; } }
 
