@@ -2080,10 +2080,21 @@ button.primary:hover {
   animation: momo-flow 4s linear infinite;
 }
 
+.card.is-momo .avatar {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #8a3dff, 0 0 10px 3px rgba(138, 61, 255, 0.55);
+  animation: momo-ring 3s ease-in-out infinite;
+}
+
+@keyframes momo-ring {
+  0%, 100% { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #8a3dff, 0 0 6px 1px rgba(138, 61, 255, 0.35); }
+  50% { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #b27cff, 0 0 14px 4px rgba(178, 124, 255, 0.75); }
+}
+
 @keyframes momo-flow { to { background-position: 200px 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .card.is-momo .nick { animation: none; }
+  .card.is-momo .nick,
+  .card.is-momo .avatar { animation: none; }
 }
 
 /* ---------- 피드백 ---------- */
