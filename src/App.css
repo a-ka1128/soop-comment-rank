@@ -2086,6 +2086,17 @@ button.primary:hover {
   .detail.is-momo .detail-avatar { animation: none; }
 }
 
+/* ---------- 추 ---------- 글씨 색만 쿰쿰한 갈색. 나머지는 자기소개 꼬리표와 같다. */
+.badge.tag-chu {
+  background: #eef0f3;
+  font-weight: 500;
+}
+
+.badge.tag-chu,
+.tag.tag-chu:not(.active) {
+  color: #8a6a3b;
+}
+
 /* ---------- 폐사동 ---------- 하늘색에 가까운 민트색 테두리만 숨 쉬듯 빛난다. 안쪽은 칠하지 않는다. */
 .badge.tag-pesadong,
 .tag.tag-pesadong {
