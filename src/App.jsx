@@ -54,6 +54,8 @@ export default function App() {
   const admin = useAdmin()
   // 어드민으로 로그인해 있을 때만 수정된 댓글을 찾고 알린다.
   const watchEdits = admin.route && !!admin.user
+  // 공개 전인 꼬리표(남성)는 로그인한 어드민 화면에서만 보인다.
+  const tagsFor = useCallback((c, l) => tagsOf(c, l, { admin: watchEdits }), [watchEdits])
   /** 갱신 사이에 본문이 바뀐 댓글. 새것이 앞. 어드민이 확인하면 지운다. */
   const [edits, setEdits] = useState([])
   const [live, setLive] = useState(null)
@@ -199,7 +201,7 @@ export default function App() {
   const tagCounts = useMemo(() => {
     const map = new Map()
     for (const c of activeSection?.items ?? []) {
-      for (const t of tagsOf(c, labels[c.userId])) {
+      for (const t of tagsFor(c, labels[c.userId])) {
         const entry = map.get(t.id) ?? { ...t, count: 0 }
         entry.count += 1
         map.set(t.id, entry)
@@ -212,7 +214,7 @@ export default function App() {
       if (a.kind === 'self') return order.get(a.id) - order.get(b.id)
       return b.count - a.count || a.name.localeCompare(b.name, 'ko')
     })
-  }, [activeSection, labels])
+  }, [activeSection, labels, tagsFor])
 
   // 갱신 직전 순위를 찍어 두기 위해, 화면에 그려진 최신 결과를 항상 들고 있는다.
   useEffect(() => {
@@ -383,7 +385,7 @@ export default function App() {
     // 상위 N명을 정해 두면 전체 N등 안에 든 사람만 센다. 데뷔 탭의 N 은 데뷔 글끼리의 순위라 여기엔 쓰지 않는다.
     const inTop = (c) => topN == null || activeTab === DEBUT_TAB || (overallRankById.get(c.id) ?? Infinity) <= topN
     // 자기소개 꼬리표를 골랐으면 그 꼬리표를 가진 사람만 센다. 직업 칸마다 그 경력이 몇 명인지 보인다.
-    const hasTag = (c) => !tagFilter || tagsOf(c, labels[c.userId]).some((t) => t.id === tagFilter)
+    const hasTag = (c) => !tagFilter || tagsFor(c, labels[c.userId]).some((t) => t.id === tagFilter)
     const notHidden = (c) => {
       if (!hideLow || activeTab === DEBUT_TAB) return true
       const count = fans.get(c.userId)
@@ -399,7 +401,7 @@ export default function App() {
         also: items.filter((c) => c.groupId !== s.id).length,
       }
     })
-  }, [sections, topN, activeTab, overallRankById, tagFilter, labels, hideLow, fans])
+  }, [sections, topN, activeTab, overallRankById, tagFilter, labels, hideLow, fans, tagsFor])
   const maxClassCount = Math.max(1, ...classCounts.map((s) => s.total))
 
   /** 신청 인원. 답글(대댓글)을 뺀 일반 댓글의 개수다. */
@@ -440,10 +442,10 @@ export default function App() {
     () =>
       tagFilter
         ? limitedItems
-            .filter((c) => tagsOf(c, labels[c.userId]).some((t) => t.id === tagFilter))
+            .filter((c) => tagsFor(c, labels[c.userId]).some((t) => t.id === tagFilter))
             .map((c, i) => ({ ...c, overallRank: c.rank, rank: i + 1 }))
         : limitedItems,
-    [limitedItems, tagFilter, labels],
+    [limitedItems, tagFilter, labels, tagsFor],
   )
 
   /** 슬라이더가 가리키는 값. 전체 인원보다 크게 적어도 전부로 친다. */
@@ -1125,7 +1127,7 @@ export default function App() {
                       groupName={groupNameById[comment.groupId]}
                       gameNick={labels[comment.userId]?.gameNick || GAME_NICKS[comment.userId]}
                       scan={scanNicks[comment.userId]}
-                      isedol={tagsOf(comment, labels[comment.userId]).some((t) => t.name === ISEDOL)}
+                      isedol={tagsFor(comment, labels[comment.userId]).some((t) => t.name === ISEDOL)}
                       selected={comment.id === selected?.id}
                       onSelect={setSelectedId}
                     />
@@ -1145,6 +1147,7 @@ export default function App() {
               gameNick={selected ? labels[selected.userId]?.gameNick || GAME_NICKS[selected.userId] : undefined}
               defaultGameNick={selected ? GAME_NICKS[selected.userId] : undefined}
               admin={isEditing}
+              adminView={watchEdits}
               onSaveLabel={saveLabelFor}
               fanCount={selected ? fans.get(selected.userId) : undefined}
               alsoDebut={!!selected && activeTab !== DEBUT_TAB && debutUserIds.has(selected.userId)}

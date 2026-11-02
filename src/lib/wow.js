@@ -253,6 +253,8 @@ export const SELF_TAGS = [
   {
     id: 'male',
     name: '남성',
+    // 자료를 채우는 중이라 어드민 화면에서만 보인다. 공개하려면 이 줄을 지운다.
+    adminOnly: true,
     hint: '남성 스트리머(확인된 사람과 자기소개에 적은 사람)',
     look: 'self',
     test: /남자\s*(스트리머|와튜버|방송인)|남성\s*(스트리머|와튜버|방송인)/,
@@ -305,7 +307,7 @@ export function crewsOf(userId, label) {
 export const ISEDOL = '이세계아이돌'
 export const PESADONG = '폐사동'
 
-export function tagsOf(comment, label) {
+export function tagsOf(comment, label, opts = {}) {
   const text = comment.text || ''
   const removed = TAG_FIXES[comment.userId] ?? []
   const forced = label?.tags ?? {}
@@ -315,7 +317,7 @@ export function tagsOf(comment, label) {
   const asTag = new Set(allCrews)
   // 데뷔 글은 와우를 처음 하는 새 와튜버라 '와우 처음'만 기본으로 달고, 글에서 자동으로 뽑는
   // 다른 꼬리표는 달지 않는다. 어드민이 고친 것(켜기·끄기)은 그대로 따른다.
-  const hit = SELF_TAGS.filter((t) =>
+  const hit = SELF_TAGS.filter((t) => !t.adminOnly || opts.admin).filter((t) =>
     t.id in forced
       ? forced[t.id]
       : comment.debut

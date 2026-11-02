@@ -25,6 +25,7 @@ export default function CommentDetail({
   defaultGameNick,
   scan,
   admin,
+  adminView,
   onSaveLabel,
   fanCount,
   alsoDebut,
@@ -53,7 +54,7 @@ export default function CommentDetail({
   }
 
   const seasons = seasonMatch(comment)
-  const tags = tagsOf(comment, label)
+  const tags = tagsOf(comment, label, { admin: adminView })
 
   return (
     <aside
