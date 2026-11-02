@@ -2017,8 +2017,6 @@ button.primary:hover {
 .card.is-isedol .card-row {
   position: relative;
   overflow: hidden;
-  background:
-    linear-gradient(100deg, rgba(247, 240, 138, 0.16), rgba(143, 227, 247, 0.16) 35%, rgba(185, 160, 245, 0.16) 65%, rgba(247, 163, 230, 0.16));
 }
 
 /* 빛줄기는 위치를 옮기는 transform 으로 움직인다. 양 끝에서 완전히 투명해 나타나고 사라지는 게 보이지 않는다. */
