@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { scanAgrees } from '../lib/scanNicks'
 
-// 제작자의 최애 스트리머(문모모). 줄에 강조 효과와 배지를 붙인다.
+// 제작자의 최애 스트리머(문모모). 이름과 줄 테두리에 효과를 준다.
 const MOMO_ID = 'doormomo'
 
 /**
@@ -67,11 +67,6 @@ function CommentCard({
             {isedol && (
               <span className="badge isedol-badge" title="이세계아이돌">
                 ISEGYE IDOL
-              </span>
-            )}
-            {momo && (
-              <span className="badge momo-badge" title="이 사이트 제작자는 문모모 팬입니다">
-                ♥ 제작자 최애
               </span>
             )}
             {/* 목록에는 대표 직업 하나만. 나머지 직업은 오른쪽 자세히 보기에 있다. */}

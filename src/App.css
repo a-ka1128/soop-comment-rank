@@ -2068,33 +2068,36 @@ button.primary:hover {
 }
 
 /* ---------- 문모모 (제작자 최애) ----------
- * 분홍 줄과 은은한 분홍 배경, 숨쉬듯 번지는 빛. */
-.card.is-momo::before {
-  width: 4px;
-  background: linear-gradient(180deg, #ff9ec7, #ff5fa2, #ff9ec7);
-  animation: momo-pulse 2.4s ease-in-out infinite;
-}
+ * 이름은 보라·흰색 홀로그램 글씨, 줄 테두리는 보라빛으로 은은하게 빛난다.
+ * 그라데이션은 처음·끝 색이 같고 이동 거리가 타일 길이와 같아 끊기지 않는다. */
+.card.is-momo::before { display: none; }
 
 .card.is-momo .card-row {
-  background: linear-gradient(100deg, rgba(255, 95, 162, 0.16), rgba(255, 158, 199, 0.08));
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px rgba(185, 140, 255, 0.7), 0 0 10px rgba(185, 140, 255, 0.45);
+  animation: momo-glow 2.6s ease-in-out infinite;
 }
 
-.badge.momo-badge {
-  border: 0;
-  background: linear-gradient(120deg, #ff9ec7, #ff5fa2);
-  color: #fff;
+.card.is-momo .nick {
+  background: linear-gradient(110deg, #a56cff, #ffffff, #c9a6ff, #ffffff, #a56cff) 0 0 / 200px 100% repeat-x;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
   font-weight: 700;
-  animation: momo-pulse 2.4s ease-in-out infinite;
+  animation: momo-flow 4s linear infinite;
 }
 
-@keyframes momo-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+@keyframes momo-flow { to { background-position: 200px 0; } }
+
+@keyframes momo-glow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(185, 140, 255, 0.6), 0 0 6px rgba(185, 140, 255, 0.3); }
+  50% { box-shadow: 0 0 0 1px rgba(220, 200, 255, 0.95), 0 0 16px rgba(185, 140, 255, 0.7); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card.is-momo::before,
-  .badge.momo-badge { animation: none; }
+  .card.is-momo .card-row,
+  .card.is-momo .nick { animation: none; }
 }
 
 /* ---------- 피드백 ---------- */
