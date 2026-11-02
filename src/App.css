@@ -2046,11 +2046,11 @@ button.primary:hover {
 }
 
 /* ---------- 문모모 (드루이드 · 제작자 최애) ----------
- * 줄 모양은 그대로. 이름만 보라·검정 홀로그램 글씨.
+ * 줄 모양은 그대로. 이름만 보라·시안 홀로그램 글씨.
  * 그라데이션은 처음·끝 색이 같고 이동 거리가 타일 길이와 같아 끊기지 않는다. */
 .card.is-momo .nick,
 .detail.is-momo h2 {
-  background: linear-gradient(110deg, #8a3dff, #1a1a1a, #b27cff, #1a1a1a, #8a3dff) 0 0 / 200px 100% repeat-x;
+  background: linear-gradient(110deg, #8a3dff, #22e6ff, #b27cff, #22e6ff, #8a3dff) 0 0 / 200px 100% repeat-x;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -2070,8 +2070,8 @@ button.primary:hover {
 .detail.is-momo .detail-avatar {
   box-sizing: border-box;
   padding: 3px;
-  background: conic-gradient(from var(--momo-a), #8a3dff, #ffffff, #b27cff, #1a1a1a, #8a3dff);
-  box-shadow: 0 0 10px 2px rgba(138, 61, 255, 0.5);
+  background: conic-gradient(from var(--momo-a), #8a3dff, #22e6ff, #b27cff, #22e6ff, #8a3dff);
+  box-shadow: 0 0 10px 2px rgba(34, 230, 255, 0.45);
   animation: momo-spin 3s linear infinite;
 }
 
