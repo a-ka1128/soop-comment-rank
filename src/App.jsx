@@ -42,6 +42,22 @@ export default function App() {
   /** 「리얼 뉴 와튜버 데뷔 하기」 글의 댓글. 못 불러와도 본 화면은 그대로 뜬다. */
   const [debut, setDebut] = useState(null)
   const [showFeedback, setShowFeedback] = useState(false)
+  // 피드백 버튼 옆 말풍선: 처음 온 사람에게만. 버튼이나 ✕를 누르면 이 브라우저에서는 다시 안 뜬다.
+  const [fbHint, setFbHint] = useState(() => {
+    try {
+      return !localStorage.getItem('fbHintSeen')
+    } catch {
+      return true
+    }
+  })
+  const dismissFbHint = () => {
+    setFbHint(false)
+    try {
+      localStorage.setItem('fbHintSeen', '1')
+    } catch {
+      // 저장이 막힌 브라우저에서는 이번 방문 동안만 숨긴다
+    }
+  }
   /** 카페 글에는 프로필 사진이 없어서 방송국 정보에서 받아 온 사진(userId -> 주소). */
   const [profiles, setProfiles] = useState(() => new Map())
   const [tagFilter, setTagFilter] = useState(null)
@@ -732,12 +748,29 @@ export default function App() {
               </div>
             )}
             {feedbackEnabled() && (
-              <button type="button" className="fb-open" onClick={() => setShowFeedback(true)}>
-                <span className="ac-label">의견 · 버그 제보</span>
-                <strong className="fb-open-main">
-                  <span aria-hidden="true">✎</span> 피드백 하기
-                </strong>
-              </button>
+              <div className="fb-wrap">
+                <button
+                  type="button"
+                  className="fb-open"
+                  onClick={() => {
+                    dismissFbHint()
+                    setShowFeedback(true)
+                  }}
+                >
+                  <span className="ac-label">의견 · 버그 제보</span>
+                  <strong className="fb-open-main">
+                    <span aria-hidden="true">✎</span> 피드백 하기
+                  </strong>
+                </button>
+                {fbHint && (
+                  <div className="fb-hint" role="status">
+                    <span>💬 제보·피드백 받습니다!</span>
+                    <button type="button" className="fb-hint-close" aria-label="안내 닫기" onClick={dismissFbHint}>
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
