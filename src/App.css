@@ -1681,6 +1681,23 @@ button:disabled {
   align-items: center;
   gap: 10px;
   cursor: pointer;
+  list-style: none;
+}
+
+.live-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 눌러서 접고 펼 수 있다는 표시. 펼쳐 있으면 아래를 향한다. */
+.live-panel summary::before {
+  content: '▸';
+  color: var(--brand);
+  font-size: 12px;
+  transition: transform 0.15s;
+}
+
+.live-panel[open] > summary::before {
+  transform: rotate(90deg);
 }
 
 .live-grid {

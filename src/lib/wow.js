@@ -247,6 +247,8 @@ export const SELF_TAGS = [
     hint: '와우(불타는 성전)로 방송을 시작했다고 적은 사람',
     // 와튜버는 동아리처럼 묶이는 이름이라 크루와 같은 파란 글씨로 그린다. 순서는 자기소개 쪽 그대로.
     look: 'crew',
+    // 거르기 줄에서는 자기소개가 아니라 '크루·그룹' 줄 맨 앞에 둔다(추도 같다).
+    row: 'crew',
     // '와트너'(와우 파트너 스트리머)는 와튜버 데뷔가 아니다 — 단즈가 그렇게 잘못 붙었다.
     test: /와튜버\s*(로|로서)?\s*(방송\s*)?데뷔|와우로\s*(뒤늦게\s*)?(방송\s*)?데뷔|순혈\s*와튜버|와튜버\s*1기|와튜버\s*2기|와튜버로\s*데뷔/,
   },
@@ -255,6 +257,7 @@ export const SELF_TAGS = [
     name: '추',
     hint: '남성 스트리머(확인된 사람과 자기소개에 적은 사람)',
     look: 'chu',
+    row: 'crew',
     test: /남자\s*(스트리머|와튜버|방송인)|남성\s*(스트리머|와튜버|방송인)/,
   },
 ]
@@ -332,6 +335,7 @@ export function tagsOf(comment, label, opts = {}) {
       t.id in forced ? `${t.hint} — 어드민 확인` : comment.debut && t.id === 'newbie' ? '뉴 와튜버 데뷔 글을 올린 사람(기본값)' : t.hint,
     kind: 'self',
     look: t.look ?? 'self',
+    row: t.row ?? 'self',
   }))
   const selfNames = new Set(SELF_TAGS.map((t) => t.name))
   const crews = allCrews.filter((name) => !selfNames.has(name)).map((name) => ({

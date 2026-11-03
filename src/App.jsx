@@ -77,6 +77,23 @@ export default function App() {
   /** 갱신 사이에 본문이 바뀐 댓글. 새것이 앞. 어드민이 확인하면 지운다. */
   const [edits, setEdits] = useState([])
   const [live, setLive] = useState(null)
+  // 방송 중 패널을 접었는지. 다음에 열어도 그대로 둔다.
+  const [liveOpen, setLiveOpen] = useState(() => {
+    try {
+      return localStorage.getItem('livePanelOpen') !== '0'
+    } catch {
+      return true
+    }
+  })
+  const toggleLive = (e) => {
+    const open = e.currentTarget.open
+    setLiveOpen(open)
+    try {
+      localStorage.setItem('livePanelOpen', open ? '1' : '0')
+    } catch {
+      // 저장이 막힌 브라우저에서는 이번 방문 동안만 기억한다
+    }
+  }
   const [notifyPerm, setNotifyPerm] = useState(() =>
     typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
   )
@@ -235,11 +252,17 @@ export default function App() {
   }, [activeSection, labels, tagsFor])
 
   /** 자기소개 줄과, 크루를 갈래(왁타버스·산하 / 동아리 / 그 밖)별로 나눈 줄들. */
-  const selfTagCounts = useMemo(() => tagCounts.filter((t) => t.kind === 'self'), [tagCounts])
+  // 와튜버·추처럼 row: 'crew' 인 자기소개 꼬리표는 '크루·그룹' 줄 맨 앞에 선다(추, 와튜버 순).
+  const selfTagCounts = useMemo(() => tagCounts.filter((t) => t.kind === 'self' && t.row !== 'crew'), [tagCounts])
   const crewRows = useMemo(() => {
     const groups = [...CREW_GROUPS, OTHER_CREW_GROUP]
     const byGroup = new Map(groups.map((g) => [g.id, []]))
-    for (const t of tagCounts) if (t.kind === 'crew') byGroup.get(crewGroupOf(t.name).id).push(t)
+    for (const t of tagCounts) {
+      if (t.kind === 'crew') byGroup.get(crewGroupOf(t.name).id).push(t)
+      else if (t.row === 'crew') byGroup.get(OTHER_CREW_GROUP.id).push(t)
+    }
+    // 그중 추가 맨 앞.
+    byGroup.get(OTHER_CREW_GROUP.id).sort((a, b) => (b.id === 'male') - (a.id === 'male'))
     return groups.map((g) => ({ ...g, tags: byGroup.get(g.id) })).filter((g) => g.tags.length > 0)
   }, [tagCounts])
 
@@ -834,7 +857,7 @@ export default function App() {
         {admin.route && admin.user && <AdminFeedback getToken={admin.getToken} />}
 
         {admin.route && live && (
-          <details className="live-panel" open>
+          <details className="live-panel" open={liveOpen} onToggle={toggleLive}>
             <summary>
               <strong>지금 방송 중 {live.live.length}명</strong>
               <span className="muted">
