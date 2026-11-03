@@ -1430,14 +1430,6 @@ button:disabled {
   color: #2c4fa8;
 }
 
-/* 뉴 와튜버 신청. 꼬리표가 아니라 다른 글로 넘어가는 칩이라 금빛으로 구분한다. */
-.tag.tag-debut {
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 600;
-}
-
 .tag.active {
   border-color: var(--text);
   background: var(--text);
