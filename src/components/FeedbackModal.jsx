@@ -1,9 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { CONTACT_MAX, FEEDBACK_OPEN, MESSAGE_MAX, cooldownLeft, sendFeedback } from '../lib/feedback'
 
 /** 방문자 피드백 창. 보내면 어드민 화면(#admin)에서 볼 수 있다. */
 export default function FeedbackModal({ onClose }) {
   const [message, setMessage] = useState('')
+  // 글이 길어지면 입력칸이 내용만큼 세로로 늘어난다(최소 6줄, 상한은 CSS max-height 에서 스크롤).
+  const boxRef = useRef(null)
+  useLayoutEffect(() => {
+    const el = boxRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`
+  }, [message])
   const [contact, setContact] = useState('')
   const [state, setState] = useState('idle') // idle | sending | done
   const [error, setError] = useState('')
@@ -56,6 +64,7 @@ export default function FeedbackModal({ onClose }) {
             <label>
               <span>의견·버그·잘못 분류된 사람 등</span>
               <textarea
+                ref={boxRef}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 maxLength={MESSAGE_MAX}

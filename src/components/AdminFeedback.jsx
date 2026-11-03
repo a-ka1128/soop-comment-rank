@@ -6,6 +6,8 @@ export default function AdminFeedback({ getToken }) {
   const [items, setItems] = useState(null)
   const [status, setStatus] = useState({})
   const [error, setError] = useState('')
+  // 보는 칸: 'new'(아직 상태 없음)가 기본. 나머지는 탭을 눌러야 보인다.
+  const [view, setView] = useState('new')
 
   const load = useCallback(async () => {
     setError('')
@@ -48,6 +50,10 @@ export default function AdminFeedback({ getToken }) {
   }
 
   const pending = items ? items.filter((it) => !status[it.id]).length : 0
+  const tabs = [{ id: 'new', label: 'NEW' }, ...FEEDBACK_STATUSES]
+  const countOf = (id) =>
+    items ? items.filter((it) => (id === 'new' ? !status[it.id] : status[it.id] === id)).length : 0
+  const shown = items?.filter((it) => (view === 'new' ? !status[it.id] : status[it.id] === view))
 
   return (
     <details className="live-panel fb-admin" open={!!items?.length}>
@@ -66,9 +72,23 @@ export default function AdminFeedback({ getToken }) {
         </button>
       </summary>
       {error && <p className="fb-error">{error}</p>}
+      <div className="fb-tabs" role="tablist">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={view === t.id}
+            className={view === t.id ? `fb-tab ${t.id} active` : `fb-tab ${t.id}`}
+            onClick={() => setView(t.id)}
+          >
+            {t.label} <span className="fb-tab-n">{countOf(t.id)}</span>
+          </button>
+        ))}
+      </div>
       <ul className="fb-list">
-        {items?.map((it) => (
-          <li key={it.id} className={status[it.id] ? `fb-st-${status[it.id]}` : undefined}>
+        {shown?.map((it) => (
+          <li key={it.id}>
             <div className="fb-meta">
               <time>{new Date(it.createdAt).toLocaleString('ko-KR')}</time>
               {it.contact && <span className="muted">연락처: {it.contact}</span>}
@@ -89,7 +109,9 @@ export default function AdminFeedback({ getToken }) {
             <p>{it.message}</p>
           </li>
         ))}
-        {items?.length === 0 && <li className="muted">아직 없습니다.</li>}
+        {shown?.length === 0 && (
+          <li className="muted">{view === 'new' ? '새 피드백이 없습니다.' : '이 칸에 든 피드백이 없습니다.'}</li>
+        )}
       </ul>
     </details>
   )
