@@ -699,9 +699,22 @@ export default function App() {
       {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
       <header className="topbar">
         <div className="brand">
+          {/* 로고를 누르면 새로고침: 고른 탭·꼬리표·검색어가 모두 처음으로 돌아간다(따로 저장하는 상태가 없다). */}
+          <a
+            className="logo"
+            href={window.location.href}
+            title="처음 화면으로 (새로고침)"
+            onClick={(e) => {
+              e.preventDefault()
+              window.history.scrollRestoration = 'manual'
+              window.scrollTo(0, 0)
+              window.location.reload()
+            }}
+          >
+            <img src="./logo.webp" alt="와우 포에버" width="822" height="669" />
+          </a>
           <div className="brand-text">
-            <span className="kicker">WORLD OF WARCRAFT · FOREVER</span>
-            <h1>와우 포에버 · 우왁굳 길드 사전 신청</h1>
+            <h1>우왁굳 길드 사전 신청</h1>
             <p>
               신청 댓글을 해보려는 직업별로 나눠 좋아요 순으로 세웁니다.
               <a className="source-link" href={TARGET_POST.url} target="_blank" rel="noopener noreferrer">
