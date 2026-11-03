@@ -2254,6 +2254,18 @@ button.primary:hover {
   white-space: nowrap;
 }
 
+/* 좁은 화면에서는 말풍선 폭을 화면 안으로 묶고 안내 글을 단어 단위로 줄바꿈 */
+@media (max-width: 600px) {
+  .fb-hint.open {
+    width: min(320px, calc(100vw - 48px));
+  }
+
+  .topbar .brand .fb-hint-body p {
+    white-space: normal;
+    word-break: keep-all;
+  }
+}
+
 .fb-hint-close {
   justify-self: end;
   padding: 3px 12px;

@@ -777,9 +777,9 @@ export default function App() {
                     {fbHintOpen && (
                       <div className="fb-hint-body">
                         <p>
-                          스트리머분들 닉네임, 동아리, 크루 제보받습니다.
+                          스트리머분들 인게임 닉네임, 크루 등 정보 제보받습니다.
                           <br />
-                          많은 제보 부탁드립니다.
+                          많은 제보 및 피드백 부탁드립니다.
                         </p>
                         <button type="button" className="fb-hint-close" onClick={dismissFbHint}>
                           닫기
