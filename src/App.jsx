@@ -50,6 +50,7 @@ export default function App() {
       return true
     }
   })
+  const [fbHintOpen, setFbHintOpen] = useState(false)
   const dismissFbHint = () => {
     setFbHint(false)
     try {
@@ -762,12 +763,29 @@ export default function App() {
                     <span aria-hidden="true">✎</span> 피드백 하기
                   </strong>
                 </button>
+                {/* 처음엔 한 줄만. 눌러서 펼쳐 안내를 읽은 다음에야 닫을 수 있다. */}
                 {fbHint && (
-                  <div className="fb-hint" role="status">
-                    <span>💬 제보·피드백 받습니다!</span>
-                    <button type="button" className="fb-hint-close" aria-label="안내 닫기" onClick={dismissFbHint}>
-                      ✕
+                  <div className={fbHintOpen ? 'fb-hint open' : 'fb-hint'}>
+                    <button
+                      type="button"
+                      className="fb-hint-head"
+                      aria-expanded={fbHintOpen}
+                      onClick={() => setFbHintOpen((v) => !v)}
+                    >
+                      💬 제보·피드백 받습니다! <span className="fb-hint-caret" aria-hidden="true">▾</span>
                     </button>
+                    {fbHintOpen && (
+                      <div className="fb-hint-body">
+                        <p>
+                          스트리머분들 닉네임, 동아리, 크루 제보받습니다.
+                          <br />
+                          많은 제보 부탁드립니다.
+                        </p>
+                        <button type="button" className="fb-hint-close" onClick={dismissFbHint}>
+                          닫기
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

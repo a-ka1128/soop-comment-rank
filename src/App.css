@@ -2192,18 +2192,15 @@ button.primary:hover {
   top: calc(100% + 10px);
   right: 0;
   z-index: 20;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 8px 7px 12px;
   border-radius: 10px;
   background: var(--brand-deep);
   color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
   box-shadow: 0 4px 14px rgba(20, 28, 48, 0.25);
   animation: fb-hint-bounce 0.9s ease-in-out 0.6s 4;
+}
+
+.fb-hint.open {
+  animation: none;
 }
 
 .fb-hint::before {
@@ -2215,18 +2212,58 @@ button.primary:hover {
   border-bottom-color: var(--brand-deep);
 }
 
-.fb-hint-close {
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
+.fb-hint-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 12px;
   border: 0;
-  border-radius: 50%;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.fb-hint-caret {
+  margin-left: auto;
+  font-size: 11px;
+  transition: transform 0.15s;
+}
+
+.fb-hint.open .fb-hint-caret {
+  transform: rotate(180deg);
+}
+
+.fb-hint-body {
+  display: grid;
+  gap: 8px;
+  padding: 0 12px 10px;
+}
+
+.topbar .brand .fb-hint-body p {
+  margin: 0;
+  color: #fff;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: nowrap;
+}
+
+.fb-hint-close {
+  justify-self: end;
+  padding: 3px 12px;
+  border: 0;
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.18);
   color: #fff;
-  font-size: 11px;
-  line-height: 1;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
 }
 
