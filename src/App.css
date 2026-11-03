@@ -1397,6 +1397,8 @@ button:disabled {
 }
 
 .tagbar-label {
+  /* 줄마다 라벨 길이가 달라도 칩이 같은 자리에서 시작하게 */
+  min-width: 84px;
   font-size: 12px;
   font-weight: 600;
   color: var(--muted);

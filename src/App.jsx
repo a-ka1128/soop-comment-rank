@@ -6,6 +6,7 @@ import { fetchAllComments, fetchPost, postUrl } from './lib/soop'
 import { loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, rank } from './lib/groups'
 import { CUT_RANK, DEBUT_BOARD, TARGET_POST } from './lib/target'
+import { CREW_GROUPS, OTHER_CREW_GROUP, crewGroupOf } from './lib/crews'
 import { ISEDOL, SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
 import { cleanLabel, fetchLabels, saveLabel } from './lib/labels'
 import { loadScanNicks } from './lib/scanNicks'
@@ -215,6 +216,15 @@ export default function App() {
       return b.count - a.count || a.name.localeCompare(b.name, 'ko')
     })
   }, [activeSection, labels, tagsFor])
+
+  /** 자기소개 줄과, 크루를 갈래(왁타버스·산하 / 동아리 / 그 밖)별로 나눈 줄들. */
+  const selfTagCounts = useMemo(() => tagCounts.filter((t) => t.kind === 'self'), [tagCounts])
+  const crewRows = useMemo(() => {
+    const groups = [...CREW_GROUPS, OTHER_CREW_GROUP]
+    const byGroup = new Map(groups.map((g) => [g.id, []]))
+    for (const t of tagCounts) if (t.kind === 'crew') byGroup.get(crewGroupOf(t.name).id).push(t)
+    return groups.map((g) => ({ ...g, tags: byGroup.get(g.id) })).filter((g) => g.tags.length > 0)
+  }, [tagCounts])
 
   // 갱신 직전 순위를 찍어 두기 위해, 화면에 그려진 최신 결과를 항상 들고 있는다.
   useEffect(() => {
@@ -1046,7 +1056,7 @@ export default function App() {
               </button>
             </div>
 
-          {(tagCounts.length > 0 || debutSection) && (
+          {(selfTagCounts.length > 0 || debutSection) && (
             <div className="tagbar">
               <span
                 className="tagbar-label"
@@ -1069,7 +1079,7 @@ export default function App() {
                   뉴 와튜버 데뷔 <em>{debutSection.items.length}</em>
                 </button>
               )}
-              {tagCounts.map((t) => (
+              {selfTagCounts.map((t) => (
                 <button
                   type="button"
                   key={t.id}
@@ -1086,6 +1096,25 @@ export default function App() {
               ))}
             </div>
           )}
+          {crewRows.map((row) => (
+            <div className="tagbar tagbar-crew" key={row.id}>
+              <span className="tagbar-label">{row.name}</span>
+              {row.tags.map((t) => (
+                <button
+                  type="button"
+                  key={t.id}
+                  className={`tag tag-${t.look}${tagFilter === t.id ? ' active' : ''}`}
+                  title={t.hint}
+                  onClick={() => {
+                    if (activeTab === DEBUT_TAB) setActiveTab(ALL_TAB)
+                    setTagFilter((v) => (v === t.id ? null : t.id))
+                  }}
+                >
+                  {t.name} <em>{t.count}</em>
+                </button>
+              ))}
+            </div>
+          ))}
           </section>
 
           <div className={`board${selected ? ' has-selection' : ''}`}>
