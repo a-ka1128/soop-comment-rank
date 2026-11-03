@@ -163,7 +163,7 @@ export default function App() {
     )
     return {
       id: DEBUT_TAB,
-      name: '뉴 와튜버 데뷔',
+      name: '뉴 와튜버 신청',
       color: DEBUT_COLOR,
       topN: null,
       items: rank(items),
@@ -1163,7 +1163,7 @@ export default function App() {
                     setActiveTab((v) => (v === DEBUT_TAB ? ALL_TAB : DEBUT_TAB))
                   }}
                 >
-                  뉴 와튜버 데뷔 <em>{debutSection.items.length}</em>
+                  뉴 와튜버 신청 <em>{debutSection.items.length}</em>
                 </button>
               )}
               {selfTagCounts.map((t) => (
@@ -1173,8 +1173,9 @@ export default function App() {
                   className={`tag tag-${t.look}${tagFilter === t.id ? ' active' : ''}`}
                   title={t.hint}
                   onClick={() => {
-                    // 데뷔 칩이 켜져 있으면 꺼진다(둘 중 하나만 선택).
-                    if (activeTab === DEBUT_TAB) setActiveTab(ALL_TAB)
+                    // 신청 칩이 켜져 있으면 꺼진다(둘 중 하나만 선택). 리얼 뉴 와튜버만은 신청 목록 안에서
+                    // 거르는 칩이라(합격자가 대개 신청 글 쪽에 있다) 목록을 그대로 둔다.
+                    if (activeTab === DEBUT_TAB && t.id !== 'realnew') setActiveTab(ALL_TAB)
                     setTagFilter((v) => (v === t.id ? null : t.id))
                   }}
                 >

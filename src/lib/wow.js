@@ -2,6 +2,7 @@
 import { UNGROUPED_ID } from './groups.js'
 import { CREWS } from './crews.js'
 import { MALE_IDS } from './male.js'
+import { REAL_NEW_IDS } from './realnew.js'
 
 /**
  * 와우 직업. 댓글 양식 첫 줄이 "해보려는 직업"이라 본문 번호 목록 대신 직업으로 나눈다.
@@ -206,9 +207,17 @@ export function uniqueComments(list) {
  * 확인된 크루는 crews.js 에 따로 적는다.
  *
  * 순서가 화면에 붙는 순서다(자기소개 줄과 줄마다 붙는 배지 모두). 크루는 이 뒤에 온다.
- * 맨 앞의 '뉴 와튜버 데뷔' 칩은 꼬리표가 아니라 App 이 따로 붙인다.
+ * 맨 앞의 '뉴 와튜버 신청' 칩은 꼬리표가 아니라 App 이 따로 붙인다.
  */
 export const SELF_TAGS = [
+  {
+    id: 'realnew',
+    name: '리얼 뉴 와튜버',
+    hint: '우왁굳 공지로 발표된 리얼 뉴 와튜버 합격자',
+    look: 'realnew',
+    // 글에서 뽑는 게 아니라 공지 명단(realnew.js)에 있는 사람에게만 붙는다.
+    test: /(?!)/,
+  },
   {
     id: 'legacy70',
     name: '와점기 70렙',
@@ -321,8 +330,9 @@ export function tagsOf(comment, label, opts = {}) {
     t.id in forced
       ? forced[t.id]
       : comment.debut
-        ? t.id === 'newbie' || asTag.has(t.name)
+        ? t.id === 'newbie' || asTag.has(t.name) || (t.id === 'realnew' && REAL_NEW_IDS.includes(comment.userId))
         : asTag.has(t.name) ||
+          (t.id === 'realnew' && REAL_NEW_IDS.includes(comment.userId)) ||
           (t.id === 'male' && MALE_IDS.includes(comment.userId)) ||
           (!removed.includes(t.id) && t.test.test(text)),
   )
@@ -332,7 +342,7 @@ export function tagsOf(comment, label, opts = {}) {
     id: t.id,
     name: t.name,
     hint:
-      t.id in forced ? `${t.hint} — 어드민 확인` : comment.debut && t.id === 'newbie' ? '뉴 와튜버 데뷔 글을 올린 사람(기본값)' : t.hint,
+      t.id in forced ? `${t.hint} — 어드민 확인` : comment.debut && t.id === 'newbie' ? '뉴 와튜버 신청 글을 올린 사람(기본값)' : t.hint,
     kind: 'self',
     look: t.look ?? 'self',
     row: t.row ?? 'self',
