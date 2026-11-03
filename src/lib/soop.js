@@ -1,3 +1,5 @@
+import { NICK_RENAMES } from './renames.js'
+
 export const API_BASE = 'https://api-channel.sooplive.com/v1.1/channel'
 
 /**
@@ -109,7 +111,7 @@ export function decodeEntities(text) {
 function normalize(item) {
   return {
     id: item.pCommentNo,
-    nick: decodeEntities(item.userNick ?? ''),
+    nick: NICK_RENAMES[item.userId] ?? decodeEntities(item.userNick ?? ''),
     userId: item.userId ?? '',
     text: decodeEntities(item.comment ?? ''),
     likes: item.likeCnt ?? 0,
