@@ -1151,21 +1151,6 @@ export default function App() {
               >
                 자기소개
               </span>
-              {/* 데뷔 글은 다른 글이라 꼬리표가 아니라 목록 자체를 바꾼다. 다시 누르면 전체로. */}
-              {debutSection && (
-                <button
-                  type="button"
-                  className={`tag tag-debut${activeTab === DEBUT_TAB ? ' active' : ''}`}
-                  title="「리얼 뉴 와튜버 데뷔 하기」 글에 댓글을 단 사람"
-                  onClick={() => {
-                    // 다른 꼬리표와 같이 하나만 고른다. 데뷔를 누르면 꼬리표는 풀린다.
-                    setTagFilter(null)
-                    setActiveTab((v) => (v === DEBUT_TAB ? ALL_TAB : DEBUT_TAB))
-                  }}
-                >
-                  뉴 와튜버 신청 <em>{debutSection.items.length}</em>
-                </button>
-              )}
               {selfTagCounts.map((t) => (
                 <button
                   type="button"
@@ -1182,6 +1167,21 @@ export default function App() {
                   {t.name} <em>{t.count}</em>
                 </button>
               ))}
+              {/* 데뷔 글은 다른 글이라 꼬리표가 아니라 목록 자체를 바꾼다. 다시 누르면 전체로. */}
+              {debutSection && (
+                <button
+                  type="button"
+                  className={`tag tag-debut${activeTab === DEBUT_TAB ? ' active' : ''}`}
+                  title="「리얼 뉴 와튜버 데뷔 하기」 글에 댓글을 단 사람"
+                  onClick={() => {
+                    // 다른 꼬리표와 같이 하나만 고른다. 데뷔를 누르면 꼬리표는 풀린다.
+                    setTagFilter(null)
+                    setActiveTab((v) => (v === DEBUT_TAB ? ALL_TAB : DEBUT_TAB))
+                  }}
+                >
+                  뉴 와튜버 신청 <em>{debutSection.items.length}</em>
+                </button>
+              )}
             </div>
           )}
           {crewRows.map((row) => (
