@@ -7,6 +7,7 @@ import { loadFanCounts } from './lib/fans'
 import { UNGROUPED_ID, rank } from './lib/groups'
 import { CUT_RANK, DEBUT_BOARD, TARGET_POST } from './lib/target'
 import { CREW_GROUPS, OTHER_CREW_GROUP, crewGroupOf } from './lib/crews'
+import { REAL_NEW_IDS } from './lib/realnew'
 import { ISEDOL, SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments } from './lib/wow'
 import { cleanLabel, fetchLabels, saveLabel } from './lib/labels'
 import { loadScanNicks } from './lib/scanNicks'
@@ -253,7 +254,16 @@ export default function App() {
 
   /** 자기소개 줄과, 크루를 갈래(왁타버스·산하 / 동아리 / 그 밖)별로 나눈 줄들. */
   // 와튜버·추처럼 row: 'crew' 인 자기소개 꼬리표는 '크루·그룹' 줄 맨 앞에 선다(추, 와튜버 순).
-  const selfTagCounts = useMemo(() => tagCounts.filter((t) => t.kind === 'self' && t.row !== 'crew'), [tagCounts])
+  const selfTagCounts = useMemo(() => {
+    const list = tagCounts.filter((t) => t.kind === 'self' && t.row !== 'crew')
+    // 합격자는 대개 신청 글 쪽에만 있어서 전체 탭에서는 칩이 안 생긴다. 신청 목록에 있는 합격자 수로 맨 앞에 채워 둔다.
+    if (activeTab !== DEBUT_TAB && !list.some((t) => t.id === 'realnew')) {
+      const def = SELF_TAGS.find((t) => t.id === 'realnew')
+      const n = (debutSection?.items ?? []).filter((c) => REAL_NEW_IDS.includes(c.userId)).length
+      if (def && n > 0) list.unshift({ ...def, kind: 'self', row: def.row ?? 'self', count: n })
+    }
+    return list
+  }, [tagCounts, activeTab, debutSection])
   const crewRows = useMemo(() => {
     const groups = [...CREW_GROUPS, OTHER_CREW_GROUP]
     const byGroup = new Map(groups.map((g) => [g.id, []]))
@@ -1161,6 +1171,12 @@ export default function App() {
                     // 신청 칩이 켜져 있으면 꺼진다(둘 중 하나만 선택). 리얼 뉴 와튜버만은 신청 목록 안에서
                     // 거르는 칩이라(합격자가 대개 신청 글 쪽에 있다) 목록을 그대로 둔다.
                     if (activeTab === DEBUT_TAB && t.id !== 'realnew') setActiveTab(ALL_TAB)
+                    // 전체 탭에서 누르면 합격자가 있는 신청 목록으로 넘어가 거른다.
+                    if (t.id === 'realnew' && activeTab !== DEBUT_TAB) {
+                      setActiveTab(DEBUT_TAB)
+                      setTagFilter('realnew')
+                      return
+                    }
                     setTagFilter((v) => (v === t.id ? null : t.id))
                   }}
                 >
