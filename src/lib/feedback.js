@@ -91,3 +91,12 @@ export async function setFeedbackStatus(id, status, idToken) {
   })
   if (!res.ok) throw new Error(`상태를 바꾸지 못했습니다 (HTTP ${res.status})`)
 }
+
+/** 피드백을 아예 지운다(처리 상태도 같이). 되돌릴 수 없다. */
+export async function deleteFeedback(id, idToken) {
+  const key = encodeURIComponent(id)
+  const res = await fetch(url(`feedback/${key}`, idToken), { method: 'DELETE' })
+  if (!res.ok) throw new Error(`지우지 못했습니다 (HTTP ${res.status})`)
+  // 상태가 남아 있어도 글은 이미 없어졌으니, 정리에 실패해도 지운 것으로 친다.
+  await fetch(url(`feedbackStatus/${key}`, idToken), { method: 'DELETE' }).catch(() => {})
+}

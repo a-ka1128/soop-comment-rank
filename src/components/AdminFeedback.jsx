@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { FEEDBACK_STATUSES, fetchFeedback, fetchFeedbackStatus, setFeedbackStatus } from '../lib/feedback'
+import { FEEDBACK_STATUSES, deleteFeedback, fetchFeedback, fetchFeedbackStatus, setFeedbackStatus } from '../lib/feedback'
 
-/** 어드민 화면의 피드백 목록. 로그인한 어드민에게만 그려진다. 지우지 않고 처리 상태만 매긴다. */
+/** 어드민 화면의 피드백 목록. 로그인한 어드민에게만 그려진다. 처리 상태를 매기거나, 지우기 버튼으로 아예 지운다. */
 export default function AdminFeedback({ getToken }) {
   const [items, setItems] = useState(null)
   const [status, setStatus] = useState({})
@@ -42,6 +42,22 @@ export default function AdminFeedback({ getToken }) {
         const copy = { ...prev }
         if (value) copy[id] = value
         else delete copy[id]
+        return copy
+      })
+    } catch (e) {
+      setError(e.message)
+    }
+  }
+
+  // 지우면 복구할 수 없어서 한 번 묻는다.
+  const remove = async (id) => {
+    if (!window.confirm('이 피드백을 아예 지울까요? 되돌릴 수 없습니다.')) return
+    try {
+      await deleteFeedback(id, await getToken())
+      setItems((prev) => prev.filter((it) => it.id !== id))
+      setStatus((prev) => {
+        const copy = { ...prev }
+        delete copy[id]
         return copy
       })
     } catch (e) {
@@ -104,6 +120,9 @@ export default function AdminFeedback({ getToken }) {
                     {s.label}
                   </button>
                 ))}
+                <button type="button" className="fb-st-btn fb-del" onClick={() => remove(it.id)}>
+                  지우기
+                </button>
               </span>
             </div>
             <p>{it.message}</p>
