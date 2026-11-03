@@ -4,7 +4,7 @@ const RTDB_URL = import.meta.env.VITE_RTDB_URL ?? ''
  * 방문자 피드백. Firebase Realtime Database 의 feedback/{id} 에 쌓인다.
  *
  * 보내기는 누구나 — 새 글을 만드는 것만 되고 고치거나 지울 수는 없다(database.rules.json).
- * 읽기·삭제는 어드민 uid 만. 규칙이 글자 수(본문 1000자, 연락처 100자)와 시각(서버 시각)도 검사한다.
+ * 읽기와 처리 상태(feedbackStatus/{id}) 매기기는 어드민 uid 만. 규칙이 글자 수(본문 1000자, 연락처 100자)와 시각(서버 시각)도 검사한다.
  *
  * 한 건의 모양: { message, contact?, createdAt }
  */
@@ -67,7 +67,27 @@ export async function fetchFeedback(idToken) {
     .sort((a, b) => b.createdAt - a.createdAt)
 }
 
-export async function deleteFeedback(id, idToken) {
-  const res = await fetch(url(`feedback/${encodeURIComponent(id)}`, idToken), { method: 'DELETE' })
-  if (!res.ok) throw new Error(`지우지 못했습니다 (HTTP ${res.status})`)
+/** 어드민이 매기는 처리 상태. feedbackStatus/{id} 에 따로 둔다(피드백 글 자체는 그대로). */
+export const FEEDBACK_STATUSES = [
+  { id: 'done', label: '처리 완료' },
+  { id: 'hold', label: '보류' },
+  { id: 'rejected', label: '반려' },
+]
+
+/** @returns {Promise<Record<string, string>>} 피드백 id → 상태 id */
+export async function fetchFeedbackStatus(idToken) {
+  const res = await fetch(url('feedbackStatus', idToken))
+  if (res.status === 401 || res.status === 403) throw new Error('처리 상태를 읽을 권한이 없습니다. DB 규칙을 배포했는지 확인하세요.')
+  if (!res.ok) throw new Error(`처리 상태를 읽지 못했습니다 (HTTP ${res.status})`)
+  return (await res.json()) ?? {}
+}
+
+/** status 가 null 이면 상태를 지운다(미처리로 되돌림). */
+export async function setFeedbackStatus(id, status, idToken) {
+  const res = await fetch(url(`feedbackStatus/${encodeURIComponent(id)}`, idToken), {
+    method: status ? 'PUT' : 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: status ? JSON.stringify(status) : undefined,
+  })
+  if (!res.ok) throw new Error(`상태를 바꾸지 못했습니다 (HTTP ${res.status})`)
 }

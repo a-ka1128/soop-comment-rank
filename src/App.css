@@ -2402,8 +2402,47 @@ button.primary:hover {
   color: var(--muted);
 }
 
-.fb-meta button {
+/* 처리 상태 버튼 세 개. 고른 것만 색이 찬다. 끝난 글(완료·반려)은 흐리게. */
+.fb-status {
+  display: flex;
+  gap: 4px;
   margin-left: auto;
+}
+
+.fb-st-btn {
+  --st: var(--muted);
+  padding: 2px 10px;
+  border: 1px solid color-mix(in srgb, var(--st) 45%, var(--line));
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--st);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fb-st-btn.done { --st: #2e8b57; }
+.fb-st-btn.hold { --st: #c08a1e; }
+.fb-st-btn.rejected { --st: #c0392b; }
+
+.fb-st-btn:hover {
+  background: color-mix(in srgb, var(--st) 10%, var(--panel));
+}
+
+.fb-st-btn.active {
+  border-color: var(--st);
+  background: var(--st);
+  color: #fff;
+}
+
+.fb-list li.fb-st-done,
+.fb-list li.fb-st-rejected {
+  opacity: 0.6;
+}
+
+.fb-list li.fb-st-hold {
+  border-color: color-mix(in srgb, #c08a1e 45%, var(--line));
 }
 
 /* 꼬리표 고르는 줄의 이세계아이돌 칩. 칸 전체가 아니라 테두리만 홀로그램으로 흐른다.

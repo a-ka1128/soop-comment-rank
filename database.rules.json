@@ -18,6 +18,13 @@
         "$other": { ".validate": false }
       }
     },
+    "feedbackStatus": {
+      ".read": "auth != null && auth.uid === 'ko2UDZwBNXVO3qBKWyf2ykqsqPa2'",
+      "$id": {
+        ".write": "auth != null && auth.uid === 'ko2UDZwBNXVO3qBKWyf2ykqsqPa2'",
+        ".validate": "newData.isString() && (newData.val() === 'done' || newData.val() === 'hold' || newData.val() === 'rejected')"
+      }
+    },
     "labels": {
       ".read": true,
       "$userId": {
