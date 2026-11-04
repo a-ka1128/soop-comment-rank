@@ -8,6 +8,14 @@
       name="description"
       content="와우 포에버 우왁굳 길드 사전 신청 댓글을 직업별로 나눠 좋아요 순으로 세웁니다"
     />
+    <script>
+      // 첫 그림 전에 테마를 정해 깜빡임을 막는다: 저장값 → 시스템 설정 순.
+      try {
+        var t = localStorage.getItem('theme')
+        if (t !== 'dark' && t !== 'light') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        document.documentElement.dataset.theme = t
+      } catch (e) {}
+    </script>
     <title>와우 포에버 길드 신청</title>
   </head>
   <body>

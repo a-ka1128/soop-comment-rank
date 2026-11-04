@@ -2583,3 +2583,125 @@ button.primary:hover {
   font-size: 12px;
   cursor: pointer;
 }
+
+/* 다크 모드 ------------------------------------------------------------------
+ * <html data-theme="dark"> 일 때만 적용된다(index.html 의 스크립트가 저장값·시스템 설정으로 정한다).
+ * 위쪽 :root 의 변수만 바꾸고, 색을 직접 박아 둔 몇 군데만 아래에서 덮는다. */
+:root[data-theme='dark'] {
+  --bg: #12151c;
+  --panel: #1b2029;
+  --panel-2: #222835;
+  --hover: #262d3b;
+  --line: #2d3545;
+  --line-strong: #3b4558;
+  --text: #e4e8f0;
+  --muted: #9aa5b8;
+  --accent: #e0a04a;
+  --accent-soft: #33291a;
+  --brand: #8fa3d1;
+  --brand-deep: #b9c6e6;
+  --brand-soft: #232b3f;
+  --like: #f06a8a;
+  --up: #4ade80;
+  --down: #8b97ab;
+  --danger: #f08a5d;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
+}
+
+:root[data-theme='dark'] body {
+  background:
+    radial-gradient(900px 340px at 50% 0, rgba(143, 163, 209, 0.07), transparent 75%),
+    var(--bg);
+}
+
+/* --text 를 바탕색으로 쓰는 버튼·배지: 다크에선 바탕이 밝아지니 글씨를 어둡게. */
+:root[data-theme='dark'] .loader button[type='submit'],
+:root[data-theme='dark'] button.primary,
+:root[data-theme='dark'] .class-picks em,
+:root[data-theme='dark'] .tri label.on {
+  color: var(--bg);
+}
+
+:root[data-theme='dark'] button.primary:hover {
+  background: #fff;
+}
+
+:root[data-theme='dark'] .crew-chip,
+:root[data-theme='dark'] .badge.tag-crew {
+  background: #27324f;
+  color: #a9bdf2;
+}
+
+:root[data-theme='dark'] .crew-chip em {
+  background: rgba(169, 189, 242, 0.16);
+}
+
+:root[data-theme='dark'] .crew-chip.is-off,
+:root[data-theme='dark'] .badge.tag-self,
+:root[data-theme='dark'] .badge.tag-chu {
+  background: #2a3140;
+}
+
+:root[data-theme='dark'] .badge.tag-self {
+  color: #c3cad8;
+}
+
+:root[data-theme='dark'] .crew-chip.is-off button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+:root[data-theme='dark'] .tag.tag-crew {
+  color: #a9bdf2;
+}
+
+:root[data-theme='dark'] .badge.tag-chu,
+:root[data-theme='dark'] .tag.tag-chu:not(.active) {
+  color: #d1ab74;
+}
+
+:root[data-theme='dark'] .badge.season2 {
+  background: #17383a;
+  color: #6fd3d3;
+}
+
+:root[data-theme='dark'] .badge.season1 {
+  background: #2c2850;
+  color: #b3a6f5;
+}
+
+:root[data-theme='dark'] .fanfilter-toggle .ft-box,
+:root[data-theme='dark'] input[type='range']::-webkit-slider-thumb,
+:root[data-theme='dark'] input[type='range']::-moz-range-thumb {
+  background: var(--panel);
+}
+
+:root[data-theme='dark'] .fanfilter-toggle.on {
+  color: #f6d68a;
+}
+
+/* 테마 전환 버튼 */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  padding: 8px 14px;
+  border: 1.5px solid var(--brand);
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.theme-toggle .tt-icon {
+  font-size: 17px;
+}
+
+.theme-toggle:hover {
+  background: var(--brand);
+  color: var(--panel);
+}

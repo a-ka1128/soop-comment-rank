@@ -45,6 +45,17 @@ export default function App() {
   const [debut, setDebut] = useState(null)
   const [showFeedback, setShowFeedback] = useState(false)
   // 접속하면 종료 공지를 띄운다. 어드민 화면(#admin)에는 띄우지 않는다.
+  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light')
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+    document.documentElement.dataset.theme = next
+    try {
+      localStorage.setItem('theme', next)
+    } catch {
+      // 저장이 막혀도 이번 방문엔 적용된다.
+    }
+  }
   const [showNotice, setShowNotice] = useState(() => window.location.hash !== '#admin')
   // 피드백 버튼 옆 말풍선: 처음 온 사람에게만. 버튼이나 ✕를 누르면 이 브라우저에서는 다시 안 뜬다.
   const [fbHint, setFbHint] = useState(() => {
@@ -777,6 +788,16 @@ export default function App() {
             </p>
           </div>
           <div className="brand-side">
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? '라이트 모드로' : '다크 모드로'}
+              title={theme === 'dark' ? '라이트 모드로' : '다크 모드로'}
+            >
+              <span className="tt-icon" aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span>
+              {theme === 'dark' ? '라이트' : '다크'}
+            </button>
             {applicantCount != null && (
               <div className="applicant-count" aria-label={`신청 인원 ${applicantCount}명`}>
                 <span className="ac-label">신청 인원</span>
