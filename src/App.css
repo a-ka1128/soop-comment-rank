@@ -2543,3 +2543,19 @@ button.primary:hover {
     animation: none;
   }
 }
+
+.notice-body p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.notice-link {
+  display: block;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}

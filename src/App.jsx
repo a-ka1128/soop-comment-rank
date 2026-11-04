@@ -12,6 +12,8 @@ import { ISEDOL, SELF_TAGS, WOW_CLASSES, classifyByClass, tagsOf, uniqueComments
 import { cleanLabel, fetchLabels, saveLabel } from './lib/labels'
 import { loadScanNicks } from './lib/scanNicks'
 import FeedbackModal from './components/FeedbackModal'
+import NoticeModal from './components/NoticeModal'
+import { isVtuber } from './lib/vtubers'
 import AdminFeedback from './components/AdminFeedback'
 import { feedbackEnabled } from './lib/feedback'
 import { useAdmin } from './lib/admin'
@@ -43,6 +45,8 @@ export default function App() {
   /** 「리얼 뉴 와튜버 데뷔 하기」 글의 댓글. 못 불러와도 본 화면은 그대로 뜬다. */
   const [debut, setDebut] = useState(null)
   const [showFeedback, setShowFeedback] = useState(false)
+  // 접속하면 종료 공지를 띄운다. 어드민 화면(#admin)에는 띄우지 않는다.
+  const [showNotice, setShowNotice] = useState(() => window.location.hash !== '#admin')
   // 피드백 버튼 옆 말풍선: 처음 온 사람에게만. 버튼이나 ✕를 누르면 이 브라우저에서는 다시 안 뜬다.
   const [fbHint, setFbHint] = useState(() => {
     try {
@@ -65,6 +69,7 @@ export default function App() {
   const [tagFilter, setTagFilter] = useState(null)
   /** 즐찾이 기준에 모자란 사람을 목록에서 숨긴다. 순위는 그대로 두고 줄만 뺀다. */
   const [hideLow, setHideLow] = useState(false)
+  const [vtuberOnly, setVtuberOnly] = useState(false)
   /**
    * 어드민이 고친 라벨(userId -> 라벨). 모든 방문자가 같은 값을 본다.
    * 예전의 '수동 지정'은 그 브라우저에만 남아 남에게 안 보였다 — 그래서 없앴다.
@@ -445,7 +450,9 @@ export default function App() {
     // 상위 N명을 정해 두면 전체 N등 안에 든 사람만 센다. 데뷔 탭의 N 은 데뷔 글끼리의 순위라 여기엔 쓰지 않는다.
     const inTop = (c) => topN == null || activeTab === DEBUT_TAB || (overallRankById.get(c.id) ?? Infinity) <= topN
     // 자기소개 꼬리표를 골랐으면 그 꼬리표를 가진 사람만 센다. 직업 칸마다 그 경력이 몇 명인지 보인다.
-    const hasTag = (c) => !tagFilter || tagsFor(c, labels[c.userId]).some((t) => t.id === tagFilter)
+    const hasTag = (c) =>
+      (!tagFilter || tagsFor(c, labels[c.userId]).some((t) => t.id === tagFilter)) &&
+      (!vtuberOnly || isVtuber(c, tagsFor(c, labels[c.userId])))
     const notHidden = (c) => {
       if (!hideLow || activeTab === DEBUT_TAB) return true
       const count = fans.get(c.userId)
@@ -461,7 +468,7 @@ export default function App() {
         also: items.filter((c) => c.groupId !== s.id).length,
       }
     })
-  }, [sections, topN, activeTab, overallRankById, tagFilter, labels, hideLow, fans, tagsFor])
+  }, [sections, topN, activeTab, overallRankById, tagFilter, vtuberOnly, labels, hideLow, fans, tagsFor])
   const maxClassCount = Math.max(1, ...classCounts.map((s) => s.total))
 
   /** 신청 인원. 답글(대댓글)을 뺀 일반 댓글의 개수다. */
@@ -500,12 +507,15 @@ export default function App() {
    */
   const taggedItems = useMemo(
     () =>
-      tagFilter
+      tagFilter || vtuberOnly
         ? limitedItems
-            .filter((c) => tagsFor(c, labels[c.userId]).some((t) => t.id === tagFilter))
+            .filter((c) => {
+              const tags = tagsFor(c, labels[c.userId])
+              return (!tagFilter || tags.some((t) => t.id === tagFilter)) && (!vtuberOnly || isVtuber(c, tags))
+            })
             .map((c, i) => ({ ...c, overallRank: c.rank, rank: i + 1 }))
         : limitedItems,
-    [limitedItems, tagFilter, labels, tagsFor],
+    [limitedItems, tagFilter, vtuberOnly, labels, tagsFor],
   )
 
   /** 슬라이더가 가리키는 값. 전체 인원보다 크게 적어도 전부로 친다. */
@@ -747,6 +757,7 @@ export default function App() {
         )
       )}
       {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
+      {showNotice && <NoticeModal onClose={() => setShowNotice(false)} />}
       <header className="topbar">
         <div className="brand">
           {/* 로고를 누르면 새로고침: 고른 탭·꼬리표·검색어가 모두 처음으로 돌아간다(따로 저장하는 상태가 없다). */}
@@ -1150,6 +1161,17 @@ export default function App() {
                 {fansLoading
                   ? '애청자 수 불러오는 중…'
                   : `즐찾 ${MIN_FANS_RULE}명 미만 숨기기`}
+              </button>
+              {/* 켜면 버튜버(기준은 src/lib/vtubers.js)만 남긴다. */}
+              <button
+                type="button"
+                className={`fanfilter-toggle${vtuberOnly ? ' on' : ''}`}
+                aria-pressed={vtuberOnly}
+                onClick={() => setVtuberOnly((v) => !v)}
+                title="버튜버로 확인되었거나 본인이 버튜버라고 적은 사람만 보여 줍니다"
+              >
+                <span className="ft-box" aria-hidden="true" />
+                버튜버만
               </button>
             </div>
 
