@@ -38,6 +38,7 @@ export default function LabelEditor({ userId, label, defaultGameNick, onSave }) 
   const research = CREWS[userId] ?? []
   const [crews, setCrews] = useState(() => label?.crews ?? [])
   const [crewsOff, setCrewsOff] = useState(() => label?.crewsOff ?? [])
+  const [notVtuber, setNotVtuber] = useState(() => label?.notVtuber === true)
   const [draft, setDraft] = useState('')
   const [status, setStatus] = useState({ kind: 'idle', text: '' })
 
@@ -86,7 +87,7 @@ export default function LabelEditor({ userId, label, defaultGameNick, onSave }) 
     )
     // 입력칸에 적어 두고 추가를 안 누른 채 저장해도 들어가게 한다.
     const next = addDraft()
-    save(cleanLabel({ cls, tags: tagValues, gameNick, ...next }))
+    save(cleanLabel({ cls, tags: tagValues, gameNick, notVtuber, ...next }))
   }
 
   function reset() {
@@ -95,6 +96,7 @@ export default function LabelEditor({ userId, label, defaultGameNick, onSave }) 
     setTags(Object.fromEntries(SELF_TAGS.map((t) => [t.id, 'auto'])))
     setCrews([])
     setCrewsOff([])
+    setNotVtuber(false)
     setDraft('')
     save(null)
   }
@@ -191,6 +193,17 @@ export default function LabelEditor({ userId, label, defaultGameNick, onSave }) 
               ))}
             </fieldset>
           ))}
+        </div>
+      </div>
+
+      <div className="label-field">
+        <span>버튜버</span>
+        <div>
+          <label className="vtuber-check">
+            <input type="checkbox" checked={notVtuber} onChange={(e) => setNotVtuber(e.target.checked)} />
+            버튜버 아님
+          </label>
+          <p className="muted class-picks-note">체크하면 '버튜버만' 거르기에서 빠집니다. 기본은 버튜버입니다.</p>
         </div>
       </div>
 

@@ -1,13 +1,7 @@
 /**
- * '버튜버만' 거르기 기준. 신청자는 전원 버튜버로 보고, 아닌 사람만 NOT_VTUBER_IDS 에 userId 로 적는다.
- * (userId 는 화면의 닉네임 옆 회색 글씨, 방송국 주소 끝부분)
- *
- *   export const NOT_VTUBER_IDS = [
- *     'someone', // 닉네임
- *   ]
+ * '버튜버만' 거르기 기준. 신청자는 전원 버튜버로 보고, 어드민이 카드를 펼쳐 '버튜버 아님'을
+ * 체크한 사람(라벨의 notVtuber)만 뺀다. 라벨은 Firebase 에 저장돼 모든 방문자에게 바로 적용된다.
  */
-export const NOT_VTUBER_IDS = []
-
-export function isVtuber(comment) {
-  return !NOT_VTUBER_IDS.includes(comment.userId)
+export function isVtuber(label) {
+  return label?.notVtuber !== true
 }

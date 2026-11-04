@@ -15,6 +15,7 @@ const RTDB_URL = import.meta.env.VITE_RTDB_URL ?? ''
  *     crews: ['와우포에버즈'],              어드민이 넣은 크루
  *     crewsOff: ['천타버스'],               crews.js 에 조사해 둔 크루 중 어드민이 뺀 것
  *     gameNick: '징버거 영택이의친구',      인게임 닉네임. 없으면 gameNicks.json 의 값을 쓴다
+ *     notVtuber: true,                     버튜버가 아닌 사람('버튜버만' 거르기에서 빠진다). 없으면 버튜버
  *   }
  *
  * 글이 아니라 사람(userId)에 붙인다. 같은 사람이 두 글에 댓글을 달아도 라벨은 하나다.
@@ -52,6 +53,7 @@ export function cleanLabel(label) {
   if (crewsOff.length > 0) out.crewsOff = crewsOff
   const gameNick = typeof label?.gameNick === 'string' ? label.gameNick.trim() : ''
   if (gameNick) out.gameNick = gameNick
+  if (label?.notVtuber === true) out.notVtuber = true
   return Object.keys(out).length > 0 ? out : null
 }
 

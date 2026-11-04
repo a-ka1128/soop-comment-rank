@@ -452,7 +452,7 @@ export default function App() {
     // 자기소개 꼬리표를 골랐으면 그 꼬리표를 가진 사람만 센다. 직업 칸마다 그 경력이 몇 명인지 보인다.
     const hasTag = (c) =>
       (!tagFilter || tagsFor(c, labels[c.userId]).some((t) => t.id === tagFilter)) &&
-      (!vtuberOnly || isVtuber(c, tagsFor(c, labels[c.userId])))
+      (!vtuberOnly || isVtuber(labels[c.userId]))
     const notHidden = (c) => {
       if (!hideLow || activeTab === DEBUT_TAB) return true
       const count = fans.get(c.userId)
@@ -511,7 +511,7 @@ export default function App() {
         ? limitedItems
             .filter((c) => {
               const tags = tagsFor(c, labels[c.userId])
-              return (!tagFilter || tags.some((t) => t.id === tagFilter)) && (!vtuberOnly || isVtuber(c, tags))
+              return (!tagFilter || tags.some((t) => t.id === tagFilter)) && (!vtuberOnly || isVtuber(labels[c.userId]))
             })
             .map((c, i) => ({ ...c, overallRank: c.rank, rank: i + 1 }))
         : limitedItems,
@@ -1162,7 +1162,7 @@ export default function App() {
                   ? '애청자 수 불러오는 중…'
                   : `즐찾 ${MIN_FANS_RULE}명 미만 숨기기`}
               </button>
-              {/* 켜면 버튜버(기준은 src/lib/vtubers.js)만 남긴다. */}
+              {/* 켜면 버튜버만 남긴다. 어드민이 '버튜버 아님'으로 표시한 사람(라벨 notVtuber)은 빠진다. */}
               <button
                 type="button"
                 className={`fanfilter-toggle${vtuberOnly ? ' on' : ''}`}
