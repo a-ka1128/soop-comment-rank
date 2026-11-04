@@ -2544,18 +2544,42 @@ button.primary:hover {
   }
 }
 
-.notice-body p {
-  margin: 0;
-  line-height: 1.6;
+.notice-card {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: 94vh;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(10, 16, 36, 0.55);
 }
 
-.notice-link {
+.notice-img {
   display: block;
-  padding: 12px;
-  border-radius: 10px;
-  background: var(--brand);
+  width: 100%;
+  max-height: 94vh;
+  object-fit: contain;
+}
+
+.notice-hit {
+  position: absolute;
+  left: 14%;
+  width: 72%;
+  top: 61%;
+  height: 20%;
+  border-radius: 12px;
+  outline: none;
+}
+
+.notice-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(10, 16, 36, 0.7);
   color: #fff;
-  font-weight: 700;
-  text-align: center;
-  text-decoration: none;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
 }
